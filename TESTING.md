@@ -33,7 +33,7 @@ git submodule update --init --recursive
 ## Launch a localsecret network
 
 ```console
-docker compose --file deployment/dockerfiles/dev.yml up
+docker compose --file deployment/dockerfiles/ibc/dev.yml up
 ```
 
 ## Run the integration tests
@@ -65,14 +65,14 @@ The first time the `docker compose up` command is run the images will
 also be built. Afterwards, to trigger a re-build of the images, you can run:
 
 ```console
-docker compose --file deployment/dockerfiles/dev.yml up --build
+docker compose --file deployment/dockerfiles/ibc/dev.yml up --build
 ```
 
 This will still use cached layers, so if you wish to re-build the images without using
 the cached layers, you can use the `build` subcommand:
 
 ```console
-docker compose --file deployment/dockerfiles/dev.yml up build --no-cache
+docker compose --file deployment/dockerfiles/ibc/dev.yml up build --no-cache
 ```
 
 [buildkit]: https://docs.docker.com/build/buildkit/#getting-started
