@@ -30,31 +30,10 @@ command:
 git submodule update --init --recursive
 ```
 
-## Build the localsecret image
-Run
-
-```console
-DOCKER_TAG=v0.0.0 make localsecret
-```
-
-> **Note**: If you are relying on the `DOCKER_BUILDKIT` environment variable,
-you may need to pass it along, e.g.:
->
-> ```console
-> DOCKER_BUILDKIT=1 DOCKER_TAG=v0.0.0 make localsecret
-> ```
-
-## Build the relayer (hermes) image
-Run
-
-```console
-make build-ibc-hermes
-```
-
 ## Launch a localsecret network
 
 ```console
-docker compose --file deployment/dockerfiles/ibc/docker-compose.yml up
+docker compose --file deployment/dockerfiles/dev.yml up
 ```
 
 ## Run the integration tests
@@ -73,6 +52,27 @@ Run the tests:
 
 ```console
 yarn test
+```
+
+## Making modifications to the code
+See the `volumes` field in the `dev.yml` compose file to mount specifc source code,
+which can be available in a container used to re-build specific components.
+
+As time progresses, the development workflow will be improved.
+
+## Tips
+The first time the `docker compose up` command is run the images will
+also be built. Afterwards, to trigger a re-build of the images, you can run:
+
+```console
+docker compose --file deployment/dockerfiles/dev.yml up --build
+```
+
+This will still use cached layers, so if you wish to re-build the images without using
+the cached layers, you can use the `build` subcommand:
+
+```console
+docker compose --file deployment/dockerfiles/dev.yml up build --no-cache
 ```
 
 [buildkit]: https://docs.docker.com/build/buildkit/#getting-started
