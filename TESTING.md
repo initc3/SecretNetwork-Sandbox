@@ -1,5 +1,5 @@
 # Testing
-Quick help and reminder on how to run integration tests.
+Quick help and reminder on how to run unit and integration tests.
 
 ## Prerequisites
 * [node v16+](https://nodejs.org)
@@ -30,13 +30,49 @@ command:
 git submodule update --init --recursive
 ```
 
-## Launch a localsecret network
+## Enclave Unit Tests
+Build the docker image:
+
+```console
+make docker_enclave_test
+```
+
+Note that by default the image is built for hardware mode (`SGX_MODe=HW`),
+meaning that an SGX enable machine is necessary. To build in simulation
+(software) mode, set `SGX_MODE=SW`, e.g.:
+
+
+```console
+SGX_MODE=SW make docker_enclave_test
+```
+
+To run the tests:
+
+```console
+docker run --rm -it rust-enclave-test
+```
+
+If you wish to work in a container, override the entrypoint , e.g.:
+
+```console
+docker run --rm -it --entrypoint='' rust-enclave-test bash
+```
+
+Once in the container, the tests can be run with `make`:
+
+```console
+make enclave-tests
+```
+
+## Integrations Tests
+
+### Launch a localsecret network
 
 ```console
 docker compose --file deployment/dockerfiles/ibc/dev.yml up
 ```
 
-## Run the integration tests
+### Run the integration tests
 
 ```console
 cd integration-tests
@@ -54,13 +90,13 @@ Run the tests:
 yarn test
 ```
 
-## Making modifications to the code
+### Making modifications to the code
 See the `volumes` field in the `dev.yml` compose file to mount specifc source code,
 which can be available in a container used to re-build specific components.
 
 As time progresses, the development workflow will be improved.
 
-## Tips
+### Tips
 The first time the `docker compose up` command is run the images will
 also be built. Afterwards, to trigger a re-build of the images, you can run:
 
