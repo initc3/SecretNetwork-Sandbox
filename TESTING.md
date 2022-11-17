@@ -31,7 +31,10 @@ git submodule update --init --recursive
 ```
 
 ## Enclave Unit Tests
-Build the docker image:
+There's a `Dockerfile` to build and run the enclave tests under
+[`deployment/dockerfiles/enclave-test.Dockerfile`][deployment/dockerfiles/enclave-test.Dockerfile].
+
+There's a `make` target to simplify building the image:
 
 ```console
 make docker_enclave_test
@@ -63,6 +66,31 @@ Once in the container, the tests can be run with `make`:
 ```console
 make enclave-tests
 ```
+
+If you wish to make modifications to the code, then you'll probably want to
+mount the relevant source code, e.g.:
+
+```console
+docker run --rm -it --entrypoint='' \
+    --volume $PWD/cosmwasm/enclaves/execute/src/:/enclave-test/cosmwasm/enclaves/execute/src/ \
+    rust-enclave-test bash
+```
+
+### Using docker compose
+By default `SGX_MODE=SW`, i.e. simulation mode, i.e. SGX chip not required.
+
+Run the enclave unit tests in simulation mode:
+
+```console
+docker compose --file deployment/dockerfiles/test.yml up
+```
+
+To build and run in hardware mode:
+
+```console
+docker compose --file deployment/dockerfiles/test.yml build --build-arg SGX_MODE=HW
+```
+
 
 ## Integrations Tests
 

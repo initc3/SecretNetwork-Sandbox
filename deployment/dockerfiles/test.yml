@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  scrt-enclave-test:
+    image: rust-enclave-test
+    build:
+      context: ../..
+      dockerfile: deployment/dockerfiles/enclave-test.Dockerfile
+      args:
+        FEATURES: "test ${FEATURES}"
+        SGX_MODE: SW
+      secrets:
+        - API_KEY
+        - SPID
+    environment:
+        SGX_MODE: SW
+    volumes:
+      - ../../cosmwasm:/enclave-test/cosmwasm
+      - ../../Makefile:/enclave-test/Makefile
+      - ../../third_party:/enclave-test/third_party
+      #- ../../cosmwasm/enclaves/Cargo.toml:/enclave-test/cosmwasm/enclaves/Cargo.toml
+      #- ../../cosmwasm/enclaves/rust-toolchain:/enclave-test/cosmwasm/enclaves/rust-toolchain
+      #- ../../cosmwasm/enclaves/Xargo.toml:/enclave-test/cosmwasm/enclaves/Xargo.toml
+      #- ../../cosmwasm/enclaves/execute/proto:/enclave-test/cosmwasm/enclaves/execute/proto
+      #- ../../cosmwasm/enclaves/execute/src:/enclave-test/cosmwasm/enclaves/execute/src
+      #- ../../cosmwasm/enclaves/execute/proto:/enclave-test/cosmwasm/enclaves/execute/proto
+      #- ../../cosmwasm/enclaves/execute/Cargo.toml:/enclave-test/cosmwasm/enclaves/execute/Cargo.toml
+      #- ../../cosmwasm/enclaves/execute/Enclave.config.xml:/enclave-test/cosmwasm/enclaves/execute/Enclave.config.xml
+      #- ../../cosmwasm/enclaves/execute/Enclave.edl:/enclave-test/cosmwasm/enclaves/execute/Enclave.edl
+      #- ../../cosmwasm/enclaves/execute/Enclave.lds:/enclave-test/cosmwasm/enclaves/execute/Enclave.lds
+      #- ../../cosmwasm/enclaves/execute/Enclave_private.pem:/enclave-test/cosmwasm/enclaves/execute/Enclave_private.pem
+      #- ../../cosmwasm/enclaves/execute/Intel_SGX_Attestation_RootCA.pem:/enclave-test/cosmwasm/enclaves/execute/Intel_SGX_Attestation_RootCA.pem
+      #- ../../cosmwasm/enclaves/execute/Makefile:/enclave-test/cosmwasm/enclaves/execute/Makefile
+
+secrets:
+  API_KEY:
+    file: ../../.env.local
+  SPID:
+    file: ../../.env.local
