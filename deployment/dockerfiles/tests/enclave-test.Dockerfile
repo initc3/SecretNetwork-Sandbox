@@ -2,11 +2,9 @@ FROM rust:1.65
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    #### Base utilities ####
-    clang && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        clang \
+    && rm -rf /var/lib/apt/lists/*
 
 # sgx sdk
 ENV INTEL_SGX_URL "https://download.01.org/intel-sgx"
@@ -27,8 +25,12 @@ ARG SGX_MODE=SW
 ENV SGX_MODE=${SGX_MODE}
 ARG FEATURES="test"
 ENV FEATURES=${FEATURES}
-ENV PKG_CONFIG_PATH=""
-ENV LD_LIBRARY_PATH=""
+
+ENV SGX_SDK /opt/sgxsdk
+ENV PATH $PATH:$SGX_SDK/bin:$SGX_SDK/bin/x64
+ENV PKG_CONFIG_PATH $PKG_CONFIG_PATH:$SGX_SDK/pkgconfig
+ENV LD_LIBRARY_PATH $SGX_SDK/sdk_libs
+
 #ENV MITIGATION_CVE_2020_0551=LOAD
 
 WORKDIR /enclave-test
@@ -41,15 +43,7 @@ COPY rust-toolchain rust-toolchain
 RUN rustup component add rust-src clippy
 RUN cargo install xargo --version 0.3.25
 
-#WORKDIR cosmwasm/enclaves/execute
-#RUN rustup component add rust-src clippy
-
-#WORKDIR /enclave-test
-
 RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /enclave-test/cosmwasm/enclaves/execute/spid.txt
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /enclave-test/cosmwasm/enclaves/execute/api_key.txt
 
-COPY deployment/ci/enclave-test.sh .
-RUN chmod +x enclave-test.sh
-
-ENTRYPOINT ["/bin/bash", "enclave-test.sh"]
+CMD ["make", "enclave-tests"]
