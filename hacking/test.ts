@@ -14,10 +14,6 @@ import {
     TxResultCode,
     Wallet,
 } from "secretjs";
-import {
-    QueryBalanceRequest,
-    QueryBalanceResponse,
-} from "secretjs";
 import { MsgSend } from "secretjs/dist/protobuf_stuff/cosmos/bank/v1beta1/tx";
 import { AminoWallet } from "secretjs/dist/wallet_amino";
 import {
