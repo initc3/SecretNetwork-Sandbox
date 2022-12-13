@@ -19,6 +19,31 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{keeper: k}
 }
 
+func (m msgServer) SnapshotDB(goCtx context.Context, msg *types.MsgSnapshotDB) (*types.MsgSnapshotDBResponse, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go SnapshotDB snapshot_name: %s\n", msg.SnapshotName)
+	ChangeSnapshot(string(msg.SnapshotName))
+	return &types.MsgSnapshotDBResponse{
+		Result: true,
+	}, nil
+}
+
+func (m msgServer) FakeDeliver(goCtx context.Context, msg *types.MsgFakeDeliver) (*types.MsgFakeDeliverResponse, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go FakeDeliver fake_deliver: %v\n", msg.FakeDeliver)
+	ChangeFakeDeliver(msg.FakeDeliver)
+	return &types.MsgFakeDeliverResponse{
+		Result: true,
+	}, nil
+}
+
+func (m msgServer) CallFakeDeliver(goCtx context.Context, msg *types.MsgCallFakeDeliver) (*types.MsgCallFakeDeliverResponse, error) {
+	// fmt.Printf("nerla x/compute/internal/keeper/msg_server.go CallFakeDeliver tx: %x\n", msg.Tx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	m.keeper.CallFakeDeliverTx(ctx, msg.Tx)
+	return &types.MsgCallFakeDeliverResponse{
+		Result: true,
+	}, nil
+}
+
 func (m msgServer) StoreCode(goCtx context.Context, msg *types.MsgStoreCode) (*types.MsgStoreCodeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

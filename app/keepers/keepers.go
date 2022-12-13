@@ -3,6 +3,8 @@ package keepers
 import (
 	"path/filepath"
 
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -284,7 +286,8 @@ func (ak *SecretAppKeepers) InitCustomKeepers(
 		nil,
 	)
 	ak.ComputeKeeper = &computeKeeper
-
+	fmt.Printf("nerla app/keepers/keepers.go InitCustomKeepers\n")
+	compute.SetBaseApp(app)
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
 		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
