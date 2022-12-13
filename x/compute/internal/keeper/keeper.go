@@ -44,6 +44,7 @@ import (
 	v1wasmTypes "github.com/scrtlabs/SecretNetwork/go-cosmwasm/types/v1"
 
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type ResponseHandler interface {
@@ -58,6 +59,11 @@ type ResponseHandler interface {
 		sigInfo wasmTypes.VerificationInfo,
 	) ([]byte, error)
 }
+
+var snapshot_name string
+var FAKE_DELIVER bool = false
+var baseApp *baseapp.BaseApp
+var txDecoder sdk.TxDecoder
 
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
@@ -74,6 +80,7 @@ type Keeper struct {
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
 	HomeDir       string
+	snapshot_name string
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -114,7 +121,6 @@ func NewKeeper(
 	if err != nil {
 		panic(err)
 	}
-
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
@@ -127,11 +133,75 @@ func NewKeeper(
 		messenger:        NewMessageHandler(msgRouter, legacyMsgRouter, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		HomeDir:          homeDir,
+		snapshot_name:    "",
 	}
 	keeper.queryPlugins = DefaultQueryPlugins(govKeeper, distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
-
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go NewKeeper storeKey %s\n", storeKey.String())
+	snapshot_name = ""
 	return keeper
 }
+
+func SetTxDecoder(txd sdk.TxDecoder) {
+	txDecoder = txd
+}
+
+func SetBaseApp(app *baseapp.BaseApp) {
+	baseApp = app
+}
+
+func (k Keeper) CallFakeDeliverTx(ctx sdk.Context, tx []byte) {
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx tx %x\n", tx)
+	dTx, err := txDecoder(tx)
+	if err != nil {
+		fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
+		panic(err)
+	}
+	
+	sigTx, ok := dTx.(authsigning.SigVerifiableTx)
+	if !ok {
+		fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
+		panic(sdkerrors.ErrTxDecode)
+	}
+	sigs, err := sigTx.GetSignaturesV2()
+	signerAddrs := sigTx.GetSigners()
+
+	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res.Code %v res %v\n", res.Code, res)
+
+	for _, addr := range sigTx.GetSigners() {
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		fmt.Printf("nerla x/compute/internal/keeper/keeper.go after address: %s seq %d\n", addr.String(), acc.GetSequence())
+	}
+
+	for i, sig := range sigs {
+		addr := signerAddrs[i]
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence)
+		if snapshot_name != "" {
+			if err != nil {
+				panic(err)
+			}
+			if err := acc.SetSequence(sig.Sequence); err != nil {
+				panic(err)
+			}
+			fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s set to %d\n", addr.String(), acc.GetSequence())
+			k.accountKeeper.SetAccount(ctx, acc)
+		}
+	}
+
+}
+
+func ChangeFakeDeliver(val bool) {
+	FAKE_DELIVER = val
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeFakeDeliver FAKE_DELIVER %v\n", FAKE_DELIVER)
+}
+
+func ChangeSnapshot(name string) {
+	snapshot_name = name
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", snapshot_name)
+
+}
+
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {
@@ -140,12 +210,14 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 		return 0, sdkerrors.Wrap(types.ErrCreateFailed, err.Error())
 	}
 	ctx.GasMeter().ConsumeGas(types.CompileCost*uint64(len(wasmCode)), "Compiling WASM Bytecode")
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Create creator %s\n", creator.String())
 
 	codeHash, err := k.wasmer.Create(wasmCode)
 	if err != nil {
 		return 0, sdkerrors.Wrap(types.ErrCreateFailed, err.Error())
 	}
 	store := ctx.KVStore(k.storeKey)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Create accessing k.storeKey %s\n", k.storeKey.String())
 	codeID = k.autoIncrementID(ctx, types.KeyLastCodeID)
 
 	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder)
@@ -179,6 +251,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 }
 
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go GetSignerInfo signer %s\n", signer.String())
 	tx := sdktx.Tx{}
 	println(fmt.Sprintf("tx bytes: %s", tx))
 	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
@@ -325,6 +398,8 @@ func V010MsgsToV1SubMsgs(contractAddr string, msgs []v010wasmTypes.CosmosMsg) ([
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, []byte, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "instantiate")
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate ctx %v\n", ctx)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate codeID %d creator %s initMsg %x label %s\n", codeID, creator.String(), initMsg, label)
 
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
@@ -346,7 +421,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
 
 	// create contract address
-
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate accessing k.storeKey %s\n", k.storeKey.String())
 	store := ctx.KVStore(k.storeKey)
 	existingAddress := store.Get(types.GetContractLabelPrefix(label))
 
@@ -355,6 +430,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	}
 
 	contractAddress := k.generateContractAddress(ctx, codeID)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate contractAddress %s\n", contractAddress.String())
 	existingAcct := k.accountKeeper.GetAccount(ctx, contractAddress)
 	if existingAcct != nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
@@ -378,6 +454,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 
 	// get contact info
 	bz := store.Get(types.GetCodeKey(codeID))
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate bz %x\n", bz)
 	if bz == nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrNotFound, "code")
 	}
@@ -390,7 +467,9 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x snapshot_name %s\n", prefixStoreKey, snapshot_name)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -486,7 +565,9 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 // Execute executes the contract instance
 func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "execute")
+	fmt.Printf("x/compute/internal/keeper/keeper.go Execute &k %p k %+v\n", &k, k)
 
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute snapshot_name %s contractAddress %s caller %s msg %x\n", snapshot_name, contractAddress.String(), caller.String(), msg)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: execute")
 
 	signBytes := []byte{}
@@ -506,12 +587,16 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
 
-	contractInfo, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	contractInfo, codeInfo, _, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute accessing snapshot_name %s k.storeKey %s\n", snapshot_name, k.storeKey.String())
 	store := ctx.KVStore(k.storeKey)
+
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
 
 	// add more funds
 	if !coins.IsZero() {
@@ -526,7 +611,9 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+
 	env := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute contractKey %x blockheight %d\n", contractKey, env.Block.Height)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -588,6 +675,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 // QuerySmart queries the smart contract itself.
 func (k Keeper) QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go QuerySmart contractAddr %s req %x\n", contractAddr.String(), req)
 	return k.querySmartImpl(ctx, contractAddr, req, useDefaultGasLimit, 1)
 }
 
@@ -607,11 +695,13 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: query")
 
-	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	_, codeInfo, _, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
 	}
 
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
 	// prepare querier
 	querier := QueryHandler{
 		Ctx:     ctx,
@@ -667,7 +757,7 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 		return result
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{

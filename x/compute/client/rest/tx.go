@@ -16,6 +16,9 @@ import (
 )
 
 func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/snapshot", snapshotHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/fakedeliver", fakeDeliverHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/delivertx", fakeCallDeliverHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/code", storeCodeHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/code/{codeId}", instantiateContractHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/contract/{contractAddr}", executeContractHandlerFn(cliCtx)).Methods("POST")
@@ -24,6 +27,20 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 // limit max bytes read to prevent gzip bombs
 const maxSize = 400 * 1024
 
+type snapshotReq struct {
+	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
+	SnapshotName []byte       `json:"snapshot_name"`
+}
+
+type fakeDeliverReq struct {
+	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
+	FakeDeliver bool      `json:"fake_deliver"`
+}
+
+type callDeliverReq struct {
+	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
+	Tx []byte      `json:"tx"`
+}
 type storeCodeReq struct {
 	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
 	WasmBytes []byte       `json:"wasm_bytes"`
@@ -41,6 +58,107 @@ type executeContractReq struct {
 	Amount  sdk.Coins    `json:"coins" yaml:"coins"`
 }
 
+func snapshotHandlerFn(cliCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req snapshotReq
+		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		var err error
+		snapshot_name := req.SnapshotName		
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		// build and sign the transaction, then broadcast to Tendermint
+		msg := types.MsgSnapshotDB{
+			Sender:       	fromAddr,
+			SnapshotName:	snapshot_name,
+		}		
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, &msg)
+	}
+}
+
+func fakeDeliverHandlerFn(cliCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req fakeDeliverReq
+		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		var err error
+		fake_deliver := req.FakeDeliver		
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		// build and sign the transaction, then broadcast to Tendermint
+		msg := types.MsgFakeDeliver{
+			Sender:       	fromAddr,
+			FakeDeliver:	fake_deliver,
+		}		
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, &msg)
+	}
+}
+
+func fakeCallDeliverHandlerFn(cliCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req callDeliverReq
+		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		var err error
+		tx_bytes := req.Tx		
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		// build and sign the transaction, then broadcast to Tendermint
+		msg := types.MsgCallFakeDeliver{
+			Sender:       	fromAddr,
+			Tx:	tx_bytes,
+		}		
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, &msg)
+	}
+}
 func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req storeCodeReq

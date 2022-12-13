@@ -4,8 +4,7 @@ services:
     image: devlocalsecret
     build:
       context: ..
-      dockerfile: deployment/dockerfiles/Dockerfile
-      target: build-localsecret
+      dockerfile: hacking/dev.Dockerfile
       args:
         #BUILD_VERSION: ${VERSION}
         FEATURES: "${FEATURES},debug-print"
@@ -27,7 +26,7 @@ services:
       # faucet
       - "5000:5000"
     environment:
-      LOG_LEVEL: "TRACE"
+      LOG_LEVEL: "INFO"
       SECRET_NODE_TYPE: BOOTSTRAP
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
@@ -39,8 +38,7 @@ services:
     image: devlocalsecret
     build:
       context: ..
-      dockerfile: deployment/dockerfiles/Dockerfile
-      target: build-localsecret
+      dockerfile: hacking/dev.Dockerfile
       args:
         #BUILD_VERSION: ${VERSION}
         FEATURES: "${FEATURES},debug-print"
@@ -62,7 +60,7 @@ services:
       - "5300:5000"
     environment:
       CHAINID: "secretdev-1"
-      LOG_LEVEL: "TRACE"
+      LOG_LEVEL: "INFO"
       SECRET_NODE_TYPE: NODE
       DUMMY_STORE: "true"
     # NOTE: mount source code that may be changed and rebuilt in a container
