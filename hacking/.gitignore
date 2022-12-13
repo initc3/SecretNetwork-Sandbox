@@ -1,0 +1,8 @@
+secretd-1
+secretd-2
+genesis
+node_modules
+package-lock.json
+Cargo.lock
+target
+contract.wasm
