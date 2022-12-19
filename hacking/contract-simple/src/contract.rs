@@ -13,7 +13,7 @@ use crate::state::{
 #[entry_point]
 pub fn instantiate(deps: DepsMut, env: Env, info: MessageInfo, msg: Msg) -> StdResult<Response> {
     store1(deps.storage).save(&"init val 1".to_string())?;
-    store1(deps.storage).save(&"init val 2".to_string())?;
+    store2(deps.storage).save(&"init val 2".to_string())?;
     return handle_msg(deps, env, info, msg);
 }
 
