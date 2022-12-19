@@ -160,12 +160,36 @@ describe("Setup", () => {
         contracts["simple"].v1.ibcPortId =
             "wasm." + contracts["simple"].v1.address;
 
+        try {
+            fs.writeFileSync('contractAddress.txt', contracts["simple"].v1.address);
+        } catch (err) {
+            console.error(err);
+        }
+        try {
+            fs.writeFileSync('codeHash.txt', contracts["simple"].v1.codeHash);
+        } catch (err) {
+            console.error(err);
+        }
+
         console.log("Contract at ", contracts["simple"].v1.address, contracts["simple"].v1.codeHash)
     });
 });
+let addr = "";
+let codehash = "";
 
-let addr = "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg";
-let codehash = "a308fa70197b96aef058a4baa6ad999eb688d9f9a92e44388137df2ed65f0d9a";
+try {
+    const data = fs.readFileSync('contractAddress.txt', 'utf8');
+    addr = data;
+} catch (err) {
+    // console.log(err)
+}
+
+try {
+    const data = fs.readFileSync('codeHash.txt', 'utf8');
+    codehash = data;
+} catch (err) {
+    // console.log(err)
+}
 
 describe("Update", () => {
     describe("Send", () => {
