@@ -61,6 +61,7 @@ services:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "INFO"
       SECRET_NODE_TYPE: NODE
+      DUMMY_STORE: "true"
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
