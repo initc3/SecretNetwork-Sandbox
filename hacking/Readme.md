@@ -68,7 +68,7 @@ sudo rm -rf secretd-2
 
 * delete network
 
-`docker volume rm hacking_default`
+`docker network rm hacking_default`
 
 ### Keeper
 [keeper.go](../x/compute/internal/keeper/keeper.go#L478)
