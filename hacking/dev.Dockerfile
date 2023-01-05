@@ -46,7 +46,7 @@ RUN . /opt/sgxsdk/environment && env \
 
 ENTRYPOINT ["/bin/bash"]
 
-FROM $SCRT_BASE_IMAGE_SECRETD AS compile-secretd
+FROM $SCRT_BASE_IMAGE_SECRETD AS build-localsecret
 
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go/
@@ -108,25 +108,26 @@ RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/api_key.txt
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
 
-RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
+RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 
-ENTRYPOINT ["/bin/bash"]
+# ENTRYPOINT ["/bin/bash"]
 
 
 
-#ARG SCRT_BIN_IMAGE=rust-go-base-image
-#FROM $SCRT_BIN_IMAGE AS build-env-rust-go
-FROM compile-secretd AS build-env-rust-go
+# #ARG SCRT_BIN_IMAGE=rust-go-base-image
+# #FROM $SCRT_BIN_IMAGE AS build-env-rust-go
+# FROM compile-secretd AS build-env-rust-go
 
-# Final image
-FROM $SCRT_BASE_IMAGE as build-node
+# # Final image
+# FROM $SCRT_BASE_IMAGE as build-node
 
 # wasmi-sgx-test script requirements
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     #### Base utilities ####
     jq \
+    git \
     openssl \
     curl \
     wget \
@@ -158,11 +159,11 @@ RUN ln -s /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/x86_64-linux-gnu/
 # Install ca-certificates
 WORKDIR /root
 
-# Copy over binaries from the build-env
-COPY --from=build-env-rust-go /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
-#COPY --from=build-env-rust-go /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
+
+RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
+RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
+#RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
+RUN cp /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
 
 COPY deployment/docker/bootstrap/bootstrap_init.sh .
 COPY deployment/docker/node/node_init.sh .
@@ -198,12 +199,12 @@ ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 #ENV LD_LIBRARY_PATH=/opt/sgxsdk/libsgx-enclave-common/:/opt/sgxsdk/lib64/
 
 # Run secretd by default, omit entrypoint to ease using container with secretcli
-CMD ["/bin/bash", "startup.sh"]
+# CMD ["/bin/bash", "startup.sh"]
 
 # Final image
 #ARG SCRT_BASE_IMAGE=build-release
 #FROM $SCRT_BASE_IMAGE as build-localsecret
-FROM build-node as build-localsecret
+# FROM build-node as build-localsecret
 
 ARG SECRET_NODE_TYPE=BOOTSTRAP
 # ENV SECRET_NODE_TYPE=${SECRET_NODE_TYPE}
@@ -219,5 +220,8 @@ RUN chmod +x bootstrap_init.sh
 
 COPY hacking/scripts/node_init.sh node_init.sh
 RUN chmod +x node_init.sh
+
+COPY hacking/scripts/rebuild.sh rebuild.sh
+RUN chmod +x rebuild.sh
 
 CMD ["/bin/bash", "startup.sh"]

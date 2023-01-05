@@ -2,8 +2,6 @@
 set +x
 
 docker-compose down
-docker-compose build
-
 set -e
 
 rm -rf secretd-1
@@ -12,6 +10,7 @@ rm -rf secretd-2
 
 mkdir -p secretd-1
 mkdir -p secretd-2
+mkdir -p secretd-2-state
 mkdir -p genesis
 
 docker-compose up localsecret-1 -d
