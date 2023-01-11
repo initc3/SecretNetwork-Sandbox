@@ -5,10 +5,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
-	"os"
 
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
@@ -138,7 +138,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 		return 0, sdkerrors.Wrap(types.ErrCreateFailed, err.Error())
 	}
 	ctx.GasMeter().ConsumeGas(types.CompileCost*uint64(len(wasmCode)), "Compiling WASM Bytecode")
-	fmt.Printf("x/compute/internal/keeper/keeper.go Create creator %s\n",  creator.String())
+	fmt.Printf("x/compute/internal/keeper/keeper.go Create creator %s\n", creator.String())
 
 	codeHash, err := k.wasmer.Create(wasmCode)
 	if err != nil {
@@ -508,14 +508,15 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
 
-	contractInfo, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	contractInfo, codeInfo, real_prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	fmt.Printf("x/compute/internal/keeper/keeper.go Execute accessing k.storeKey %s\n", k.storeKey.String())
-	real_store := ctx.KVStore(k.storeKey)
-	store := NewDummyStore(real_store)
+	store := ctx.KVStore(k.storeKey)
+
+	prefixStore := NewDummyStore(real_prefixStore)
 
 	// add more funds
 	if !coins.IsZero() {
