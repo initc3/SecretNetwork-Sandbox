@@ -9,11 +9,11 @@ then
   then
     ./node_init.sh
   else
-    ./node_init.sh
+    ./node_init.sh &> /root/out
     sleep infinity
   fi
 
 else
   echo "startup {BOOTSTRAP} node"
-    ./bootstrap_init.sh
+  ./bootstrap_init.sh
 fi
