@@ -24,13 +24,14 @@ Rebuild `go-cosmwasm/src` and `x/` and restart node (after `./start_node.sh` was
 
 * From outside docker container
 
-`./restart_node.sh`
+`./rebuild_node.sh`
 
 * From inside docker container
 
 ```bash
 docker-compose exec localsecret-2 bash
-$ ./rebuild.sh &> out
+$ ./scripts/rebuild.sh &> /root/out &
+$ cat out
 ```
 
 
@@ -68,7 +69,7 @@ sudo rm -rf secretd-2
 
 * delete network
 
-`docker volume rm hacking_default`
+`docker network rm hacking_default`
 
 ### Keeper
 [keeper.go](../x/compute/internal/keeper/keeper.go#L478)

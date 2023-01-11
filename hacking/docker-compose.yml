@@ -65,7 +65,9 @@ services:
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
+      - ../go-cosmwasm/api:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/api
       - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
+      - ./scripts/:/root/scripts
       - ./secretd-2:/root/.secretd/
       - ./genesis:/tmp/genesis
 secrets:

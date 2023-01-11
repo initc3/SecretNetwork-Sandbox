@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
-
-
+set -x
 pkill -f "secretd start --rpc.laddr tcp://0.0.0.0:26657"
+set -e
 
-./node_init.sh
+cd /go/src/github.com/enigmampc/SecretNetwork/
+rm secretd
+CGO_LDFLAGS=$CGO_LDFLAGS DB_BACKEND=goleveldb MITIGATION_CVE_2020_0551=LOAD VERSION=$VERSION FEATURES=$FEATURES SGX_MODE=$SGX_MODE make build_local_no_rust
+chmod +x secretd
+cp secretd /usr/bin/secretd
+cd /root
+
+RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
+sleep infinity
