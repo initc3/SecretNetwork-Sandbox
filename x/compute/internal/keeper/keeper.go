@@ -59,6 +59,8 @@ type ResponseHandler interface {
 	) ([]byte, error)
 }
 
+var snapshot_name string
+
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
 	storeKey         sdk.StoreKey
@@ -130,14 +132,14 @@ func NewKeeper(
 		snapshot_name:    "",
 	}
 	keeper.queryPlugins = DefaultQueryPlugins(govKeeper, distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
-	fmt.Printf("x/compute/internal/keeper/keeper.go NewKeeper storeKey %s &k %p k %+v\n", storeKey.String(), &keeper, keeper)
-
+	fmt.Printf("x/compute/internal/keeper/keeper.go NewKeeper storeKey %s\n", storeKey.String())
+	snapshot_name = ""
 	return keeper
 }
 
 func (k Keeper) ChangeSnapshot(name string) {
-	k.snapshot_name = name
-	fmt.Printf("x/compute/internal/keeper/keeper.go ChangeSnapshot name %s &k %p k %+v\n", name, &k, k)
+	snapshot_name = name
+	fmt.Printf("x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", name)
 }
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
@@ -402,10 +404,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	real_prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	prefixStore := NewDummyStore(real_prefixStore, contractAddress, k.snapshot_name)
+	prefixStore := NewDummyStore(real_prefixStore, contractAddress, snapshot_name)
 	fmt.Printf("x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x\n", prefixStoreKey)
 	fmt.Printf("x/compute/internal/keeper/keeper.go Instantiate prefixStore %x\n", prefixStore)
-	fmt.Printf("x/compute/internal/keeper/keeper.go Instantiate snapshot_name %s\n", k.snapshot_name)
+	fmt.Printf("x/compute/internal/keeper/keeper.go Instantiate snapshot_name %s\n", snapshot_name)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -503,7 +505,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "execute")
 	fmt.Printf("x/compute/internal/keeper/keeper.go Execute &k %p k %+v\n", &k, k)
 
-	fmt.Printf("x/compute/internal/keeper/keeper.go Execute snapshot_name %s contractAddress %s caller %s msg %x\n", k.snapshot_name, contractAddress.String(), caller.String(), msg)
+	fmt.Printf("x/compute/internal/keeper/keeper.go Execute snapshot_name %s contractAddress %s caller %s msg %x\n", snapshot_name, contractAddress.String(), caller.String(), msg)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: execute")
 
 	signBytes := []byte{}
@@ -528,10 +530,10 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		return nil, err
 	}
 
-	fmt.Printf("x/compute/internal/keeper/keeper.go Execute accessing snapshot_name %s k.storeKey %s\n", k.snapshot_name, k.storeKey.String())
+	fmt.Printf("x/compute/internal/keeper/keeper.go Execute accessing snapshot_name %s k.storeKey %s\n", snapshot_name, k.storeKey.String())
 	store := ctx.KVStore(k.storeKey)
 
-	prefixStore := NewDummyStore(real_prefixStore, contractAddress, k.snapshot_name)
+	prefixStore := NewDummyStore(real_prefixStore, contractAddress, snapshot_name)
 
 	// add more funds
 	if !coins.IsZero() {
@@ -632,7 +634,7 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	if err != nil {
 		return nil, err
 	}
-	prefixStore := NewDummyStore(real_prefixStore, contractAddress, k.snapshot_name)
+	prefixStore := NewDummyStore(real_prefixStore, contractAddress, snapshot_name)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -673,7 +675,7 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	real_prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	prefixStore := NewDummyStore(real_prefixStore, contractAddress, k.snapshot_name)
+	prefixStore := NewDummyStore(real_prefixStore, contractAddress, snapshot_name)
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{
