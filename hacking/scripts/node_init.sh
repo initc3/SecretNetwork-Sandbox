@@ -95,27 +95,23 @@ then
   secretd q staking validators | grep moniker | jq .
   secretd q staking validators | grep moniker
   echo "started" > $file
-  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &> out &
   secretd config node "http://localhost:26657"
-  sleep 10
-  echo "From local node:"
-  secretd q staking validators | jq .
-  cat out
   # hack to change permission of data after starting node
   # sleep 10 && chmod -R ugo+rwx ~/.secretd/* &
 else
   echo "Restarting node~~~~~~~~~~~~~"
-  # curr_dir=$(pwd)
-  # cd /go/src/github.com/enigmampc/SecretNetwork/
-  # make build_local_no_rust
-  # cp secretd /usr/bin/secretd
-  # chmod +x secretd
-  # cd $curr_dir
+  curr_dir=$(pwd)
+  cd /go/src/github.com/enigmampc/SecretNetwork/
+  # make build_cli
+  make build_local_no_rust
+  cp secretd /usr/bin/secretd
+  chmod +x secretd
+  cd $curr_dir
   # PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   # sed -i 's/persistent_peers = "'$PERSISTENT_PEERS'"/persistent_peers = ""/g' ~/.secretd/config/config.toml
   sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
   echo "Set pex = false"
-  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
+  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
 fi
 # sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
 # echo "Set pex = false"

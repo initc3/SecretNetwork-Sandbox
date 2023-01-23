@@ -44,11 +44,51 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
+		SnapshotDBCmd(),
 		StoreCodeCmd(),
 		InstantiateContractCmd(),
 		ExecuteContractCmd(),
 	)
 	return txCmd
+}
+
+func SnapshotDBCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "snapshot [name]",
+		Short: "Use a snapshot",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg, err := parseSnapshotDBArgs(args, clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.FlagSet) (types.MsgSnapshotDB, error) {
+	snapshotName := args[0]
+	fmt.Printf("x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
+
+	// build and sign the transaction, then broadcast to Tendermint
+	msg := types.MsgSnapshotDB{
+		Sender:         cliCtx.GetFromAddress(),
+		SnapshotName:	[]byte(snapshotName),
+	}
+	return msg, nil
 }
 
 // StoreCodeCmd will upload code to be reused.

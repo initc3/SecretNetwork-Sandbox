@@ -5,6 +5,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func (msg MsgSnapshotDB) Route() string {
+	return RouterKey
+}
+
+func (msg MsgSnapshotDB) Type() string {
+	return "snapshot"
+}
+
+func (msg MsgSnapshotDB) ValidateBasic() error {
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgSnapshotDB) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+
 func (msg MsgStoreCode) Route() string {
 	return RouterKey
 }
