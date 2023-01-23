@@ -37,6 +37,11 @@ $ cat out
 
 ### Tests
 
+* Test simple functionality of dummy_store
+
+`./test_dummy_store.sh`
+
+
 * Deploy & instantiate new contract
 
 `./node_modules/.bin/jest -t Setup`

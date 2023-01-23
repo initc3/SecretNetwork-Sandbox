@@ -18,7 +18,7 @@ sleep 5
 cp secretd-1/config/genesis.json genesis/genesis.json
 docker-compose up localsecret-2
 docker-compose up localsecret-2 -d
-sleep 10
+sleep 20
 docker-compose stop localsecret-1
 sleep 10
-docker-compose logs localsecret-2
+./logs.sh
