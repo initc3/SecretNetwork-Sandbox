@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"math/rand"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -105,6 +106,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) RegisterServices(configurator module.Configurator) {
 	types.RegisterMsgServer(configurator.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(configurator.QueryServer(), NewQuerier(am.keeper))
+	fmt.Printf("x/compute/module.go RegisterServices &k %p k %+v\n", &am.keeper, am.keeper)
 
 	// migrations go here (in the future when we have any)
 	// example:

@@ -19,6 +19,14 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{keeper: k}
 }
 
+func (m msgServer) SnapshotDB(goCtx context.Context, msg *types.MsgSnapshotDB) (*types.MsgSnapshotDBResponse, error) {
+	fmt.Printf("x/compute/internal/keeper/msg_server.go SnapshotDB snapshot_name: %s\n", msg.SnapshotName)
+	m.keeper.ChangeSnapshot(string(msg.SnapshotName))
+	return &types.MsgSnapshotDBResponse{
+		Result: true,
+	}, nil
+}
+
 func (m msgServer) StoreCode(goCtx context.Context, msg *types.MsgStoreCode) (*types.MsgStoreCodeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
