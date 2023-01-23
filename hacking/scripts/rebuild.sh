@@ -10,5 +10,5 @@ chmod +x secretd
 cp secretd /usr/bin/secretd
 cd /root
 
-RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
+RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &
 sleep infinity
