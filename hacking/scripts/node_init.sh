@@ -27,13 +27,13 @@ then
   secretd init "$(hostname)" --chain-id $CHAINID || true
 
   PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
-
+  sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
   sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.secretd/config/config.toml
   sed -i 's/trust_period = "168h0m0s"/trust_period = "168h"/g' ~/.secretd/config/config.toml
   echo "Set persistent_peers: $PERSISTENT_PEERS"
 
   echo "Waiting for bootstrap to start..."
-  sleep 20
+  sleep 5
 
   secretd q block 1
 
@@ -45,11 +45,11 @@ then
 
   secretd parse /opt/secret/.sgx_secrets/attestation_cert.der
   ls /opt/secret/.sgx_secrets/attestation_cert.der
-  secretd tx register auth /opt/secret/.sgx_secrets/attestation_cert.der -y --from b --gas-prices 0.25uscrt > out
+  secretd tx register auth /opt/secret/.sgx_secrets/attestation_cert.der -y --from b --broadcast-mode block --gas-prices 0.25uscrt > out
   cat out
   tx_hash="$(cat out | jq -r '.txhash')"
 
-  sleep 15
+  # sleep 5
 
   secretd q tx "$tx_hash"
 
@@ -66,12 +66,12 @@ then
   RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &> output &
   PID=$!
   echo "waiting for state sync to end.."
-  sleep 40
+  sleep 5
   state_sync=$(secretd status | jq .SyncInfo.catching_up)
   echo "state_sync $state_sync"
   while [ $state_sync == "true" ];
   do
-      sleep 10
+      sleep 5
       state_sync=$(secretd status | jq .SyncInfo.catching_up)
       echo "state_sync $state_sync"
   done
@@ -88,9 +88,10 @@ then
     --commission-max-change-rate="0.01" \
     --min-self-delegation="1" \
     --moniker="hack0r" \
+    --broadcast-mode block \
     --from=b > out2
   tx_hash="$(cat out2 | jq -r '.txhash')"
-  sleep 15
+  # sleep 15
   secretd q tx "$tx_hash" | jq .
   secretd q staking validators | grep moniker | jq .
   secretd q staking validators | grep moniker
@@ -110,6 +111,7 @@ else
   # PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   # sed -i 's/persistent_peers = "'$PERSISTENT_PEERS'"/persistent_peers = ""/g' ~/.secretd/config/config.toml
   sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
+  sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
   echo "Set pex = false"
   RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
 fi
