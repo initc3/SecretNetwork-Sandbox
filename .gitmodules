@@ -2,3 +2,6 @@
 	path = third_party/incubator-teaclave-sgx-sdk
 	url = https://github.com/scrtlabs/incubator-teaclave-sgx-sdk
 	branch = master
+[submodule "hacking/secretSCRT"]
+	path = hacking/secretSCRT
+	url = https://github.com/scrtlabs/secretSCRT.git

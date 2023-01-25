@@ -445,9 +445,11 @@ fn do_handle(
     handle_type: u8,
 ) -> Result<Vec<u8>, Error> {
     let gas_used = gas_used.ok_or_else(|| Error::empty_arg(GAS_USED_ARG))?;
+    info!("code_id buffer: {:?}", unsafe { code_id.read() });
     let code_id: Checksum = unsafe { code_id.read() }
         .ok_or_else(|| Error::empty_arg(CODE_ID_ARG))?
         .try_into()?;
+    info!("code_id checksum: {:?}", code_id.to_hex());
     let params = unsafe { params.read() }.ok_or_else(|| Error::empty_arg(PARAMS_ARG))?;
     let msg = unsafe { msg.read() }.ok_or_else(|| Error::empty_arg(MSG_ARG))?;
     let sig_info = unsafe { sig_info.read() }.ok_or_else(|| Error::empty_arg(SIG_INFO_ARG))?;

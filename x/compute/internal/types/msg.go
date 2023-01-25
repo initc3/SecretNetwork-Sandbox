@@ -5,6 +5,62 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func (msg MsgStartSnapshot) Route() string {
+	return RouterKey
+}
+
+func (msg MsgStartSnapshot) Type() string {
+	return "snapshot"
+}
+
+func (msg MsgStartSnapshot) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
+	return nil
+}
+
+func (msg MsgStartSnapshot) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+func (msg MsgClearSnapshot) Route() string {
+	return RouterKey
+}
+
+func (msg MsgClearSnapshot) Type() string {
+	return "snapshot_clear"
+}
+
+func (msg MsgClearSnapshot) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
+	return nil
+}
+
+func (msg MsgClearSnapshot) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+func (msg MsgSimulateTx) Route() string {
+	return RouterKey
+}
+
+func (msg MsgSimulateTx) Type() string {
+	return "simulatetx"
+}
+
+func (msg MsgSimulateTx) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
+	return nil
+}
+
+func (msg MsgSimulateTx) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
 func (msg MsgStoreCode) Route() string {
 	return RouterKey
 }

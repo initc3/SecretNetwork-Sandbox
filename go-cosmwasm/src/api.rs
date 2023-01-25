@@ -1,3 +1,5 @@
+use log::*;
+
 use cosmwasm_sgx_vm::{Api, FfiError, FfiResult, GasInfo};
 use cosmwasm_std::{Binary, CanonicalAddr, HumanAddr};
 
@@ -38,6 +40,9 @@ unsafe impl Send for GoApi {}
 
 impl Api for GoApi {
     fn canonical_address(&self, human: &HumanAddr) -> FfiResult<CanonicalAddr> {
+        info!("Entering Api for GoApi canonical_address() function !@#$%");
+        warn!("Entering Api for GoApi canonical_address() function !@#$%");
+        trace!("Entering Api for GoApi canonical_address() function !@#$%");
         let human_bytes = human.as_str().as_bytes();
         let human_bytes = Buffer::from_vec(human_bytes.to_vec());
         let mut output = Buffer::default();
@@ -73,6 +78,9 @@ impl Api for GoApi {
     }
 
     fn human_address(&self, canonical: &CanonicalAddr) -> FfiResult<HumanAddr> {
+        info!("Entering Api for GoApi human_address() function !@#$%");
+        warn!("Entering Api for GoApi human_address() function !@#$%");
+        trace!("Entering Api for GoApi human_address() function !@#$%");
         let canonical_bytes = canonical.as_slice();
         let canonical_buf = Buffer::from_vec(canonical_bytes.to_vec());
         let mut output = Buffer::default();

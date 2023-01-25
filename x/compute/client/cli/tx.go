@@ -18,6 +18,7 @@ import (
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 const (
@@ -44,11 +45,109 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
+		StartSnapshotCmd(),
+		ClearSnapshotCmd(),
+		SimulateTx(),
 		StoreCodeCmd(),
 		InstantiateContractCmd(),
 		ExecuteContractCmd(),
 	)
 	return txCmd
+}
+
+func StartSnapshotCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "snapshot [name]",
+		Short: "Use a snapshot",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			snapshotName := args[0]
+
+			msg := types.MsgStartSnapshot{
+				Sender:       clientCtx.GetFromAddress(),
+				SnapshotName: []byte(snapshotName),
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func ClearSnapshotCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "snapshot_clear [name]",
+		Short: "Clear a snapshot",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			snapshotName := args[0]
+
+			msg := types.MsgClearSnapshot{
+				Sender:       clientCtx.GetFromAddress(),
+				SnapshotName: []byte(snapshotName),
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func SimulateTx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "simulatetx filename.json",
+		Short: "Call Simulate function on a transaction",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgSimulateTx{
+				Sender:		clientCtx.GetFromAddress(),
+				Tx: 		txBytes,
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // StoreCodeCmd will upload code to be reused.

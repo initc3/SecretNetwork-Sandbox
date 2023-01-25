@@ -46,3 +46,12 @@ x/compute/internal/keeper/testdata/v1-contract.wasm
 third_party/build
 x/compute/internal/keeper/testdata/test-contract/target
 x/compute/internal/keeper/testdata/v1-sanity-contract/target
+build
+check-hw/target
+
+# hacking
+hacking/backup_snip20/backup_adv_key
+hacking/backup_snip20/backup_adv_value
+hacking/backup_snip20/backup_victim_key
+hacking/backup_snip20/codeHash.txt
+hacking/backup_snip20/simulate_result
