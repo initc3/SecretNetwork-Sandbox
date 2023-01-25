@@ -91,7 +91,7 @@ then
     --broadcast-mode block \
     --from=b > out2
   tx_hash="$(cat out2 | jq -r '.txhash')"
-  # sleep 15
+  sleep 10
   secretd q tx "$tx_hash" | jq .
   secretd q staking validators | grep moniker | jq .
   secretd q staking validators | grep moniker

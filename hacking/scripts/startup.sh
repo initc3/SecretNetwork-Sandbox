@@ -7,13 +7,13 @@ then
   file=/root/.secretd/config/started.txt
   if [ ! -e "$file" ]
   then
-    ./node_init.sh
+    ./scripts/node_init.sh
   else
-    ./node_init.sh &> /root/out
+    ./scripts/node_init.sh &> /root/out
     sleep infinity
   fi
 
 else
   echo "startup {BOOTSTRAP} node"
-  ./bootstrap_init.sh
+  ./scripts/bootstrap_init.sh
 fi
