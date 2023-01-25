@@ -1,3 +1,5 @@
+use log::*;
+
 use cosmwasm_sgx_vm::{FfiResult, GasInfo, Querier};
 use cosmwasm_std::{Binary, StdResult, SystemError, SystemResult};
 
@@ -43,6 +45,7 @@ impl Querier for GoQuerier {
         query_depth: u32,
         gas_limit: u64,
     ) -> FfiResult<SystemResult<StdResult<Binary>>> {
+        trace!("Entering Querier for GoQuerier query_raw() function !@#$%");
         let request_buf = Buffer::from_vec(request.to_vec());
         let mut result_buf = Buffer::default();
         let mut err = Buffer::default();
