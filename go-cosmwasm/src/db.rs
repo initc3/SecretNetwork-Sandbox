@@ -1,3 +1,5 @@
+use log::*;
+
 use cosmwasm_sgx_vm::{FfiResult, GasInfo, Storage, StorageIterator};
 
 use crate::error::GoResult;
@@ -50,6 +52,9 @@ pub struct DB {
 
 impl Storage for DB {
     fn get(&self, key: &[u8]) -> FfiResult<Option<Vec<u8>>> {
+        info!("Entering Storage for DB get() function !@#$%");
+        warn!("Entering Storage for DB get() function !@#$%");
+        trace!("Entering Storage for DB get() function !@#$%");
         let key_buf = Buffer::from_vec(key.to_vec());
         let mut result_buf = Buffer::default();
         let mut err = Buffer::default();
@@ -86,6 +91,15 @@ impl Storage for DB {
         } else {
             Some(unsafe { result_buf.consume() })
         };
+        //info!("get db (Ok(value), gas_info): ({}, {})", value, gas_info)
+        info!("**********************************************************************");
+        info!("*                                                                    *");
+        info!("*        DB get (key, value) ...                                     *");
+        info!("*                                                                    *");
+        info!("**********************************************************************");
+        info!("key: {:?}", hex::encode(key));
+        let a = vec![0u8, 0, 1, 2, 3, 4, 5];
+        info!("value: {:?}", hex::encode(value.as_ref().unwrap_or_else(|| &a)));
         (Ok(value), gas_info)
     }
 
@@ -142,6 +156,11 @@ impl Storage for DB {
     }
 
     fn set(&mut self, key: &[u8], value: &[u8]) -> FfiResult<()> {
+        info!("Entering Storage for DB set() function !@#$%");
+        warn!("Entering Storage for DB set() function !@#$%");
+        trace!("Entering Storage for DB set() function !@#$%");
+
+        info!("DB set(): key -> value: {:x?} -> {:x?}", key, value);
         let key_buf = Buffer::from_vec(key.to_vec());
         let value_buf = Buffer::from_vec(value.to_vec());
         let mut err = Buffer::default();
@@ -174,6 +193,9 @@ impl Storage for DB {
     }
 
     fn remove(&mut self, key: &[u8]) -> FfiResult<()> {
+        info!("Entering Storage for DB remove() function !@#$%");
+        warn!("Entering Storage for DB remove() function !@#$%");
+        trace!("Entering Storage for DB remove() function !@#$%");
         let key_buf = Buffer::from_vec(key.to_vec());
         let mut err = Buffer::default();
         let mut used_gas = 0_u64;
