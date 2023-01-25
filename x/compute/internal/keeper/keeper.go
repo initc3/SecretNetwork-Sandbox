@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -179,7 +180,12 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
 	tx := sdktx.Tx{}
+	println(fmt.Sprintf("tx bytes: %s", tx))
+	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
+	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
+	println(fmt.Sprintf("tx type: %T", tx))
+	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
 	}
