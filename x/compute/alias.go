@@ -110,6 +110,9 @@ type (
 	GenesisState            = types.GenesisState
 	Code                    = types.Code
 	Contract                = types.Contract
+	MsgStartSnapshot        = types.MsgStartSnapshot
+	MsgClearSnapshot        = types.MsgClearSnapshot
+	MsgSimulateTx      	= types.MsgSimulateTx
 	MsgStoreCode            = types.MsgStoreCode
 	MsgInstantiateContract  = types.MsgInstantiateContract
 	MsgExecuteContract      = types.MsgExecuteContract

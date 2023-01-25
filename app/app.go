@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	// "time"
 	"path/filepath"
 
 	"github.com/scrtlabs/SecretNetwork/app/keepers"
@@ -87,13 +89,20 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
+	// authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	// unnamed import of statik for swagger UI support
 	_ "github.com/scrtlabs/SecretNetwork/client/docs/statik"
 )
 
 const appName = "secret"
 
+//const OUTPUTFILE = "/root/backup_snip20/simulate_result"
+
 var (
+	snip20AttackDir = os.Getenv("SNIP20_ATTACK_DIR")
+	OUTPUTFILE      = filepath.Join(snip20AttackDir, "simulate_result")
+
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
 	DefaultCLIHome = filepath.Join(homeDir, ".secretd")
@@ -148,6 +157,7 @@ type SecretNetworkApp struct {
 	sm *module.SimulationManager
 
 	configurator module.Configurator
+	// chainID String
 }
 
 func (app *SecretNetworkApp) GetBaseApp() *baseapp.BaseApp {
@@ -186,6 +196,78 @@ func (app *SecretNetworkApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
+func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
+	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
+	if err != nil {
+		fmt.Println("nerla app/app.go error TxDecoder")
+		panic(err)
+	}
+	msgs := dTx.GetMsgs()
+	for _, m := range msgs {
+		switch typedTx := m.(type) {
+		case *compute.MsgStartSnapshot:
+			fmt.Println("nerla app/app.go MsgStartSnapshot calling Simulate\n")
+			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			if err != nil {
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
+			}
+			return abci.ResponseCheckTx{
+				Code:      abci.CodeTypeOK,
+				Log:       response.Log,
+				Data:      response.Data,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
+			}
+		case *compute.MsgClearSnapshot:
+			fmt.Println("nerla app/app.go MsgClearSnapshot calling Simulate\n")
+			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			if err != nil {
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
+			}
+			return abci.ResponseCheckTx{
+				Code:      abci.CodeTypeOK,
+				Log:       response.Log,
+				Data:      response.Data,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
+			}
+		case *compute.MsgSimulateTx:
+			fmt.Println("nerla app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
+			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
+			if err != nil {
+				err := os.WriteFile(OUTPUTFILE, []byte("1"), 0222)
+				if err != nil {
+					panic(err)
+				}
+
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
+			}
+			err = os.WriteFile(OUTPUTFILE, []byte("0"), 0222)
+			if err != nil {
+				panic(err)
+			}
+			return abci.ResponseCheckTx{
+				Code:      1,
+				Log:       response.Log,
+				Data:      response.Data,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
+			}
+		default:
+		}
+	}
+	return app.BaseApp.CheckTx(req)
+}
+
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
 type WasmWrapper struct {
@@ -216,7 +298,6 @@ func NewSecretNetworkApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	// bApp.GRPCQueryRouter().RegisterSimulateService(bApp.Simulate, interfaceRegistry)
-
 	// Initialize our application with the store keys it requires
 	app := &SecretNetworkApp{
 		BaseApp:           bApp,
@@ -225,6 +306,7 @@ func NewSecretNetworkApp(
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		bootstrap:         bootstrap,
+		// chainID: appOpts.Get(server.Blockchain),
 	}
 
 	app.AppKeepers.InitKeys()
@@ -242,6 +324,7 @@ func NewSecretNetworkApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
+
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.AppKeepers.AccountKeeper, app.AppKeepers.StakingKeeper, app.BaseApp.DeliverTx, encodingConfig.TxConfig),
 		auth.NewAppModule(appCodec, *app.AppKeepers.AccountKeeper, authsims.RandomGenesisAccounts),
@@ -424,6 +507,7 @@ func (app *SecretNetworkApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBloc
 
 // InitChainer application update at chain initialization
 func (app *SecretNetworkApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	fmt.Println("nerla app/app.go InitChainer")
 	var genesisState simapp.GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
