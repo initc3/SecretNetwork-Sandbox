@@ -41,13 +41,14 @@ $ cat out
 
 `./test_dummy_store.sh`
 
+#### IntegrationTests in test.ts
 
 * Deploy & instantiate new contract
 
 `./node_modules/.bin/jest -t Setup`
 
 * Query value stored in contract and check if it is the initial value instatiated in the contract
-  
+
 `./node_modules/.bin/jest -t QueryOld`
 
 * Update value stored in contract
