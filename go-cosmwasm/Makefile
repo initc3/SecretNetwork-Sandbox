@@ -7,6 +7,7 @@ FEATURES ?=
 FEATURES_U += $(FEATURES)
 FEATURES_U += backtraces
 FEATURES_U := $(strip $(FEATURES_U))
+$(info FEATURES_U is $(FEATURES_U))
 
 DOCKER_TAG := 0.8.2
 USER_ID := $(shell id -u)
@@ -63,6 +64,12 @@ build: build-rust build-go
 
 .PHONY: build-rust
 build-rust: build-enclave
+	cargo build -Z unstable-options --profile $(BUILD_PROFILE) --features "$(FEATURES_U)"
+	cp target/$(BUILD_PROFILE)/libgo_cosmwasm.$(DLL_EXT) api
+	@ #this pulls out ELF symbols, 80% size reduction!
+
+.PHONY: build-libgo-cosmwasm
+build-libgo-cosmwasm:
 	cargo build -Z unstable-options --profile $(BUILD_PROFILE) --features "$(FEATURES_U)"
 	cp target/$(BUILD_PROFILE)/libgo_cosmwasm.$(DLL_EXT) api
 	@ #this pulls out ELF symbols, 80% size reduction!
