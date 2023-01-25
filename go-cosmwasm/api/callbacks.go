@@ -159,6 +159,9 @@ func buildIterator(dbCounter uint64, it dbm.Iterator) C.iterator_t {
 
 //export cGet
 func cGet(ptr *C.db_t, gasMeter *C.gas_meter_t, usedGas *u64, key C.Buffer, val *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+	fmt.Println("*********************************************************************")
+	fmt.Println("*              Entering go-cosmwasm.api.callbacks.cGet()            *")
+	fmt.Println("*********************************************************************")
 	defer recoverPanic(&ret)
 	if ptr == nil || gasMeter == nil || usedGas == nil || val == nil {
 		// we received an invalid pointer

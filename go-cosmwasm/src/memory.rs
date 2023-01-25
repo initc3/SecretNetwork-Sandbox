@@ -1,3 +1,5 @@
+use log::*;
+
 use std::mem;
 use std::slice;
 
@@ -36,6 +38,7 @@ impl Buffer {
     ///
     /// The caller must make sure that the `Buffer` points to valid and initialized memory
     pub unsafe fn read(&self) -> Option<&[u8]> {
+        trace!("Entering Buffer read() function !@#$%");
         if self.ptr.is_null() {
             None
         } else {
@@ -52,6 +55,7 @@ impl Buffer {
     /// created by `from_vec`. You may not consume a slice twice.
     /// Otherwise you risk double free panics
     pub unsafe fn consume(self) -> Vec<u8> {
+        trace!("Entering Buffer consume() function !@#$%");
         if self.ptr.is_null() {
             vec![]
         } else {
@@ -61,11 +65,13 @@ impl Buffer {
 
     /// Creates a new zero length Buffer with the given capacity
     pub fn with_capacity(capacity: usize) -> Self {
+        trace!("Entering Buffer with_capacity() function !@#$%");
         Buffer::from_vec(Vec::<u8>::with_capacity(capacity))
     }
 
     // this releases our memory to the caller
     pub fn from_vec(v: Vec<u8>) -> Self {
+        trace!("Entering Buffer from_vec() function !@#$%");
         let mut v = mem::ManuallyDrop::new(v);
         Buffer {
             ptr: v.as_mut_ptr(),
@@ -77,6 +83,7 @@ impl Buffer {
 
 impl Default for Buffer {
     fn default() -> Self {
+        trace!("Entering Default for Buffer default() function !@#$%");
         Buffer {
             ptr: std::ptr::null_mut::<u8>(),
             len: 0,
