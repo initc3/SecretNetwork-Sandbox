@@ -115,6 +115,7 @@ func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contract
 	}
 	nano := ctx.BlockTime().UnixNano()
 	if nano < 1 {
+        println(fmt.Sprintf("ctx.BlockTime() (nano): %s", nano))
 		panic("Block (unix) time must never be empty or negative ")
 	}
 	env := wasmTypes.Env{
