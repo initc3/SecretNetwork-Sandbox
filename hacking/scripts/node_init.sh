@@ -49,7 +49,7 @@ then
   cat out
   tx_hash="$(cat out | jq -r '.txhash')"
 
-  # sleep 5
+  sleep 5
 
   secretd q tx "$tx_hash"
 
