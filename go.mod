@@ -5,7 +5,7 @@ go 1.19
 replace (
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	github.com/cosmos/cosmos-sdk => github.com/scrtlabs/cosmos-sdk v0.45.11-0.20221129100248-e5f7eddfd405
+	github.com/cosmos/cosmos-sdk => github.com/initc3/cosmos-sdk v0.0.0-20230127010833-27818a286615
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/scrtlabs/tendermint v0.34.23-secret
 	// enforce grpc version
