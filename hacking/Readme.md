@@ -42,7 +42,13 @@ $ cat out
 
 * Test simple functionality of dummy_store
 
+typescript verion:
+
 `./test_dummy_store.sh`
+
+secretd version:
+
+`docker-compose exec localsecret-2 ./scripts/test_dummy_store_cli.sh`
 
 #### IntegrationTests in test.ts
 
