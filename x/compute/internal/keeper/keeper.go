@@ -239,6 +239,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
 	println(fmt.Sprintf("tx type: %T", tx))
 	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
+	println(fmt.Sprintf("tx hash (from proto): %x", sha256.Sum256(k.cdc.MustMarshal(&tx))))
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
 	}
