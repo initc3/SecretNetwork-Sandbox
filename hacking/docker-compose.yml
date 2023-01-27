@@ -74,6 +74,7 @@ services:
       - ./secretd-2:/root/.secretd/
       - ./genesis:/tmp/genesis
       - ./contract-simple:/root/contract-simple
+      - ./contract-sienna-swap:/root/contract-sienna-swap
 secrets:
   API_KEY:
     file: ../.env.local
