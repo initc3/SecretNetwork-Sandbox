@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
 )
 
 type DummyStore struct {
@@ -17,25 +16,26 @@ type DummyStore struct {
 }
 
 func NewDummyStore(
-	real_store sdk.KVStore,
-	contractAddress sdk.AccAddress,
+	parent_store sdk.KVStore,
+	prefixStoreKey []byte,
 	snapshot_name string,
 ) DummyStore {
-	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	real_store := prefix.NewStore(parent_store, prefixStoreKey)
 	dummy_prefixStoreKey := append([]byte(snapshot_name), prefixStoreKey...)
-	dummy_prefixStore := prefix.NewStore(real_store, dummy_prefixStoreKey)
-	fmt.Printf("x/compute/internal/keeper/dummy_store.go NewDummyStore snapshot_name: |%s|\n", snapshot_name)
+	dummy_prefixStore := prefix.NewStore(parent_store, dummy_prefixStoreKey)
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go NewDummyStore snapshot_name: |%s| prefixStoreKey: |%x|\n", snapshot_name, prefixStoreKey)
 	return DummyStore{real_store, dummy_prefixStore, snapshot_name}
 }
 
 func (d DummyStore) Get(key []byte) []byte {
-	fmt.Printf("x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s|\n", d.snapshot_name)
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s| key %x\n", d.snapshot_name, key)
 	if d.snapshot_name == "" {
 		return d.real_store.Get(key)
 	} else {
 		if d.dummy_store.Has(key) { //the value was set in dummy_store so return that value
 			return d.dummy_store.Get(key)
 		} else { //value was not set in dummy_store so get it from the real store and update it to dummy_store
+			fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s| key %x not in dummy_store getting from real_store\n", d.snapshot_name, key)
 			v := d.real_store.Get(key)
 			d.dummy_store.Set(key, v)
 			return v
@@ -44,6 +44,7 @@ func (d DummyStore) Get(key []byte) []byte {
 }
 
 func (d DummyStore) Has(key []byte) bool {
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Has snapshot_name |%s| key %x\n", d.snapshot_name, key)
 	if d.snapshot_name == "" {
 		return d.dummy_store.Has(key)
 	} else {
@@ -52,7 +53,7 @@ func (d DummyStore) Has(key []byte) bool {
 }
 
 func (d DummyStore) Set(key, value []byte) {
-	fmt.Printf("x/compute/internal/keeper/dummy_store.go Set snapshot_name |%s|\n", d.snapshot_name)
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set snapshot_name |%s| key %x value %x\n", d.snapshot_name, key, value)
 	if d.snapshot_name == "" {
 		d.real_store.Set(key, value)
 	} else {
@@ -61,6 +62,7 @@ func (d DummyStore) Set(key, value []byte) {
 }
 
 func (d DummyStore) Delete(key []byte) {
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Delete snapshot_name |%s| key %x\n", d.snapshot_name, key)
 	if d.snapshot_name == "" {
 		d.real_store.Delete(key)
 	} else {
@@ -73,6 +75,7 @@ func (d DummyStore) Delete(key []byte) {
 
 // todo
 func (d DummyStore) Iterator(start, end []byte) sdk.Iterator {
+	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Iterator snapshot_name |%s|\n", d.snapshot_name)
 	if d.snapshot_name == "" {
 		return d.real_store.Iterator(start, end)
 	} else {

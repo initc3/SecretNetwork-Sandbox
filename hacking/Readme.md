@@ -36,6 +36,9 @@ $ cat out
 
 
 ### Tests
+* Test simple functionality of delivertx
+
+`docker-compose exec localsecret-2 ./scripts/test_delivertx.sh`
 
 * Test simple functionality of dummy_store
 
@@ -77,5 +80,25 @@ sudo rm -rf secretd-2
 
 `docker network rm hacking_default`
 
-### Keeper
+### Other
+#### Update protobuf for rpc calls
+
+* Update proto spec and other relevant files
+
+    * [msg.proto](../proto/secret/compute/v1beta1/msg.proto)
+    * [alias.go](../x/compute/alias.go)
+    * [cli/tx.go](x/compute/client/cli/tx.go)
+    * [rest/tx.go](x/compute/client/rest/tx.go)
+    * [handler.go](x/compute/handler.go)
+    * [msg_server.go](x/compute/internal/keeper/msg_server.go)
+    * [codec.go](x/compute/internal/types/codec.go)
+    * [msg.go](x/compute/internal/types/msg.go)
+
+* generate protobuf files `make proto-gen`
+
+    * you can ignore errors: `W0123 19:43:24.908481     375 services.go:38] No HttpRule found for method: Msg....` 
+
+* build image `./build_image.sh` or `./rebuild_node.sh`
+
+#### Keeper
 [keeper.go](../x/compute/internal/keeper/keeper.go#L478)

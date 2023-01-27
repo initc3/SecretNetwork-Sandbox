@@ -18,6 +18,7 @@ import (
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 const (
@@ -45,6 +46,8 @@ func GetTxCmd() *cobra.Command {
 	}
 	txCmd.AddCommand(
 		SnapshotDBCmd(),
+		FakeDeliverCmd(),
+		CallFakeDeliverCmd(),
 		StoreCodeCmd(),
 		InstantiateContractCmd(),
 		ExecuteContractCmd(),
@@ -81,14 +84,83 @@ func SnapshotDBCmd() *cobra.Command {
 
 func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.FlagSet) (types.MsgSnapshotDB, error) {
 	snapshotName := args[0]
-	fmt.Printf("x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
+	// fmt.Printf("nerla x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgSnapshotDB{
-		Sender:         cliCtx.GetFromAddress(),
-		SnapshotName:	[]byte(snapshotName),
+		Sender:       cliCtx.GetFromAddress(),
+		SnapshotName: []byte(snapshotName),
 	}
 	return msg, nil
+}
+
+func FakeDeliverCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fake_deliver [true/false]",
+		Short: "Use a fake DeliverTx function",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			boolValue, err := strconv.ParseBool(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgFakeDeliver{
+				Sender:       clientCtx.GetFromAddress(),
+				FakeDeliver: boolValue,
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CallFakeDeliverCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "delivertx filename.json",
+		Short: "Call DeliverTx function",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			stdTx, err := authclient.ReadTxFromFile(clientCtx, args[0])
+			if err != nil {
+				return err
+			}
+
+			txBytes, err := clientCtx.TxConfig.TxEncoder()(stdTx)
+			if err != nil {
+				return err
+			}
+
+			msg := types.MsgCallFakeDeliver{
+				Sender:		clientCtx.GetFromAddress(),
+				Tx: 		txBytes,
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // StoreCodeCmd will upload code to be reused.
