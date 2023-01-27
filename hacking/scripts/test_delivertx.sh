@@ -15,7 +15,7 @@ STORE_TX=$(secretd tx compute store /root/contract-simple/contract.wasm --from b
 eval tx_height=$(echo $STORE_TX | jq .height)
 while [ "$tx_height" == "0" ]; do 
     # echo $STORE_TX | jq .
-    echo "\tretry secred tx compute store"
+    echo -e "\tretry secred tx compute store"
     sleep 2
     STORE_TX=$(secretd tx compute store /root/contract-simple/contract.wasm --from b -y --broadcast-mode block --gas=5000000)
     eval tx_height=$(echo $STORE_TX | jq .height)
@@ -30,7 +30,7 @@ INIT_TX=$(secretd tx compute instantiate $CODE_ID "{\"nop\":{}}" --from b --labe
 eval tx_height=$(echo $INIT_TX | jq .height)
 while [ "$tx_height" == "0" ]; do
     # echo $INIT_TX | jq .
-    echo "retry secred tx compute instantiate"
+    echo -e "\tretry secred tx compute instantiate"
     sleep 2
     INIT_TX=$(secretd tx compute instantiate $CODE_ID "{\"nop\":{}}" --from b --label $UNIQUE_LABEL  -y  --broadcast-mode block )
     eval tx_height=$(echo $INIT_TX | jq .height)
