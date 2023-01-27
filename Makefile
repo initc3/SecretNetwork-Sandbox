@@ -295,7 +295,7 @@ libgo_cosmwasm:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-patch.4 \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--target libgo_cosmwasm \
@@ -307,7 +307,7 @@ compile-enclave:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-patch.4 \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--target compile-enclave \
@@ -318,7 +318,7 @@ artifacts:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-patch.4 \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--secret id=API_KEY,src=.env.local \
