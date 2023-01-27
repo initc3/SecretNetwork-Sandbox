@@ -24,7 +24,43 @@ func (msg MsgSnapshotDB) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 
+func (msg MsgFakeDeliver) Route() string {
+	return RouterKey
+}
 
+func (msg MsgFakeDeliver) Type() string {
+	return "fake_deliver"
+}
+
+func (msg MsgFakeDeliver) ValidateBasic() error {
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgFakeDeliver) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+func (msg MsgCallFakeDeliver) Route() string {
+	return RouterKey
+}
+
+func (msg MsgCallFakeDeliver) Type() string {
+	return "call_delivertx"
+}
+
+func (msg MsgCallFakeDeliver) ValidateBasic() error {
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgCallFakeDeliver) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
 func (msg MsgStoreCode) Route() string {
 	return RouterKey
 }

@@ -93,6 +93,7 @@ import (
 
 const appName = "secret"
 
+
 var (
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
@@ -186,6 +187,17 @@ func (app *SecretNetworkApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
+func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+	fmt.Printf("nerla app/app.go DeliverTx tx %x\n", req.Tx)
+	if compute.GetFakeDeliver() {
+		fmt.Printf("nerla app/app.go DeliverTx FAKE_DELIVER is true\n", )
+		return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
+	}
+	resp := app.BaseApp.DeliverTx(req)
+	fmt.Printf("nerla app/app.go DeliverTx res %v\n", resp)
+	return resp
+}
+
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
 type WasmWrapper struct {
@@ -242,6 +254,7 @@ func NewSecretNetworkApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
+
 	app.mm = module.NewManager(
 		genutil.NewAppModule(app.AppKeepers.AccountKeeper, app.AppKeepers.StakingKeeper, app.BaseApp.DeliverTx, encodingConfig.TxConfig),
 		auth.NewAppModule(appCodec, *app.AppKeepers.AccountKeeper, authsims.RandomGenesisAccounts),
