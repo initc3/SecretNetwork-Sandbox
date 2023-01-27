@@ -149,7 +149,7 @@ func CallFakeDeliverTx(tx []byte) {
 	// prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
 	// prefixStore.Set(key, value)
 	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res %x\n", tx)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res %v\n", res)
 }
 
 func ChangeFakeDeliver(val bool) {

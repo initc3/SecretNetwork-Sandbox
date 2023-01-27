@@ -94,19 +94,6 @@ func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.F
 	return msg, nil
 }
 
-
-func parseSnapshotDBClearArgs(args []string, cliCtx client.Context, initFlags *flag.FlagSet) (types.MsgSnapshotDBClear, error) {
-	snapshotName := args[0]
-	fmt.Printf("nerla x/compute/client/cli/tx.go parseSnapshotDBClearArgs snapshot_name: %s\n", snapshotName)
-
-	// build and sign the transaction, then broadcast to Tendermint
-	msg := types.MsgSnapshotDBClear{
-		Sender:       cliCtx.GetFromAddress(),
-		SnapshotName: []byte(snapshotName),
-	}
-	return msg, nil
-}
-
 func FakeDeliverCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fake_deliver [true/false]",
