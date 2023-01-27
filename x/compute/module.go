@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"math/rand"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,6 +32,14 @@ var (
 
 // AppModuleBasic defines the basic application module used by the compute module.
 type AppModuleBasic struct{}
+
+func GetFakeDeliver() bool {
+	return keeper.FAKE_DELIVER
+}
+
+func SetBaseApp(app *baseapp.BaseApp) {
+	keeper.SetBaseApp(app)
+}
 
 func (b AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	RegisterCodec(amino)
@@ -106,7 +114,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) RegisterServices(configurator module.Configurator) {
 	types.RegisterMsgServer(configurator.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(configurator.QueryServer(), NewQuerier(am.keeper))
-	fmt.Printf("x/compute/module.go RegisterServices &k %p k %+v\n", &am.keeper, am.keeper)
 
 	// migrations go here (in the future when we have any)
 	// example:
