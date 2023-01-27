@@ -1,5 +1,5 @@
 #!/bin/bash
-set +x
+set -x
 
 docker-compose down
 set -e
@@ -41,3 +41,6 @@ done
 
 docker-compose stop localsecret-1
 ./logs.sh
+
+docker cp hacking-localsecret-2-1:/usr/bin/secretd ./secretd
+docker cp hacking-localsecret-2-1:/root/io-master-cert.der ./io-master-cert.der
