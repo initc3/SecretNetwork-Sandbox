@@ -63,6 +63,7 @@ type ResponseHandler interface {
 var snapshot_name string
 var FAKE_DELIVER bool = false
 var baseApp *baseapp.BaseApp
+var txDecoder sdk.TxDecoder
 
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
@@ -140,16 +141,38 @@ func NewKeeper(
 	return keeper
 }
 
+func SetTxDecoder(txd sdk.TxDecoder) {
+	txDecoder = txd
+}
+
 func SetBaseApp(app *baseapp.BaseApp) {
 	baseApp = app
 }
 
-func CallFakeDeliverTx(tx []byte) {
+func (k Keeper) CallFakeDeliverTx(ctx sdk.Context, tx []byte) {
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx tx %x\n", tx)
-	// prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
-	// prefixStore.Set(key, value)
+
 	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res %v\n", res)
+	dTx, err := txDecoder(tx)
+	if err != nil {
+		fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
+		panic(err)
+	}
+	sigTx, ok := dTx.(authsigning.SigVerifiableTx)
+	if !ok {
+		fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
+		panic(sdkerrors.ErrTxDecode)
+	}
+	for _, addr := range sigTx.GetSigners() {
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		fmt.Printf("nerla x/compute/internal/keeper/keeper.go setting seq %d\n", acc.GetSequence() - 2)
+		if err := acc.SetSequence(acc.GetSequence() - 2); err != nil {
+			panic(err)
+		}
+
+		k.accountKeeper.SetAccount(ctx, acc)
+	}
 }
 
 func ChangeFakeDeliver(val bool) {
@@ -212,6 +235,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 }
 
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go GetSignerInfo signer %s\n", signer.String())
 	tx := sdktx.Tx{}
 	println(fmt.Sprintf("tx bytes: %s", tx))
 	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
