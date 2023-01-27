@@ -84,7 +84,7 @@ func SnapshotDBCmd() *cobra.Command {
 
 func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.FlagSet) (types.MsgSnapshotDB, error) {
 	snapshotName := args[0]
-	fmt.Printf("nerla x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
+	// fmt.Printf("nerla x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgSnapshotDB{
