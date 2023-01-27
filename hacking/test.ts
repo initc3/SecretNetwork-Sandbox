@@ -5,6 +5,7 @@ import {
     fromBase64,
     fromUtf8,
     MsgExecuteContract,
+    MsgInstantiateContract,
     ProposalType,
     SecretNetworkClient,
     toBase64,
@@ -46,7 +47,6 @@ const contracts = {
         v1: new Contract("v1"),
     },
 };
-
 
 let v1Wasm: Uint8Array;
 
@@ -265,4 +265,155 @@ describe("QueryOld", () => {
         expect(result).toBe("init val 1");
     });
 });
+
+describe("Deploy", () => {
+    test("toy", async () => {
+        console.log("Deploying toy-swap contract...")
+        let contract_name = "contract-sienna-swap";
+        let wasm: Uint8Array = fs.readFileSync(
+            `${__dirname}/${contract_name}/contract.wasm`
+        ) as Uint8Array;
+        const contract = new Contract("v0");
+        contract.codeHash = toHex(sha256(wasm));
+
+        console.log("Storing contracts on secretdev-1...");
+        let account = accounts[0].secretjs;
+        let tx: Tx = await storeContracts(account, [wasm]);
+        contract.codeId = Number(
+            tx.arrayLog.find((x) => x.key === "code_id").value
+        );
+
+        console.log("Instantiating contracts on simple...");
+        let sender = accounts[0].address;
+        let code_hash = contract.codeHash;
+        tx = await account.tx.broadcast(
+             [
+              new MsgInstantiateContract({
+                sender: sender,
+                codeId: contract.codeId,
+                codeHash: code_hash,
+                initMsg: {
+                    init: {
+                        pool_a: 1000,
+                        pool_b: 2000,
+                    }
+                },
+                label: `v1-${Date.now()}`,
+              }),
+            ],
+            { gasLimit: 300_000 }
+          );
+        contract.address = tx.arrayLog.find(
+            (x) => x.key === "contract_address"
+        ).value;
+        contract.ibcPortId =
+            "wasm." + contract.address;
+        let contract_addr = contract.address;
+        try {
+            fs.writeFileSync('contractAddress.txt', contract_addr);
+        } catch (err) {
+            console.error(err);
+        }
+        try {
+            fs.writeFileSync('codeHash.txt', code_hash);
+        } catch (err) {
+            console.error(err);
+        }
+        console.log("Contract at ", contract_addr, code_hash)
+
+        const pool_a: any = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_a: {
+                },
+            },
+        });
+        console.log('pool_a', pool_a)
+        const pool_b: any = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_b: {
+                },
+            },
+        });
+        console.log('pool_b', pool_b)
+    });
+});
+
+describe("Swap", () => {
+    test("toy", async () => {
+        const contract_addr = fs.readFileSync('contractAddress.txt', 'utf8');
+        const code_hash = fs.readFileSync('codeHash.txt', 'utf8');
+        console.log("contract_addr", contract_addr)
+        console.log("code_hash", code_hash)
+
+        const sender_addr = accounts[0].address;
+        const account = accounts[0].secretjs;
+        const amt_a = 10;
+        const expected_amt_b = 0;
+        const recipient_addr = sender_addr;
+
+        let pool_a: any = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_a: {
+                },
+            },
+        });
+        console.log('pool_a', pool_a)
+        let pool_b: any = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_b: {
+                },
+            },
+        });
+        console.log('pool_b', pool_b)
+
+        const tx = await account.tx.compute.executeContract(
+            {
+                sender: sender_addr,
+                contractAddress: contract_addr,
+                codeHash: code_hash,
+                msg: {
+                    swap: {
+                        amt_a: amt_a,
+                        expected_amt_b: expected_amt_b,
+                        recipient: sender_addr,
+                    },
+                }
+            },
+            {gasLimit: 250_000}
+        );
+        console.log(tx)
+        if (tx.code !== TxResultCode.Success) {
+            console.error(tx.rawLog);
+        }
+        expect(tx.code).toBe(TxResultCode.Success);
+
+        pool_a = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_a: {
+                },
+            },
+        });
+        console.log('pool_a', pool_a)
+        pool_b = await account.query.compute.queryContract({
+            contractAddress: contract_addr,
+            codeHash: code_hash,
+            query: {
+                pool_b: {
+                },
+            },
+        });
+        console.log('pool_b', pool_b)
+    });
+});
+
 
