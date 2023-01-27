@@ -41,6 +41,10 @@ func SetBaseApp(app *baseapp.BaseApp) {
 	keeper.SetBaseApp(app)
 }
 
+func SetTxDecoder(txd sdk.TxDecoder) {
+	keeper.SetTxDecoder(txd)
+}
+
 func (b AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	RegisterCodec(amino)
 }
