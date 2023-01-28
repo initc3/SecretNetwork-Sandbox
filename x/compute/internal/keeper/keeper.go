@@ -152,31 +152,44 @@ func SetBaseApp(app *baseapp.BaseApp) {
 
 func (k Keeper) CallFakeDeliverTx(ctx sdk.Context, tx []byte) {
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx tx %x\n", tx)
+	dTx, err := txDecoder(tx)
+	if err != nil {
+		fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
+		panic(err)
+	}
+	
+	sigTx, ok := dTx.(authsigning.SigVerifiableTx)
+	if !ok {
+		fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
+		panic(sdkerrors.ErrTxDecode)
+	}
+	sigs, err := sigTx.GetSignaturesV2()
+	signerAddrs := sigTx.GetSigners()
 
 	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res.Code %v == %v res %v\n", res.Code, abci.CodeTypeOK, res)
-	if res.Code == abci.CodeTypeOK {
-		fmt.Printf("nerla x/compute/internal/keeper/keeper.go setting tx succeded resetting sequence numbers\n")
-		dTx, err := txDecoder(tx)
-		if err != nil {
-			fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
-			panic(err)
-		}
-		sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-		if !ok {
-			fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
-			panic(sdkerrors.ErrTxDecode)
-		}
-		for _, addr := range sigTx.GetSigners() {
-			acc := k.accountKeeper.GetAccount(ctx, addr)
-			fmt.Printf("nerla x/compute/internal/keeper/keeper.go setting seq %d\n", acc.GetSequence() - 2)
-			if err := acc.SetSequence(acc.GetSequence() - 2); err != nil {
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res.Code %v res %v\n", res.Code, res)
+
+	for _, addr := range sigTx.GetSigners() {
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		fmt.Printf("nerla x/compute/internal/keeper/keeper.go after address: %s seq %d\n", addr.String(), acc.GetSequence())
+	}
+
+	for i, sig := range sigs {
+		addr := signerAddrs[i]
+		acc := k.accountKeeper.GetAccount(ctx, addr)
+		fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence)
+		if snapshot_name != "" {
+			if err != nil {
 				panic(err)
 			}
-
+			if err := acc.SetSequence(sig.Sequence); err != nil {
+				panic(err)
+			}
+			fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s set to %d\n", addr.String(), acc.GetSequence())
 			k.accountKeeper.SetAccount(ctx, acc)
 		}
 	}
+
 }
 
 func ChangeFakeDeliver(val bool) {
