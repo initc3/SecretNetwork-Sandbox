@@ -1,6 +1,9 @@
 
 # Steps
 
+### Update git submodules
+`git submodule update --init --recursive`
+
 ### Install tests
 * node version should be `v14.17.0`
 * npm version should be `6.14.13`

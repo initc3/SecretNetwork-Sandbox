@@ -39,5 +39,8 @@ do
     sleep 5
 done
 
+docker cp hacking-localsecret-2-1:/usr/bin/secretd ./secretd
+docker cp hacking-localsecret-2-1:/root/io-master-cert.der ./io-master-cert.der
+
 docker-compose stop localsecret-1
 ./logs.sh
