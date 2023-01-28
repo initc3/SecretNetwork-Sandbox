@@ -319,4 +319,18 @@ COPY deployment/docker/localsecret/faucet/faucet_server.js .
 
 HEALTHCHECK --interval=5s --timeout=1s --retries=120 CMD bash -c 'curl -sfm1 http://localhost:26657/status && curl -s http://localhost:26657/status | jq -e "(.result.sync_info.latest_block_height | tonumber) > 0"'
 
-ENTRYPOINT ["./bootstrap_init.sh"]
+COPY hacking/scripts/startup.sh /root/scripts/startup.sh
+RUN chmod +x /root/scripts/startup.sh
+
+COPY hacking/scripts/bootstrap_init.sh /root/scripts/bootstrap_init.sh
+RUN chmod +x /root/scripts/bootstrap_init.sh
+
+COPY hacking/scripts/node_init.sh /root/scripts/node_init.sh
+RUN chmod +x /root/scripts/node_init.sh
+
+COPY hacking/scripts/rebuild.sh /root/scripts/rebuild.sh
+RUN chmod +x /root/scripts/rebuild.sh
+
+ENTRYPOINT ["/bin/bash", "/root/scripts/startup.sh"]
+
+#ENTRYPOINT ["./bootstrap_init.sh"]
