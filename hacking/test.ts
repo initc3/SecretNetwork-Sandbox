@@ -37,7 +37,7 @@ type Account = {
     secretjs: SecretNetworkClient;
 };
 
-const accountsCount = 2;
+const accountsCount = 3;
 
 // @ts-ignore
 // accounts on secretdev-1
@@ -56,6 +56,7 @@ beforeAll(async () => {
     const mnemonics = [
         "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
         "jelly shadow frog dirt dragon use armed praise universe win jungle close inmate rain oil canvas beauty pioneer chef soccer icon dizzy thunder meadow",
+        "chair love bleak wonder skirt permit say assist aunt credit roast size obtain minute throw sand usual age smart exact enough room shadow charge",
     ];
 
     // Create clients for all of the existing wallets in secretdev-1
@@ -268,7 +269,7 @@ describe("QueryOld", () => {
 
 async function query_balance(contract_addr, code_hash, token_type, user) {
     const user_addr = user.address
-    const queried_balance: any = await user.secretjs.query.compute.queryContract({
+    const queried_balance: any = await accounts[2].secretjs.query.compute.queryContract({
         contractAddress: contract_addr,
         codeHash: code_hash,
         query: {
@@ -282,11 +283,11 @@ async function query_balance(contract_addr, code_hash, token_type, user) {
 }
 
 async function set_balance(contract_addr, code_hash, token_type, user, balance) {
-    const account = user.secretjs
+    const account = accounts[2].secretjs
     const user_addr = user.address
     let tx = await account.tx.compute.executeContract(
         {
-            sender: user_addr,
+            sender: account.address,
             contractAddress: contract_addr,
             codeHash: code_hash,
             msg: {
@@ -339,14 +340,14 @@ describe("Deploy", () => {
         contract.codeHash = toHex(sha256(wasm));
 
         console.log("Storing contracts on secretdev-1...");
-        let account = accounts[0].secretjs;
+        let account = accounts[2].secretjs;
         let tx: Tx = await storeContracts(account, [wasm]);
         contract.codeId = Number(
             tx.arrayLog.find((x) => x.key === "code_id").value
         );
 
         console.log("Instantiating contracts on simple...");
-        let sender = accounts[0].address;
+        let sender = accounts[2].address;
         let code_hash = contract.codeHash;
         tx = await account.tx.broadcast(
              [
@@ -402,7 +403,7 @@ describe("Swap", () => {
         const sender_addr = accounts[0].address;
         const account = accounts[0].secretjs;
         const offer_amt = 10;
-        const expected_return_amt = 0;
+        const expected_return_amt = 100;
         const recipient_addr = sender_addr;
 
         let tx = await account.tx.compute.executeContract(
@@ -413,7 +414,7 @@ describe("Swap", () => {
                 msg: {
                     swap: {
                         token_type: "token_a",
-                        offer_amt: 200,
+                        offer_amt,
                         expected_return_amt,
                         receiver: sender_addr,
                     },
@@ -430,30 +431,45 @@ describe("Swap", () => {
         await query_balance(contract_addr, code_hash, "token_a", accounts[0])
         await query_balance(contract_addr, code_hash, "token_b", accounts[0])
 
-        tx = await account.tx.compute.executeContract(
-            {
-                sender: sender_addr,
-                contractAddress: contract_addr,
-                codeHash: code_hash,
-                msg: {
-                    swap: {
-                        token_type: "token_b",
-                        offer_amt: offer_amt * 2,
-                        expected_return_amt,
-                        receiver: sender_addr,
-                    },
-                }
-            },
-            {gasLimit: 250_000}
-        );
-        if (tx.code !== TxResultCode.Success) {
-            console.error(tx.rawLog);
-        }
-        expect(tx.code).toBe(TxResultCode.Success);
-
-        await query_pool(account, contract_addr, code_hash)
-        await query_balance(contract_addr, code_hash, "token_a", accounts[0])
-        await query_balance(contract_addr, code_hash, "token_b", accounts[0])
+        // tx = await account.tx.compute.executeContract(
+        //     {
+        //         sender: sender_addr,
+        //         contractAddress: contract_addr,
+        //         codeHash: code_hash,
+        //         msg: {
+        //             swap: {
+        //                 token_type: "token_b",
+        //                 offer_amt: offer_amt * 2,
+        //                 expected_return_amt,
+        //                 receiver: sender_addr,
+        //             },
+        //         }
+        //     },
+        //     {gasLimit: 250_000}
+        // );
+        // if (tx.code !== TxResultCode.Success) {
+        //     console.error(tx.rawLog);
+        // }
+        // expect(tx.c
+        // ode).toBe(TxResultCode.Success);
+        //
+        // await query_pool(account, contract_addr, code_hash)
+        // await query_balance(contract_addr, code_hash, "token_a", accounts[0])
+        // await query_balance(contract_addr, code_hash, "token_b", accounts[0])
     });
 });
 
+describe("QuerySwap", () => {
+    test("toy", async () => {
+        const contract_addr = fs.readFileSync('contractAddress.txt', 'utf8');
+        const code_hash = fs.readFileSync('codeHash.txt', 'utf8');
+        const account = accounts[2].secretjs;
+
+        await query_pool(account, contract_addr, code_hash)
+        await query_balance(contract_addr, code_hash, "token_a", accounts[0])
+        await query_balance(contract_addr, code_hash, "token_b", accounts[0])
+        await query_balance(contract_addr, code_hash, "token_a", accounts[1])
+        await query_balance(contract_addr, code_hash, "token_b", accounts[1])
+
+    });
+});

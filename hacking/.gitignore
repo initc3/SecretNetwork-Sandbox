@@ -5,3 +5,4 @@ node_modules
 Cargo.lock
 target
 contract.wasm
+passphrase.txt
