@@ -55,10 +55,58 @@ ENV MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551}
 
 WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
 
-RUN --mount=type=cache,target=/root/.cargo/registry  . /opt/sgxsdk/environment && env \
-    && MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
+#RUN --mount=type=cache,target=/root/.cargo/registry  . /opt/sgxsdk/environment && env \
+#    && MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
+RUN --mount=type=cache,target=/root/.cargo/registry . /opt/sgxsdk/environment && env && \
+        MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} \
+        VERSION=${VERSION} \
+        FEATURES=${FEATURES} \
+        FEATURES_U=${FEATURES_U} \
+        SGX_MODE=${SGX_MODE} \
+        make build-enclave
+
+#FROM compile-enclave as compile-libgo-cosmwasm
+#RUN --mount=type=cache,target=/root/.cargo/registry . /opt/sgxsdk/environment && env && \
+#RUN . /opt/sgxsdk/environment && \
+#        FEATURES_U=${FEATURES_U} \
+#        make build-libgo-cosmwasm
 
 ENTRYPOINT ["/bin/bash"]
+
+# ***************** COMPILE libgo_cosmwasm.so ************** #
+
+#FROM prepare-compile-enclave AS compile-libgo-cosmwasm
+FROM compile-enclave AS compile-libgo-cosmwasm
+
+#ARG BUILD_VERSION="v0.0.0"
+#ARG SGX_MODE=SW
+#ARG FEATURES
+#ARG FEATURES_U
+#ARG MITIGATION_CVE_2020_0551=LOAD
+#
+#ENV VERSION=${BUILD_VERSION}
+#ENV SGX_MODE=${SGX_MODE}
+#ENV FEATURES=${FEATURES}
+#ENV FEATURES_U=${FEATURES_U}
+#ENV MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551}
+#
+#WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
+
+#COPY --from=compile-enclave \
+#    /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so .
+#COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/lib .
+#RUN --mount=type=cache,target=/root/.cargo/registry . /opt/sgxsdk/environment && env && \
+RUN . /opt/sgxsdk/environment && \
+        FEATURES_U=${FEATURES_U} \
+        make build-libgo-cosmwasm
+
+ENTRYPOINT ["/bin/bash"]
+
+FROM scratch AS libgo_cosmwasm
+COPY --from=compile-libgo-cosmwasm /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
+#COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
+#COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
+
 
 # ***************** COMPILE SECRETD ************** #
 FROM $TEST AS compile-secretd
@@ -89,8 +137,6 @@ ENV CGO_LDFLAGS=${CGO_LDFLAGS}
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
-COPY cosmos-sdk cosmos-sdk
-
 # This is due to some esoteric docker bug with the underlying filesystem, so until I figure out a better way, this should be a workaround
 RUN true
 COPY x x
@@ -129,9 +175,9 @@ RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${
 RUN . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
 
 FROM scratch as secret-artifacts
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so .
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
+COPY --from=compile-libgo-cosmwasm /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
+COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
+COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
 
 # ******************* RELEASE IMAGE ******************** #
 FROM $SCRT_RELEASE_BASE_IMAGE as release-image
@@ -326,18 +372,4 @@ COPY deployment/docker/localsecret/faucet/faucet_server.js .
 
 HEALTHCHECK --interval=5s --timeout=1s --retries=120 CMD bash -c 'curl -sfm1 http://localhost:26657/status && curl -s http://localhost:26657/status | jq -e "(.result.sync_info.latest_block_height | tonumber) > 0"'
 
-COPY hacking/scripts/startup.sh /root/scripts/startup.sh
-RUN chmod +x /root/scripts/startup.sh
-
-COPY hacking/scripts/bootstrap_init.sh /root/scripts/bootstrap_init.sh
-RUN chmod +x /root/scripts/bootstrap_init.sh
-
-COPY hacking/scripts/node_init.sh /root/scripts/node_init.sh
-RUN chmod +x /root/scripts/node_init.sh
-
-COPY hacking/scripts/rebuild.sh /root/scripts/rebuild.sh
-RUN chmod +x /root/scripts/rebuild.sh
-
-ENTRYPOINT ["/bin/bash", "/root/scripts/startup.sh"]
-
-#ENTRYPOINT ["./bootstrap_init.sh"]
+ENTRYPOINT ["./bootstrap_init.sh"]

@@ -249,6 +249,57 @@ localsecret:
  			--target build-localsecret \
  			-t ghcr.io/scrtlabs/localsecret:${DOCKER_TAG} .
 
+devchamber:
+	DOCKER_BUILDKIT=1 docker build \
+			--build-arg FEATURES="${FEATURES},debug-print" \
+			--build-arg FEATURES_U=${FEATURES_U} \
+			--secret id=API_KEY,src=.env.dev \
+			--secret id=SPID,src=.env.dev \
+			--build-arg SGX_MODE=SW \
+			$(DOCKER_BUILD_ARGS) \
+			-f deployment/dockerfiles/Dockerfile \
+			--target compile-secretd \
+			-t ghcr.io/scrtlabs/devchamber:${DOCKER_TAG} .
+
+libgo_cosmwasm:
+	DOCKER_BUILDKIT=1 docker build \
+			--build-arg SECRET_NODE_TYPE=NODE \
+			--build-arg DB_BACKEND=goleveldb \
+			--build-arg CGO_LDFLAGS= \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
+			--build-arg SGX_MODE=HW \
+			--file deployment/dockerfiles/Dockerfile \
+			--target libgo_cosmwasm \
+			--output type=local,dest=tmp \
+			--tag libgo_cosmwasm .
+
+compile-enclave:
+	DOCKER_BUILDKIT=1 docker build \
+			--build-arg SECRET_NODE_TYPE=NODE \
+			--build-arg DB_BACKEND=goleveldb \
+			--build-arg CGO_LDFLAGS= \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
+			--build-arg SGX_MODE=HW \
+			--file deployment/dockerfiles/Dockerfile \
+			--target compile-enclave \
+			--tag compile-enclave .
+
+artifacts:
+	DOCKER_BUILDKIT=1 docker build \
+			--build-arg SECRET_NODE_TYPE=NODE \
+			--build-arg DB_BACKEND=goleveldb \
+			--build-arg CGO_LDFLAGS= \
+			--build-arg BUILD_VERSION=1.6.0-rc.2 \
+			--build-arg SGX_MODE=HW \
+			--file deployment/dockerfiles/Dockerfile \
+			--secret id=API_KEY,src=.env.local \
+			--secret id=SPID,src=.env.local \
+			--target secret-artifacts \
+			--output type=local,dest=release \
+			--tag secret-artifacts \
+			.
+
+
 build-ibc-hermes:
 	docker build -f deployment/dockerfiles/ibc/hermes.Dockerfile -t hermes:v0.0.0 deployment/dockerfiles/ibc --load
 
