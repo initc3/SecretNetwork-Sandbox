@@ -109,13 +109,13 @@ then
   # sleep 10 && chmod -R ugo+rwx ~/.secretd/* &
 else
   echo "Restarting node~~~~~~~~~~~~~"
-  curr_dir=$(pwd)
-  cd /go/src/github.com/enigmampc/SecretNetwork/
+#  curr_dir=$(pwd)
+#  cd /go/src/github.com/enigmampc/SecretNetwork/
   # make build_cli
-  make build_local_no_rust
-  cp secretd /usr/bin/secretd
-  chmod +x secretd
-  cd $curr_dir
+#  make build_local_no_rust
+#  cp secretd /usr/bin/secretd
+#  chmod +x secretd
+#  cd $curr_dir
   # PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   # sed -i 's/persistent_peers = "'$PERSISTENT_PEERS'"/persistent_peers = ""/g' ~/.secretd/config/config.toml
   sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
