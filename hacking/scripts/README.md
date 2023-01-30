@@ -8,6 +8,7 @@ docker system prune
 sudo ./start_node.sh
 
 ./node_modules/.bin/jest -t Setup
+sudo rm -rf backup
 mkdir backup
 sudo cp -r secretd-2/* backup/
 
@@ -15,21 +16,14 @@ sudo vim backup/victim_key
 sudo ./restart_node.sh
 ```
 
-Update node with victim balance key specified and rebuild the node
-```
-./rebuild_node.sh
-```
-
 Copy the backup folder to secretd-2 everytime restart the node
 
 
 
 victim_key: 
-27bd751a70f61538ec9b7cb2c627acdf8d1f8ccd3d67b35bd500042de4330780
+317976d9fb06312ffc915651efc3c66f679e7b7c0e19ef4043b5c660f0cc8526
 codeHash: 
 22e8cdd3fddb5d25dfbb4e90dd904b6068297ab58ed45cfdda51552b18f9e854
 contractAddress: 
 secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg
-
-
 
