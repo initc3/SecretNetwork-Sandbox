@@ -10,6 +10,7 @@ rm -rf secretd-2
 
 mkdir -p secretd-1
 mkdir -p secretd-2
+touch secretd-2/victim_key
 mkdir -p genesis
 
 docker-compose up localsecret-1 -d

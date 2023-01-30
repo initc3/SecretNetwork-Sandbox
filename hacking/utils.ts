@@ -203,6 +203,7 @@ export async function storeContracts(
 
 export async function instantiateContracts(
   account: SecretNetworkClient,
+  account2: SecretNetworkClient,
   contracts: Contract[]
 ) {
   // console.log("Instantiate account", account)
@@ -212,7 +213,16 @@ export async function instantiateContracts(
         sender: account.address,
         codeId: contracts[0].codeId,
         codeHash: contracts[0].codeHash,
-        initMsg: { nop: {} },
+        initMsg: { 
+            name: "sec-sec",
+            symbol: "SECSEC",
+            decimals: 8,
+            initial_balances: [
+                {address: account.address, amount: "10000"},
+                {address: account2.address, amount: "10000"},
+            ],
+            prng_seed: "MDAwMA==",
+        },
         label: `v1-${Date.now()}`,
       }),
       // new MsgInstantiateContract({
