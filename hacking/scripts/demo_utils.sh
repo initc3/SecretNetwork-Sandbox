@@ -1,3 +1,9 @@
+ACC0='secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03'
+ACC1='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
+ACC2='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
+ACC3='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
+BACKUP='/root/backup_snip20'
+
 wait_for_tx() {
   set +e
   set +x
@@ -32,6 +38,11 @@ init_contract() {
 generate_and_sign_tx() {
   $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only $1 --from $2 --enclave-key io-master-key.txt --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$3.json
   $SECRETD tx sign tx_$3.json --chain-id $CHAIN_ID --from $2 -y > tx_$3_sign.json
+}
+
+generate_and_sign_transfer() {
+    $SECRETD tx compute execute $1 --generate-only "{\"transfer\":{\"recipient\":\"$4\", \"amount\": \"$5\", \"memo\":\"\"}}" --from $3 --enclave-key io-master-cert.der --code-hash $2 --label $UNIQUE_LABEL -y -broadcast-mode sync > tx_$6.json
+  $SECRETD tx sign tx_$6.json --chain-id $CHAIN_ID --from $3 -y > tx_$6_sign.json
 }
 
 simulate_tx() {
