@@ -139,6 +139,8 @@ beforeAll(async () => {
 describe("BeforeAll", () => {
     test("v1", async () => {
         console.log("Setup wallets.")
+        console.log("addr0: " + accounts[0].address)
+        console.log("addr1: " + accounts[1].address)
     });
 });
 
@@ -189,14 +191,14 @@ try {
     const data = fs.readFileSync('contractAddress.txt', 'utf8');
     addr = data;
 } catch (err) {
-    // console.log(err)
+    console.log(err)
 }
 
 try {
     const data = fs.readFileSync('codeHash.txt', 'utf8');
     codehash = data;
 } catch (err) {
-    // console.log(err)
+    console.log(err)
 }
 
 describe("TransferComplete", () => {
@@ -210,7 +212,7 @@ describe("TransferComplete", () => {
                 msg: {
                     transfer: {
                         recipient: accounts[0].address,
-                        amount: "9",
+                        amount: "10",
                         memo: "",
                     },
                 }
