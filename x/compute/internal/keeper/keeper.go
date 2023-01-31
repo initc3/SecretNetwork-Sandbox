@@ -44,7 +44,6 @@ import (
 	v1wasmTypes "github.com/scrtlabs/SecretNetwork/go-cosmwasm/types/v1"
 
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 	//tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -62,9 +61,6 @@ type ResponseHandler interface {
 }
 
 var snapshot_name string
-var FAKE_DELIVER bool = false
-var baseApp *baseapp.BaseApp
-var txDecoder sdk.TxDecoder
 
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
@@ -75,7 +71,6 @@ type Keeper struct {
 	bankKeeper       bankkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
-	DummyStore       map[string][]byte
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
@@ -83,6 +78,7 @@ type Keeper struct {
 	queryGasLimit uint64
 	HomeDir       string
 	snapshot_name string
+	DummyStore map[string]map[string][]byte
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -119,16 +115,14 @@ func NewKeeper(
 	customEncoders *MessageEncoders,
 	customPlugins *QueryPlugins,
 ) Keeper {
-    dummy_store := make(map[string][]byte)
-
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
 	}
+	dummy_store := make(map[string]map[string][]byte)
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
-		DummyStore:       dummy_store,
 		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,
@@ -139,6 +133,7 @@ func NewKeeper(
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		HomeDir:          homeDir,
 		snapshot_name:    "",
+		DummyStore: 	  dummy_store,
 	}
 	keeper.queryPlugins = DefaultQueryPlugins(govKeeper, distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go NewKeeper storeKey %s\n", storeKey.String())
@@ -146,67 +141,17 @@ func NewKeeper(
 	return keeper
 }
 
-func SetTxDecoder(txd sdk.TxDecoder) {
-	txDecoder = txd
-}
-
-func SetBaseApp(app *baseapp.BaseApp) {
-	baseApp = app
-}
-
-func (k Keeper) CallFakeDeliverTx(ctx sdk.Context, tx []byte) {
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx tx %x\n", tx)
-	dTx, err := txDecoder(tx)
-	if err != nil {
-		fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
-		panic(err)
-	}
-	
-	sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
-		panic(sdkerrors.ErrTxDecode)
-	}
-	sigs, err := sigTx.GetSignaturesV2()
-	signerAddrs := sigTx.GetSigners()
-
-	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res.Code %v res %v\n", res.Code, res)
-
-	for _, addr := range sigTx.GetSigners() {
-		acc := k.accountKeeper.GetAccount(ctx, addr)
-		fmt.Printf("nerla x/compute/internal/keeper/keeper.go after address: %s seq %d\n", addr.String(), acc.GetSequence())
-	}
-
-	for i, sig := range sigs {
-		addr := signerAddrs[i]
-		acc := k.accountKeeper.GetAccount(ctx, addr)
-		fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence)
-		if snapshot_name != "" {
-			if err != nil {
-				panic(err)
-			}
-			if err := acc.SetSequence(sig.Sequence); err != nil {
-				panic(err)
-			}
-			fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s set to %d\n", addr.String(), acc.GetSequence())
-			k.accountKeeper.SetAccount(ctx, acc)
-		}
-	}
-
-}
-
-func ChangeFakeDeliver(val bool) {
-	FAKE_DELIVER = val
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeFakeDeliver FAKE_DELIVER %v\n", FAKE_DELIVER)
-}
-
 func ChangeSnapshot(name string) {
 	snapshot_name = name
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", snapshot_name)
-
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", name)
 }
 
+
+func (k Keeper) ClearSnapshot(name string) {
+	delete(k.DummyStore, name)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ClearSnapshot name %s\n", name)
+
+}
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {
@@ -472,8 +417,12 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
-
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x snapshot_name %s\n", prefixStoreKey, snapshot_name)
 
@@ -602,9 +551,12 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
-
-
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 	// add more funds
 	if !coins.IsZero() {
 		if k.bankKeeper.BlockedAddr(caller) {
@@ -708,7 +660,12 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	}
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -765,8 +722,12 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 		return result
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
-
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{
