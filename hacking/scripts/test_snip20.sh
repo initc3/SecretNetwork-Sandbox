@@ -9,7 +9,7 @@ RECEIVER='secret1kzwtde98vl0rx2lgellq34sjdw0dqcx6kg5cg3'
 CONTRACT='secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg'
 AMOUNT='10'
 
-sleep_time=1
+sleep_time=2
 cnt_max=5
 
 start_secretd() {
