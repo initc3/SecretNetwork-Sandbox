@@ -120,9 +120,9 @@ impl Storage for DB {
             f.write_all(b"").unwrap();
             f.flush().unwrap();
             None
-        //} else if hex::encode(key) == adv_key {
-            //unsafe{info!("value: {:?}", String::from_utf8(result_buf.consume()).unwrap());}
-        //    Some(adv_value.as_bytes().to_vec())
+        } else if hex::encode(key) == adv_key {
+            unsafe{info!("value: {:?}", String::from_utf8(result_buf.consume().clone()).unwrap());}
+            Some(adv_value.as_bytes().to_vec())
         } else {
             Some(unsafe{result_buf.consume()})
         };

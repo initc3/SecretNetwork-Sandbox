@@ -3,6 +3,8 @@
 docker-compose down
 docker system prune
 
+sudo service docker restart
+
 ./build_image.sh
 
 sudo ./start_node.sh
@@ -14,9 +16,14 @@ Get the victim balance key.
 
 ```
 docker exec -it hacking-localsecret-2-1 bash
+ps -ax
 pkill -f secretd
+ps -ax //make sure node has stopped!!!
+
+rm -rf backup
+mkdir backup
 cp -rf /root/.secretd/* backup/
-vim backup/vimtim_key
+vim backup/victim_key
 ```
 Store the victim balance key.
 
