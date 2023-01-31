@@ -9,17 +9,8 @@ set -euo pipefail
 set -x
 export RPC_URL="localsecret-1:26657"
 export CHAINID="secretdev-1"
-  # curr_dir=$(pwd)
-  # cd /go/src/github.com/enigmampc/SecretNetwork/
-  # # make build_cli
-  # ls
-  # make build_local_no_rust
-  # cp secretd /usr/bin/secretd
-  # chmod +x secretd
-  # cd $curr_dir
-file=/root/.secretd/config/started.txt
-if [ ! -e "$file" ]
-then
+file=/root/.secretd/config/genesis.json
+if [ ! -f "$file" ];then
   echo "Starting from scratch~~~~~~~~~~~~~"
 
   mkdir -p /root/.secretd/.node
@@ -39,17 +30,14 @@ then
   echo $d_mnemonic | secretd keys add d --recover
 
   mkdir -p /root/.secretd/.node
-
+  #PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   secretd init "$(hostname)" --chain-id $CHAINID || true
-
-  PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
+  eval PEERID=$(secretd status | jq .NodeInfo.id)
+  PERSISTENT_PEERS="$PEERID@localsecret-1:26656"
   sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
   sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.secretd/config/config.toml
   sed -i 's/trust_period = "168h0m0s"/trust_period = "168h"/g' ~/.secretd/config/config.toml
   echo "Set persistent_peers: $PERSISTENT_PEERS"
-
-  echo "Waiting for bootstrap to start..."
-  sleep 5
 
   secretd q block 1
 
@@ -76,10 +64,10 @@ then
 
   secretd configure-secret node-master-cert.der "$SEED"
 
-  cp /tmp/genesis/genesis.json /root/.secretd/config/genesis.json
+  cp /genesis/genesis.json /root/.secretd/config/genesis.json
   
   secretd validate-genesis
-  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &> /root/out &
+  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
   PID=$!
   echo "waiting for state sync to end.."
   sleep 5
@@ -90,46 +78,15 @@ then
       sleep 5
       state_sync=$(secretd status | jq .SyncInfo.catching_up)
       echo "state_sync $state_sync"
-  done
+  done 
   cat /root/out
-  # echo "joininng as validator now"
-  # secretd tx staking create-validator -y \
-  #   --amount=100000000uscrt \
-  #   --pubkey=$(secretd tendermint show-validator) \
-  #   --details="To infinity and beyond!" \
-  #   --commission-rate="0.10" \
-  #   --commission-max-rate="0.20" \
-  #   --commission-max-change-rate="0.01" \
-  #   --min-self-delegation="1" \
-  #   --moniker="hack0r" \
-  #   --broadcast-mode sync \
-  #   --from=b > out2
-  # tx_hash="$(cat out2 | jq -r '.txhash')"
-  # sleep 10
-  # secretd q tx "$tx_hash" | jq .
-  # secretd q staking validators | grep moniker | jq .
-  # secretd q staking validators | grep moniker
-  echo "started" > $file
   secretd config node "http://localhost:26657"
-  # hack to change permission of data after starting node
-  # sleep 10 && chmod -R ugo+rwx ~/.secretd/* &
+  kill $PID
+  while [ $(secretd status) ];
+  do
+    sleep 5
+  done  
 else
-  echo "Restarting node~~~~~~~~~~~~~"
-  curr_dir=$(pwd)
-  cd /go/src/github.com/enigmampc/SecretNetwork/
-  # make build_cli
-  ls
-  make build_local_no_rust
-  cp secretd /usr/bin/secretd
-  chmod +x secretd
-  cd $curr_dir
-  # PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
-  # sed -i 's/persistent_peers = "'$PERSISTENT_PEERS'"/persistent_peers = ""/g' ~/.secretd/config/config.toml
-  sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
-  sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
-  echo "Set pex = false"
-  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
+  echo "$file exists restarting node"
 fi
-# sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
-# echo "Set pex = false"
-# RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
+RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
