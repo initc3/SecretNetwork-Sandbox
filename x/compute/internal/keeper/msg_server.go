@@ -19,28 +19,27 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 	return &msgServer{keeper: k}
 }
 
-func (m msgServer) SnapshotDB(goCtx context.Context, msg *types.MsgSnapshotDB) (*types.MsgSnapshotDBResponse, error) {
-	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go SnapshotDB snapshot_name: %s\n", msg.SnapshotName)
+func (m msgServer) StartSnapshot(goCtx context.Context, msg *types.MsgStartSnapshot) (*types.MsgResponse, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go StartSnapshot snapshot_name: %s\n", msg.SnapshotName)
 	ChangeSnapshot(string(msg.SnapshotName))
-	return &types.MsgSnapshotDBResponse{
+	return &types.MsgResponse{
 		Result: true,
 	}, nil
 }
 
-func (m msgServer) FakeDeliver(goCtx context.Context, msg *types.MsgFakeDeliver) (*types.MsgFakeDeliverResponse, error) {
-	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go FakeDeliver fake_deliver: %v\n", msg.FakeDeliver)
-	ChangeFakeDeliver(msg.FakeDeliver)
-	return &types.MsgFakeDeliverResponse{
+func (m msgServer) ClearSnapshot(goCtx context.Context, msg *types.MsgClearSnapshot) (*types.MsgResponse, error) {
+	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go ClearSnapshot snapshot_name: %s\n", msg.SnapshotName)
+	m.keeper.ClearSnapshot(string(msg.SnapshotName))
+	return &types.MsgResponse{
 		Result: true,
 	}, nil
 }
 
-func (m msgServer) CallFakeDeliver(goCtx context.Context, msg *types.MsgCallFakeDeliver) (*types.MsgCallFakeDeliverResponse, error) {
-	// fmt.Printf("nerla x/compute/internal/keeper/msg_server.go CallFakeDeliver tx: %x\n", msg.Tx)
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	m.keeper.CallFakeDeliverTx(ctx, msg.Tx)
-	return &types.MsgCallFakeDeliverResponse{
-		Result: true,
+func (m msgServer) SimulateTx(goCtx context.Context, msg *types.MsgSimulateTx) (*types.MsgResponse, error) {
+	fmt.Printf("nerla SHOULD NOT BE REACHED x/compute/internal/keeper/msg_server.go SimulateTx tx: %x\n", msg.Tx)
+	// ctx := sdk.UnwrapSDKContext(goCtx)
+	return &types.MsgResponse{
+		Result: false,
 	}, nil
 }
 
