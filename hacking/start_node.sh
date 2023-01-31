@@ -39,7 +39,7 @@ do
     sleep 5
 done
 
-docker-compose stop localsecret-1
+#docker-compose stop localsecret-1
 ./logs.sh
 
 docker cp hacking-localsecret-2-1:/usr/bin/secretd ./secretd

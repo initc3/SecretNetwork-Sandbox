@@ -86,23 +86,23 @@ then
 
   kill $PID  
   cat output
-  echo "joininng as validator now"
-  secretd tx staking create-validator -y \
-    --amount=100000000uscrt \
-    --pubkey=$(secretd tendermint show-validator) \
-    --details="To infinity and beyond!" \
-    --commission-rate="0.10" \
-    --commission-max-rate="0.20" \
-    --commission-max-change-rate="0.01" \
-    --min-self-delegation="1" \
-    --moniker="hack0r" \
-    --broadcast-mode block \
-    --from=b > out2
-  tx_hash="$(cat out2 | jq -r '.txhash')"
-  sleep 10
-  secretd q tx "$tx_hash" | jq .
-  secretd q staking validators | grep moniker | jq .
-  secretd q staking validators | grep moniker
+#  echo "joininng as validator now"
+#  secretd tx staking create-validator -y \
+#    --amount=100000000uscrt \
+#    --pubkey=$(secretd tendermint show-validator) \
+#    --details="To infinity and beyond!" \
+#    --commission-rate="0.10" \
+#    --commission-max-rate="0.20" \
+#    --commission-max-change-rate="0.01" \
+#    --min-self-delegation="1" \
+#    --moniker="hack0r" \
+#    --broadcast-mode block \
+#    --from=b > out2
+#  tx_hash="$(cat out2 | jq -r '.txhash')"
+#  sleep 10
+#  secretd q tx "$tx_hash" | jq .
+#  secretd q staking validators | grep moniker | jq .
+#  secretd q staking validators | grep moniker
   echo "started" > $file
   secretd config node "http://localhost:26657"
   # hack to change permission of data after starting node
