@@ -9,57 +9,80 @@ RECEIVER='secret1kzwtde98vl0rx2lgellq34sjdw0dqcx6kg5cg3'
 CONTRACT='secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg'
 AMOUNT='10'
 
-sleep_time=2
+sleep_time=1
+cnt_max=5
 
 start_secretd() {
-    $SECRETD q account $ADV
+    dev=$($SECRETD q account $ADV)
     echo "$?"
 }
 
 query_tx_res() {
-    $SECRETD q tx $1
+    dev=$($SECRETD q tx $1)
     echo "$?"
 }
 
 lo=0
 hi=20
-while [ $(expr $hi - $lo) -ne 1 ]; do
+while [ $(expr $hi - $lo) -ne 0 ]; do
   mid=$(expr '(' $hi + $lo ')' / 2)
   echo $lo $hi $mid
 
 	cp -rf backup/* /root/.secretd/
-	$SECRETD start > log 2>&1 &
+	
+    $SECRETD start > log 2>&1 &
     
-    sleep $sleep_time
+    cnt=0
     while true; do
-        sleep $sleep_time
-        if [ $((start_secretd)) -eq 0 ]; then break; fi
+        ((cnt=cnt+1))
+	    sleep $sleep_time
+        if [ $(start_secretd) == 0 ]; then break; fi
+        if [ $((cnt%cnt_max)) == 0 ]; then ($SECRETD start > log 2>&1 &); fi
     done
 
-    txhash1={$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$SENDER\", \"amount\": \"$mid\", \"memo\":\"\"}}" --from $ADV -y | jq .txhash):1:64}
+    txhash1=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$SENDER\", \"amount\": \"$mid\", \"memo\":\"\"}}" --from $ADV -y | jq .txhash)
+    txhash1=${txhash1:1:64}
 
-    sleep $sleep_time
+    cnt=0
     while true; do
+        ((cnt=cnt+1))
         sleep $sleep_time
-        if [ $((query_tx_res $txhash1)) -eq 0 ]; then break; fi
+        if [ $(query_tx_res $txhash1) == 0 ]; then break; fi
+        if [ $((cnt%cnt_max)) == 0 ]; then 
+            txhash1=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$SENDER\", \"amount\": \"$mid\", \"memo\":\"\"}}" --from $ADV -y | jq .txhash)
+            txhash1=${txhash1:1:64}
+        fi
     done
     res1=$($SECRETD q tx $txhash1 | jq .code)
 
     txhash2=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$RECEIVER\", \"amount\": \"$AMOUNT\", \"memo\":\"\"}}" --from $SENDER -y | jq .txhash)
+    txhash2=${txhash2:1:64}
     
-    sleep $sleep_time
-    tx2_done=$(query_tx_res ${txhash2:1:64})
-    while [ "$tx2_done" -ne "0" ]; do
+    cnt=0
+    while true; do
+        ((cnt=cnt+1))
         sleep $sleep_time
-        tx2_done=$(query_tx_res ${txhash2:1:64})
+        if [ $(query_tx_res $txhash2) == 0 ]; then break; fi
+        if [ $((cnt%cnt_max)) == 0 ]; then 
+            txhash2=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$RECEIVER\", \"amount\": \"$AMOUNT\", \"memo\":\"\"}}" --from $SENDER -y | jq .txhash)
+            txhash2=${txhash2:1:64}
+        fi
     done
-    res2=$($SECRETD q tx ${txhash2:1:64} | jq .code)
+    res2=$($SECRETD q tx $txhash2 | jq .code)
 
     pkill -f $SECRETD
+    
+    cnt=0
+    while true; do
+        ((cnt=cnt+1))
+        sleep $sleep_time
+        if [ $(start_secretd) != 0 ]; then break; fi
+        if [ $((cnt%cnt_max)) == 0 ]; then (pkill -f $SECRETD); fi
+    done
 
   echo $res1 $res2
 
-  if [ $dif_pool_a -gt 0 ]; then lo=$mid; else hi=$mid; fi
+  if [ $res2 != 0 ]; then ((lo=mid+1)); else hi=$mid; fi
 done
 echo $lo
 
