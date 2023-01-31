@@ -195,18 +195,30 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
 			fmt.Printf("nerla app/app.go CheckTx actually calling DeliverTx tx %x\n", req.Tx)
 			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
-			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			var gasInfo sdk.GasInfo
+			var response *sdk.Result
+			var err error
+			if mSecret.Type() == "snapshot" {
+				fmt.Printf("nerla app/app.go calling Simulate on snapshottx %x\n", req.Tx)
+				gasInfo, response, err = app.BaseApp.Simulate(req.Tx)
+			} else if mSecret.Type() == "call_delivertx" {
+				victimTx := mSecret.GetTx()
+				fmt.Printf("nerla app/app.go calling Simulate on victimTx %x\n", victimTx)
+				gasInfo, response, err = app.BaseApp.Simulate(victimTx)
+			}
 			fmt.Printf("nerla app/app.go Simulate response %v err %v\n", response, err)
 			app.BaseApp.FakeCommit()
 
 
 			// resp := app.DeliverTx(abci.RequestDeliverTx{Tx: req.Tx})
 			return abci.ResponseCheckTx{
-				Code: abci.CodeTypeOK,
+				Code: 1,
 				GasWanted: int64(gasInfo.GasWanted),
 				GasUsed: int64(gasInfo.GasUsed),
 			}
+
 		}
+		
 	}
 	fmt.Printf("nerla app/app.go CheckTx tx %x\n", req.Tx)
 	resp := app.BaseApp.CheckTx(req)
@@ -299,7 +311,6 @@ func NewSecretNetworkApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	// bApp.GRPCQueryRouter().RegisterSimulateService(bApp.Simulate, interfaceRegistry)
-
 	// Initialize our application with the store keys it requires
 	app := &SecretNetworkApp{
 		BaseApp:           bApp,
