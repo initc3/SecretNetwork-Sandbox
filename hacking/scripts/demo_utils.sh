@@ -1,10 +1,10 @@
-VICTIM='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
-ADV='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
-ADMIN='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
-UNIQUE_LABEL=$(date '+%Y-%m-%d-%H:%M:%S')
+VICTIM="secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf"
+ADV="secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq"
+ADMIN="secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne"
+UNIQUE_LABEL=$(date "+%Y-%m-%d-%H:%M:%S")
 CONTRACT_LOC=contract-sienna-swap
 SECRETD=secretd
-CHAIN_ID='secretdev-1'
+CHAIN_ID="secretdev-1"
 
 wait_for_tx() {
   set +e
@@ -19,21 +19,21 @@ wait_for_tx() {
 }
 
 init_contract() {
-  cd $CONTRACT_LOC
-  make
-  cd ..
+#  cd $CONTRACT_LOC
+#  make
+#  cd ..
 
   echo "Storing contract"
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/contract.wasm --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
   wait_for_tx $STORE_TX_HASH
-  eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq '.logs[].events[].attributes[] | select(.key=="code_id") | .value ')
+  eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key==\"code_id\") | .value ")
 
   echo "Instantiating contract"
   INIT_TX=$($SECRETD tx compute instantiate $CODE_ID "{\"init\":{\"pool_a\":$1,\"pool_b\":$2}}" --from $ADMIN --label $UNIQUE_LABEL -y --broadcast-mode sync )
   eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
   wait_for_tx $INIT_TX_HASH
-  eval CONTRACT_ADDRESS=$($SECRETD q tx $INIT_TX_HASH | jq '.logs[].events[] | select(.type=="instantiate") | .attributes[] | select(.key=="contract_address") | .value ')
+  eval CONTRACT_ADDRESS=$($SECRETD q tx $INIT_TX_HASH | jq ".logs[].events[] | select(.type==\"instantiate\") | .attributes[] | select(.key==\"contract_address\") | .value ")
   echo $CONTRACT_ADDRESS > contractAddress.txt
 
   eval CODE_HASH=$($SECRETD q compute contract-hash $CONTRACT_ADDRESS)
@@ -61,9 +61,7 @@ generate_and_sign_tx() {
 }
 
 deliver_tx() {
-  TX=$($SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN -y)
-  eval TX_HASH=$(echo $TX | jq .txhash )
-  wait_for_tx $TX_HASH
+  $SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN -y > /dev/null
 }
 
 execute_tx() {
@@ -73,15 +71,13 @@ execute_tx() {
 }
 
 set_snapshot() {
-  TX=$($SECRETD tx compute snapshot --from $ADMIN "snapshot$1" -y --broadcast-mode sync)
-  eval TX_HASH=$(echo $TX | jq .txhash )
-  wait_for_tx $TX_HASH
+  $SECRETD tx compute snapshot --from $ADMIN "snapshot$1" -y --broadcast-mode sync > /dev/null
+  echo "set_snapshot to snapshot$1"
 }
 
 reset_snapshot() {
-  TX=$($SECRETD tx compute snapshot --from $ADMIN "" -y --broadcast-mode sync)
-  eval TX_HASH=$(echo $TX | jq .txhash )
-  wait_for_tx $TX_HASH
+  $SECRETD tx compute snapshot --from $ADMIN "" -y --broadcast-mode sync
+  echo "reset_snapshot to default dbstore"
 }
 
 query_pool() {
@@ -97,7 +93,7 @@ broadcast_tx() {
 
 query_balance() {
   balance=$($SECRETD q compute query $CONTRACT_ADDRESS "{\"balance\":{\"token_type\":\"$1\",\"user\":\"$2\"}}")
-  echo 'query_balance' $1 $2 $balance
+  echo "query_balance" $1 $2 $balance
 }
 
 query_balances() {
