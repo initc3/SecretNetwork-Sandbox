@@ -77,7 +77,6 @@ type Keeper struct {
 	messenger        Messenger
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
-	DummyStore map[string][]byte
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -120,11 +119,9 @@ func NewKeeper(
 	if err != nil {
 		panic(err)
 	}
-	dummy_store := make(map[string][]byte)
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
-		DummyStore:       dummy_store,
 		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,

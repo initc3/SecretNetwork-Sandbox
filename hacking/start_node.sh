@@ -1,12 +1,12 @@
 #!/bin/bash
+
+set -e
 set -x
 
 docker-compose down
-set -e
 
 rm -rf secretd-1
 rm -rf secretd-2
-
 
 mkdir -p secretd-1
 mkdir -p secretd-2
@@ -26,7 +26,6 @@ do
     progs=$(docker-compose exec localsecret-2 ps -ef)
     ./logs.sh    
     sleep 5
-
 done
 
 #waiting for blocks to start being produced before turning off localsecret-1
@@ -39,5 +38,4 @@ do
     sleep 5
 done
 
-# docker-compose stop localsecret-1
 ./logs.sh

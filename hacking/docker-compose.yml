@@ -31,7 +31,6 @@ services:
       SECRET_NODE_TYPE: BOOTSTRAP
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
-      # - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ./secretd-1:/root/.secretd/
       - ./scripts/:/root/scripts
 
@@ -67,16 +66,13 @@ services:
       DUMMY_STORE: "true"
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
-      # - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
-      # - ../go-cosmwasm/api:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/api
-      # - ../proto:/go/src/github.com/enigmampc/SecretNetwork/proto
       - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./scripts/:/root/scripts
       - ./secretd-2:/root/.secretd/
       - ./genesis:/tmp/genesis
       - ./contract-simple:/root/contract-simple
-      - ./contract-sienna-swap:/root/contract-sienna-swap
+      - ./contract-toy-swap:/root/contract-toy-swap
       - ../cosmos-sdk:/go/src/github.com/enigmampc/SecretNetwork/cosmos-sdk
 secrets:
   API_KEY:

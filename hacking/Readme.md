@@ -4,14 +4,7 @@
 ### Update git submodules
 `git submodule update --init --recursive`
 
-### Install tests
-* node version should be `v14.17.0`
-* npm version should be `6.14.13`
-* do not change `package-lock.json`
-
-`npm install`
-
-### Build simple contract
+### Build contracts
 
 `make`
 
@@ -23,94 +16,88 @@
 
 `./start_node.sh`
 
+### Setup environment for emo
 
-### Rebuild 
+`./setup_simple.sh`
 
-Rebuild `go-cosmwasm/src` and `x/` and restart node (after `./start_node.sh` was run)
+### Run mev demo on local network
 
-* From outside docker container
-
-`./rebuild_node.sh`
-
-* From inside docker container
-
-```bash
-docker-compose exec localsecret-2 bash
-$ ./scripts/rebuild.sh &> /root/out &
-$ cat out
-```
+`docker exec -it hacking-localsecret-2-1 bash "./scripts/run_mev_demo_local.sh"`
 
 
-### Tests
-* Test simple functionality of delivertx
+[//]: # ()
+[//]: # (### Rebuild )
 
-`docker-compose exec localsecret-2 ./scripts/test_delivertx.sh`
+[//]: # ()
+[//]: # (Rebuild `go-cosmwasm/src` and `x/` and restart node &#40;after `./start_node.sh` was run&#41;)
 
-* Test simple functionality of dummy_store
+[//]: # ()
+[//]: # (* From outside docker container)
 
-typescript verion:
+[//]: # ()
+[//]: # (`./rebuild_node.sh`)
 
-`./test_dummy_store.sh`
+[//]: # ()
+[//]: # (* From inside docker container)
 
-secretd version:
+[//]: # ()
+[//]: # (```bash)
 
-`docker-compose exec localsecret-2 ./scripts/test_dummy_store_cli.sh`
+[//]: # (docker-compose exec localsecret-2 bash)
 
-#### IntegrationTests in test.ts
+[//]: # ($ ./scripts/rebuild.sh &> /root/out &)
 
-* Deploy & instantiate new contract
+[//]: # ($ cat out)
 
-`./node_modules/.bin/jest -t Setup`
+[//]: # (```)
 
-* Query value stored in contract and check if it is the initial value instatiated in the contract
+[//]: # ()
+[//]: # (* shutdown containers)
 
-`./node_modules/.bin/jest -t QueryOld`
+[//]: # ()
+[//]: # (`docker-compose down`)
 
-* Update value stored in contract
-  
-`./node_modules/.bin/jest -t Update`
+[//]: # ()
+[//]: # (* delete network)
 
-* Query value stored in contract and check if it is the update value 
+[//]: # ()
+[//]: # (`docker network rm hacking_default`)
 
-`./node_modules/.bin/jest -t QueryNew`
+[//]: # ()
+[//]: # (### Other)
 
+[//]: # (#### Update protobuf for rpc calls)
 
-### Cleanup
+[//]: # ()
+[//]: # (* Update proto spec and other relevant files)
 
-* remove container volumes
+[//]: # ()
+[//]: # (    * [msg.proto]&#40;../proto/secret/compute/v1beta1/msg.proto&#41;)
 
-```bash
-sudo rm -rf secretd-1
-sudo rm -rf secretd-2
-```
+[//]: # (    * [alias.go]&#40;../x/compute/alias.go&#41;)
 
-* shutdown containers
+[//]: # (    * [cli/tx.go]&#40;x/compute/client/cli/tx.go&#41;)
 
-`docker-compose down`
+[//]: # (    * [rest/tx.go]&#40;x/compute/client/rest/tx.go&#41;)
 
-* delete network
+[//]: # (    * [handler.go]&#40;x/compute/handler.go&#41;)
 
-`docker network rm hacking_default`
+[//]: # (    * [msg_server.go]&#40;x/compute/internal/keeper/msg_server.go&#41;)
 
-### Other
-#### Update protobuf for rpc calls
+[//]: # (    * [codec.go]&#40;x/compute/internal/types/codec.go&#41;)
 
-* Update proto spec and other relevant files
+[//]: # (    * [msg.go]&#40;x/compute/internal/types/msg.go&#41;)
 
-    * [msg.proto](../proto/secret/compute/v1beta1/msg.proto)
-    * [alias.go](../x/compute/alias.go)
-    * [cli/tx.go](x/compute/client/cli/tx.go)
-    * [rest/tx.go](x/compute/client/rest/tx.go)
-    * [handler.go](x/compute/handler.go)
-    * [msg_server.go](x/compute/internal/keeper/msg_server.go)
-    * [codec.go](x/compute/internal/types/codec.go)
-    * [msg.go](x/compute/internal/types/msg.go)
+[//]: # ()
+[//]: # (* generate protobuf files `make proto-gen`)
 
-* generate protobuf files `make proto-gen`
+[//]: # ()
+[//]: # (    * you can ignore errors: `W0123 19:43:24.908481     375 services.go:38] No HttpRule found for method: Msg....` )
 
-    * you can ignore errors: `W0123 19:43:24.908481     375 services.go:38] No HttpRule found for method: Msg....` 
+[//]: # ()
+[//]: # (* build image `./build_image.sh` or `./rebuild_node.sh`)
 
-* build image `./build_image.sh` or `./rebuild_node.sh`
+[//]: # ()
+[//]: # (#### Keeper)
 
-#### Keeper
-[keeper.go](../x/compute/internal/keeper/keeper.go#L478)
+[//]: # ([keeper.go]&#40;../x/compute/internal/keeper/keeper.go#L478&#41;)
