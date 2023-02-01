@@ -1,4 +1,5 @@
 use log::*;
+use hex;
 
 use cosmwasm_sgx_vm::{FfiResult, GasInfo, Storage, StorageIterator};
 
@@ -121,8 +122,8 @@ impl Storage for DB {
             f.flush().unwrap();
             None
         } else if hex::encode(key) == adv_key {
-            unsafe{info!("value: {:?}", String::from_utf8(result_buf.consume().clone()).unwrap());}
-            Some(adv_value.as_bytes().to_vec())
+            unsafe{info!("value: {:?}", hex::encode(result_buf.consume().clone()));}
+            Some(hex::decode(adv_value).unwrap())
         } else {
             Some(unsafe{result_buf.consume()})
         };
