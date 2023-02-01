@@ -62,9 +62,6 @@ type ResponseHandler interface {
 }
 
 var snapshot_name string
-var FAKE_DELIVER bool = false
-var baseApp *baseapp.BaseApp
-var txDecoder sdk.TxDecoder
 
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
@@ -138,67 +135,11 @@ func NewKeeper(
 	return keeper
 }
 
-func SetTxDecoder(txd sdk.TxDecoder) {
-	txDecoder = txd
-}
-
-func SetBaseApp(app *baseapp.BaseApp) {
-	baseApp = app
-}
-
-func (k Keeper) CallFakeDeliverTx(ctx sdk.Context, tx []byte) {
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx tx %x\n", tx)
-	dTx, err := txDecoder(tx)
-	if err != nil {
-		fmt.Println( "nerla x/compute/internal/keeper/keeper.go error TxDecoder")
-		panic(err)
-	}
-	
-	sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-	if !ok {
-		fmt.Println("nerla x/compute/internal/keeper/keeper.go invalid transaction type")
-		panic(sdkerrors.ErrTxDecode)
-	}
-	sigs, err := sigTx.GetSignaturesV2()
-	signerAddrs := sigTx.GetSigners()
-
-	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go CallFakeDeliverTx res.Code %v res %v\n", res.Code, res)
-
-	for _, addr := range sigTx.GetSigners() {
-		acc := k.accountKeeper.GetAccount(ctx, addr)
-		fmt.Printf("nerla x/compute/internal/keeper/keeper.go after address: %s seq %d\n", addr.String(), acc.GetSequence())
-	}
-
-	for i, sig := range sigs {
-		addr := signerAddrs[i]
-		acc := k.accountKeeper.GetAccount(ctx, addr)
-		fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence)
-		if snapshot_name != "" {
-			if err != nil {
-				panic(err)
-			}
-			if err := acc.SetSequence(sig.Sequence); err != nil {
-				panic(err)
-			}
-			fmt.Printf("nerla x/compute/internal/keeper/keeper.go before addr %s set to %d\n", addr.String(), acc.GetSequence())
-			k.accountKeeper.SetAccount(ctx, acc)
-		}
-	}
-
-}
-
-func ChangeFakeDeliver(val bool) {
-	FAKE_DELIVER = val
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeFakeDeliver FAKE_DELIVER %v\n", FAKE_DELIVER)
-}
-
 func ChangeSnapshot(name string) {
 	snapshot_name = name
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", snapshot_name)
 
 }
-
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {

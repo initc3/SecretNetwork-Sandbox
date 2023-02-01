@@ -33,10 +33,6 @@ var (
 // AppModuleBasic defines the basic application module used by the compute module.
 type AppModuleBasic struct{}
 
-func GetFakeDeliver() bool {
-	return keeper.FAKE_DELIVER
-}
-
 func SetBaseApp(app *baseapp.BaseApp) {
 	keeper.SetBaseApp(app)
 }

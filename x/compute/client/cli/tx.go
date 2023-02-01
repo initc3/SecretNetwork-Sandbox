@@ -46,7 +46,6 @@ func GetTxCmd() *cobra.Command {
 	}
 	txCmd.AddCommand(
 		SnapshotDBCmd(),
-		FakeDeliverCmd(),
 		CallFakeDeliverCmd(),
 		StoreCodeCmd(),
 		InstantiateContractCmd(),
@@ -92,38 +91,6 @@ func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.F
 		SnapshotName: []byte(snapshotName),
 	}
 	return msg, nil
-}
-
-func FakeDeliverCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "fake_deliver [true/false]",
-		Short: "Use a fake DeliverTx function",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			boolValue, err := strconv.ParseBool(args[0])
-			if err != nil {
-				return err
-			}
-
-			msg := types.MsgFakeDeliver{
-				Sender:       clientCtx.GetFromAddress(),
-				FakeDeliver: boolValue,
-			}
-
-			if err = msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
-		},
-	}
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
 }
 
 func CallFakeDeliverCmd() *cobra.Command {

@@ -22,8 +22,6 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case *MsgSnapshotDB:
 			return handleSnapshot(ctx, k, msg)
-		case *MsgFakeDeliver:
-			return handleFakeDeliver(ctx, k, msg)
 		case *MsgCallFakeDeliver:
 			return handleCallFakeDeliver(ctx, k, msg)
 		case *MsgStoreCode:
@@ -60,18 +58,6 @@ func handleSnapshot(ctx sdk.Context, k Keeper, msg *MsgSnapshotDB) (*sdk.Result,
 	fmt.Printf("nerla x/compute/handler.go handleSnapshot SnapshotName %s\n", msg.SnapshotName)
 	return &sdk.Result{
 		Data:   []byte(fmt.Sprintf("%s", msg.SnapshotName)),
-		Events: ctx.EventManager().ABCIEvents(),
-	}, nil
-}
-
-func handleFakeDeliver(ctx sdk.Context, k Keeper, msg *MsgFakeDeliver) (*sdk.Result, error) {
-	err := msg.ValidateBasic()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("nerla x/compute/handler.go handleFakeDeliver fake_deliver %v\n", msg.FakeDeliver)
-	return &sdk.Result{
-		Data:   []byte(fmt.Sprintf("%s", msg.FakeDeliver)),
 		Events: ctx.EventManager().ABCIEvents(),
 	}, nil
 }
