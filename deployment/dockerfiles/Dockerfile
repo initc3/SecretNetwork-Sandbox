@@ -140,6 +140,12 @@ RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets
 RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
 
+# ******************* BUILD ARTIFACTS ******************** #
+FROM scratch as secret-artifacts
+COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
+COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so .
+COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
+
 # ******************* RELEASE IMAGE ******************** #
 FROM $SCRT_RELEASE_BASE_IMAGE as release-image
 
