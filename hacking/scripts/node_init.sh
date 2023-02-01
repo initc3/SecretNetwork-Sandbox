@@ -81,7 +81,7 @@ if [ ! -f "$file" ];then
   done 
   cat /root/out
   secretd config node "http://localhost:26657"
-  kill $PID
+  pkill -f secretd
   while [ $(secretd status) ];
   do
     sleep 5

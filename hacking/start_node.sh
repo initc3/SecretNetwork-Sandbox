@@ -1,8 +1,9 @@
 #!/bin/bash
+
+set -e
 set -x
 
 docker-compose down
-set -e
 
 docker-compose up localsecret-1 -d
 sleep 5
@@ -38,5 +39,6 @@ do
     sleep 5
 done
 
-# docker-compose stop localsecret-1
-docker-compose logs localsecret-2 --tail 10 
+docker-compose logs localsecret-2 --tail 10
+
+./setup_simple.sh
