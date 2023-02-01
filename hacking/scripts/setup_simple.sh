@@ -2,6 +2,8 @@
 set -x
 set -e
 secretd query register secret-network-params
+secretd config node "http://localsecret-1:26657"
+
 UNIQUE_LABEL=$(date '+%Y-%m-%d-%H:%M:%S')
 ADDR=$(secretd keys show --address b)
 VICTIM_ADDR=$(secretd keys show --address c)
@@ -31,8 +33,9 @@ secretd tx compute execute $CONTRACT_ADDRESS --generate-only "{\"store1\":{\"mes
 echo "Signing Victim tx"
 secretd tx sign tx_victim.json --chain-id secretdev-1 --from $VICTIM_ADDR > tx_victim_sign.json
 
-cp -rf /root/.secretd/data/ /root/hist_data
 echo $CONTRACT_ADDRESS > CONTRACT_ADDRESS
+
+secretd config node "http://localhost:26657"
 exit 0
 
 
