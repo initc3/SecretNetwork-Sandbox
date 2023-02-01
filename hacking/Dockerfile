@@ -207,10 +207,22 @@ ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 # Run secretd by default, omit entrypoint to ease using container with secretcli
 ENTRYPOINT ["/bin/bash", "startup.sh"]
 
+# ***************** BUILD_CONTRACTS ************** #
+
+FROM rust as compile-contract
+
+COPY hacking/contract-simple /root/contract-simple
+COPY hacking/contract-toy-swap /root/contract-toy-swap
+WORKDIR /root/contract-toy-swap
+RUN make
+WORKDIR /root/contract-simple
+RUN make
 
 # ***************** LOCALSECRET ************** #
 FROM release-image as build-localsecret
 
+COPY --from=compile-contract /root/contract-toy-swap /root/contract-toy-swap
+COPY --from=compile-contract /root/contract-simple /root/contract-simple
 COPY deployment/docker/localsecret/faucet/faucet_server.js .
 
 HEALTHCHECK --interval=5s --timeout=1s --retries=120 CMD bash -c 'curl -sfm1 http://localhost:26657/status && curl -s http://localhost:26657/status | jq -e "(.result.sync_info.latest_block_height | tonumber) > 0"'

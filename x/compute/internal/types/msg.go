@@ -69,27 +69,6 @@ func (msg MsgStoreCode) Type() string {
 	return "store-code"
 }
 
-// func (msg MsgStoreCode) GetTx() []byte {
-// 	return nil
-// }
-
-// func (msg MsgSnapshotDB) GetTx() []byte {
-// 	return nil
-// }
-
-// func (msg MsgInstantiateContract) GetTx() []byte {
-// 	return nil
-// }
-
-// func (msg MsgExecuteContract) GetTx() []byte {
-// 	return nil
-// }
-
-// func (msg MsgCallFakeDeliver) GetTx() []byte {
-// 	return msg.Tx
-// }
-
-
 func (msg MsgStoreCode) ValidateBasic() error {
 	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
 		return err
