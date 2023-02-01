@@ -206,11 +206,8 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 				fmt.Printf("nerla app/app.go calling Simulate on victimTx %x\n", victimTx)
 				gasInfo, response, err = app.BaseApp.Simulate(victimTx)
 			}
-			fmt.Printf("nerla app/app.go Simulate response %v err %v\n", response, err)
-			app.BaseApp.FakeCommit()
-
-
-			// resp := app.DeliverTx(abci.RequestDeliverTx{Tx: req.Tx})
+			// fmt.Printf("nerla app/app.go Simulate response %v err %v\n", response, err)
+			// app.BaseApp.FakeCommit()
 			return abci.ResponseCheckTx{
 				Code: 1,
 				GasWanted: int64(gasInfo.GasWanted),
