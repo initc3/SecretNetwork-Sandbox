@@ -22,72 +22,53 @@ query_tx_res() {
     echo "$?"
 }
 
-lo=0
-hi=20
-while [ $(expr $hi - $lo) -ne 0 ]; do
-    midv=$(( (hi + lo ) / 2))
-    echo $lo $hi $midv
-
-	cp -rf backup/* /root/.secretd/
-	
-    $SECRETD start >> log 2>&1 &
-    
-    cnt=0
+exec_transfer() {
+    txhash=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$2\", \"amount\": \"$3\", \"memo\":\"\"}}" --from $1 -y | jq .txhash)
+    txhash=${txhash:1:64}
     while true; do
-        ((cnt=cnt+1))
-	    sleep $sleep_time
-        if [ $(start_secretd) == 0 ]; then break; fi
-        if [ $((cnt%cnt_max)) == 0 ]; then ($SECRETD start >> log 2>&1 &); fi
+        sleep $sleep_time
+        if [ $(query_tx_res $txhash) == 0 ]; then break; fi
     done
+    echo $($SECRETD q tx $txhash | jq .code)
+}
 
+
+cnt=0
+while true; do
     sleep $sleep_time
-
-    txhash1=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$ACC0\", \"amount\": \"$midv\", \"memo\":\"\"}}" --from $ACC1 -y | jq .txhash)
-    txhash1=${txhash1:1:64}
-
-    cnt=0
-    while true; do
-        ((cnt=cnt+1))
-        sleep $sleep_time
-        if [ $(query_tx_res $txhash1) == 0 ]; then break; fi
-        if [ $((cnt%cnt_max)) == 0 ]; then 
-            txhash1=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$ACC0\", \"amount\": \"$midv\", \"memo\":\"\"}}" --from $ACC1 -y | jq .txhash)
-            txhash1=${txhash1:1:64}
-        fi
-    done
-    res1=$($SECRETD q tx $txhash1 | jq .code)
-
-    txhash2=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$ACC2\", \"amount\": \"$AMOUNT\", \"memo\":\"\"}}" --from $ACC0 -y | jq .txhash)
-    txhash2=${txhash2:1:64}
-    
-    cnt=0
-    while true; do
-        ((cnt=cnt+1))
-        sleep $sleep_time
-        if [ $(query_tx_res $txhash2) == 0 ]; then break; fi
-        if [ $((cnt%cnt_max)) == 0 ]; then 
-            txhash2=$($SECRETD tx compute execute $CONTRACT "{\"transfer\":{\"recipient\":\"$ACC2\", \"amount\": \"$AMOUNT\", \"memo\":\"\"}}" --from $ACC0 -y | jq .txhash)
-            txhash2=${txhash2:1:64}
-        fi
-    done
-    res2=$($SECRETD q tx $txhash2 | jq .code)
-
-    pkill -f $SECRETD
-    
-    cnt=0
-    while true; do
-        ((cnt=cnt+1))
-        sleep $sleep_time
-        if [ $(start_secretd) != 0 ]; then break; fi
-        if [ $((cnt%cnt_max)) == 0 ]; then (pkill -f $SECRETD); fi
-    done
-    
-    sleep $sleep_time
-
-  echo $res1 $res2
-
-  if [ $res2 != 0 ]; then ((lo=midv+1)); else hi=$midv; fi
+    if [ $(start_secretd) != 0 ]; then break; fi
+    if [ $((cnt%cnt_max)) == 0 ]; then (pkill -f secretd); fi
+    ((cnt=cnt+1))
 done
-echo $lo
+
+sleep 5
+cp -rf backup/.secretd/. /root/.secretd/
+
+cnt=0
+while true; do
+    sleep $sleep_time
+    if [ $(start_secretd) == 0 ]; then break; fi
+    if [ $((cnt%cnt_max)) == 0 ]; then (secretd start --rpc.laddr tcp://0.0.0.0:26657 >> log 2>&1 &); fi
+    ((cnt=cnt+1))
+done
+
+sleep $sleep_time
+
+res1=$(exec_transfer $ACC0 $ACC1 9999)
+res2=$(exec_transfer $ACC0 $ACC1 9999)
+res3=$(exec_transfer $ACC1 $ACC2 28000)
+
+cnt=0
+while true; do
+    sleep $sleep_time
+    if [ $(start_secretd) != 0 ]; then break; fi
+    if [ $((cnt%cnt_max)) == 0 ]; then (pkill -f $SECRETD); fi
+    ((cnt=cnt+1))
+done
+
+sleep $sleep_time
+
+echo $res1 $res2 $res3
+
 
 
