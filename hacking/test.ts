@@ -336,7 +336,7 @@ async function query_pool(account, contract_addr, code_hash) {
 describe("Deploy", () => {
     test("toy", async () => {
         console.log("Deploying toy-swap contract...")
-        let contract_name = "contract-sienna-swap";
+        let contract_name = "contract-toy-swap";
         let wasm: Uint8Array = fs.readFileSync(
             `${__dirname}/${contract_name}/contract.wasm`
         ) as Uint8Array;

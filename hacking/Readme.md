@@ -1,38 +1,54 @@
 
-# Steps
+# Running the MEV Demo
 
-### Update git submodules
-`git submodule update --init --recursive`
+### Update Git Submodules
+Fetch the third_party/incubator-teaclave-sgx-sdk and cosmos-sdk submodules by running the following command:
 
+`git submodule update --init --recursive --remote`
 
-### Build contracts
-
-`make`
-
-### Build Secret Network Node image
+### Build Secret Network Node Image
+The demo contracts are built when building the image. Run the following command to build the image:
 
 `./build_image.sh`
 
-### Start Two node network
+### Setup Environment
+1) start a validator node (node-1) and a non-validator node (node-2)
+
+2) Store and instantiate demo contracts and set up the initial states. 
+The pool sizes are 1000 for token_a and 2000 for token_b. 
+The victim and adversary account in the toy-swap contract each have a balance of 100 token_a and token_b.
+
+3) Shut down the validator node (node-1).
+
+4) Temporarily shut down node-2 and take a snapshot of the current states for later rewinding.
+
+5) Restart node-2 to launch the attack in simulation mode without broadcasting any transactions to the network.
 
 `./start_node.sh`
 
+### Launch MEV Attack
+In the MEV demo, the adversary executes the following steps:
 
-### Setup contracts
+1) Generate a victim swap transaction to swap 10 token_a for at least 20 token_b.
 
-`./setup.sh`
+2) Find a front-run transaction by bisection search that, when executed before the victim's transaction, won't fail the victim's transaction. The front-run transaction found swaps 20 token_a with a slippage limit of 0, resulting in obtaining 40 token_b.
+
+3) After the victim's transaction, the adversary executes a back-run transaction to sell the 40 token_b, increasing their balance of token_a by 1 and maintaining their balance of token_b.
+
+`docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh`
 
 
 ### Run Demo
 
 TODO
 
-### Cleanup
+[//]: # ()
+[//]: # (* Update proto spec and other relevant files)
 
 * shutdown containers
 
-`docker-compose down`
+[//]: # (    * [rest/tx.go]&#40;x/compute/client/rest/tx.go&#41;)
 
-* delete network
+[//]: # (    * [handler.go]&#40;x/compute/handler.go&#41;)
 
 `docker network rm hacking_default`
