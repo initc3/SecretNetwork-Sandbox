@@ -90,7 +90,7 @@ then
       sleep 5
       state_sync=$(secretd status | jq .SyncInfo.catching_up)
       echo "state_sync $state_sync"
-  done 
+  done
   cat /root/out
   # echo "joininng as validator now"
   # secretd tx staking create-validator -y \

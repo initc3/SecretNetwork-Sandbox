@@ -71,6 +71,7 @@ type Keeper struct {
 	bankKeeper       bankkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
+	DummyStore       map[string][]byte
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
@@ -113,6 +114,8 @@ func NewKeeper(
 	customEncoders *MessageEncoders,
 	customPlugins *QueryPlugins,
 ) Keeper {
+    dummy_store := make(map[string][]byte)
+
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
@@ -121,6 +124,7 @@ func NewKeeper(
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
+		DummyStore:       dummy_store,
 		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,
@@ -537,7 +541,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
-	// prefixStore.Delete()
 	// add more funds
 	if !coins.IsZero() {
 		if k.bankKeeper.BlockedAddr(caller) {
@@ -642,6 +645,7 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+
 	// prepare querier
 	querier := QueryHandler{
 		Ctx:     ctx,

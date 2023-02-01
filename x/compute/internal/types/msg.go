@@ -5,6 +5,30 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func (msg MsgFakeDeliver) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgStoreCode) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgCallFakeDeliver) GetTx() []byte {
+	return msg.Tx
+}
+
+func (msg MsgSnapshotDB) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgInstantiateContract) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgExecuteContract) GetTx() []byte {
+	return nil
+}
+
 func (msg MsgSnapshotDB) Route() string {
 	return RouterKey
 }

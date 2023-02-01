@@ -12,6 +12,7 @@ cp -rf /root/hist_data/.secretd/. /root/.secretd/
 
 ls /root/.secretd/
 
+
 cd /go/src/github.com/enigmampc/SecretNetwork/
 rm secretd
 set -e

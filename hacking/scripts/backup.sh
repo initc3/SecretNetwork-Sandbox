@@ -27,7 +27,5 @@ done
 mkdir -p /root/hist_data
 cp -r /root/.secretd/ /root/hist_data
 
-ls /root/hist_data
-
 RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &
 sleep infinity

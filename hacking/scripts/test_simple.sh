@@ -2,6 +2,7 @@
 # set -x
 ADDR=$(secretd keys show --address b)
 CONTRACT_ADDRESS=$(cat CONTRACT_ADDRESS)
+
 UNIQUE_LABEL=$(date '+%Y-%m-%d-%H:%M:%S')
 
 num=10
