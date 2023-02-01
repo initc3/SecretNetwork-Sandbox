@@ -6,3 +6,6 @@
 	path = cosmos-sdk
 	url = https://github.com/initc3/cosmos-sdk.git
 	branch = pulp
+[submodule "hacking/secretSCRT"]
+	path = hacking/secretSCRT
+	url = https://github.com/scrtlabs/secretSCRT.git
