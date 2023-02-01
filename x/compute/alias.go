@@ -13,6 +13,7 @@ import (
 type SecretNetworkMsg interface {
 	sdk.Msg
 	Type() string
+	GetTx() []byte
 }
 
 const (
