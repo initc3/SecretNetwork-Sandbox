@@ -124,7 +124,7 @@ RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/api_key.txt
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/api_key.txt
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
-
+RUN go mod tidy
 RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
 
@@ -180,17 +180,6 @@ RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/lib
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
 
-COPY deployment/docker/testnet/bootstrap_init.sh .
-COPY deployment/docker/testnet/node_init.sh .
-COPY deployment/docker/testnet/startup.sh .
-COPY deployment/docker/testnet/node_key.json .
-COPY deployment/docker/localsecret/faucet/faucet_server.js .
-
-RUN chmod +x /usr/bin/secretd
-RUN chmod +x bootstrap_init.sh
-RUN chmod +x startup.sh
-RUN chmod +x node_init.sh
-
 RUN secretd completion > /root/secretd_completion
 
 RUN echo "SECRET_NODE_TYPE=${SECRET_NODE_TYPE}" >> ~/.bashrc
@@ -221,10 +210,6 @@ ENTRYPOINT ["/bin/bash", "startup.sh"]
 
 # ***************** LOCALSECRET ************** #
 FROM release-image as build-localsecret
-
-COPY deployment/docker/localsecret/bootstrap_init_no_stop.sh bootstrap_init.sh
-
-RUN chmod +x bootstrap_init.sh
 
 COPY deployment/docker/localsecret/faucet/faucet_server.js .
 

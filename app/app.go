@@ -218,6 +218,7 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 			}
 
 		}
+		
 	}
 	fmt.Printf("nerla app/app.go CheckTx tx %x\n", req.Tx)
 	resp := app.BaseApp.CheckTx(req)
@@ -304,13 +305,10 @@ func NewSecretNetworkApp(
 
 	// BaseApp handles interactions with Tendermint through the ABCI protocol
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	compute.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
-
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	// bApp.GRPCQueryRouter().RegisterSimulateService(bApp.Simulate, interfaceRegistry)
-
 	// Initialize our application with the store keys it requires
 	app := &SecretNetworkApp{
 		BaseApp:           bApp,

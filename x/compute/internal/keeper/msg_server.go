@@ -27,18 +27,9 @@ func (m msgServer) SnapshotDB(goCtx context.Context, msg *types.MsgSnapshotDB) (
 	}, nil
 }
 
-func (m msgServer) FakeDeliver(goCtx context.Context, msg *types.MsgFakeDeliver) (*types.MsgFakeDeliverResponse, error) {
-	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go FakeDeliver fake_deliver: %v\n", msg.FakeDeliver)
-	ChangeFakeDeliver(msg.FakeDeliver)
-	return &types.MsgFakeDeliverResponse{
-		Result: true,
-	}, nil
-}
-
 func (m msgServer) CallFakeDeliver(goCtx context.Context, msg *types.MsgCallFakeDeliver) (*types.MsgCallFakeDeliverResponse, error) {
-	// fmt.Printf("nerla x/compute/internal/keeper/msg_server.go CallFakeDeliver tx: %x\n", msg.Tx)
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	m.keeper.CallFakeDeliverTx(ctx, msg.Tx)
+	fmt.Printf("nerla x/compute/internal/keeper/msg_server.go CallFakeDeliver tx: %x\n", msg.Tx)
+	// ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.MsgCallFakeDeliverResponse{
 		Result: true,
 	}, nil

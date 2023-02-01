@@ -48,25 +48,6 @@ func (msg MsgSnapshotDB) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 
-func (msg MsgFakeDeliver) Route() string {
-	return RouterKey
-}
-
-func (msg MsgFakeDeliver) Type() string {
-	return "fake_deliver"
-}
-
-func (msg MsgFakeDeliver) ValidateBasic() error {
-	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg MsgFakeDeliver) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Sender}
-}
-
 func (msg MsgCallFakeDeliver) Route() string {
 	return RouterKey
 }
@@ -74,6 +55,7 @@ func (msg MsgCallFakeDeliver) Route() string {
 func (msg MsgCallFakeDeliver) Type() string {
 	return "call_delivertx"
 }
+
 
 func (msg MsgCallFakeDeliver) ValidateBasic() error {
 	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
@@ -92,6 +74,27 @@ func (msg MsgStoreCode) Route() string {
 func (msg MsgStoreCode) Type() string {
 	return "store-code"
 }
+
+func (msg MsgStoreCode) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgSnapshotDB) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgInstantiateContract) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgExecuteContract) GetTx() []byte {
+	return nil
+}
+
+func (msg MsgCallFakeDeliver) GetTx() []byte {
+	return msg.Tx
+}
+
 
 func (msg MsgStoreCode) ValidateBasic() error {
 	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {

@@ -12,7 +12,6 @@ import (
 // RegisterCodec registers the account types and interface
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSnapshotDB{}, "wasm/MsgSnapshotDB", nil)
-	cdc.RegisterConcrete(&MsgFakeDeliver{}, "wasm/MsgFakeDeliver", nil)
 	cdc.RegisterConcrete(&MsgCallFakeDeliver{}, "wasm/MsgCallFakeDeliver", nil)
 	cdc.RegisterConcrete(&MsgStoreCode{}, "wasm/MsgStoreCode", nil)
 	cdc.RegisterConcrete(&MsgInstantiateContract{}, "wasm/MsgInstantiateContract", nil)
@@ -23,7 +22,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgSnapshotDB{},
-		&MsgFakeDeliver{},
 		&MsgCallFakeDeliver{},
 		&MsgStoreCode{},
 		&MsgInstantiateContract{},

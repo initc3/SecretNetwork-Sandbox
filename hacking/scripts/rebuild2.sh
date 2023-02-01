@@ -5,7 +5,13 @@ pkill -f "secretd start --rpc.laddr tcp://0.0.0.0:26657"
 sleep 3
 rm -rf /root/.secretd/.*
 rm -rf /root/.secretd/*
+
+ls /root/hist_data
+
 cp -rf /root/hist_data/.secretd/. /root/.secretd/
+
+ls /root/.secretd/
+
 
 cd /go/src/github.com/enigmampc/SecretNetwork/
 rm secretd
