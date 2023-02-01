@@ -32,6 +32,7 @@ RUN --mount=type=cache,target=/root/.cargo/registry cargo install xargo --versio
 
 # Add submodules
 COPY third_party third_party
+COPY cosmos-sdk cosmos-sdk
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm/
@@ -63,6 +64,7 @@ COPY third_party third_party
 # Add source files
 COPY go-cosmwasm go-cosmwasm/
 COPY cosmwasm cosmwasm/
+COPY cosmos-sdk cosmos-sdk
 
 WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
 
@@ -100,6 +102,7 @@ ENV CGO_LDFLAGS=${CGO_LDFLAGS}
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
+COPY cosmos-sdk cosmos-sdk
 # This is due to some esoteric docker bug with the underlying filesystem, so until I figure out a better way, this should be a workaround
 RUN true
 COPY x x
