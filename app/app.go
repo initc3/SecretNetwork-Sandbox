@@ -190,91 +190,63 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 	}
 	msgs := dTx.GetMsgs()
 	for _, m := range msgs {
-		mSecret := m.(compute.SecretNetworkMsg)
-		if mSecret.Type() == "call_delivertx" || mSecret.Type() == "snapshot" {
-			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
-			fmt.Printf("nerla app/app.go CheckTx actually calling DeliverTx tx %x\n", req.Tx)
+		switch typedTx := m.(type) {
+		case *compute.MsgStartSnapshot:
+			fmt.Println("nerla app/app.go MsgStartSnapshot calling Simulate\n")
 			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
-			var gasInfo sdk.GasInfo
-			var response *sdk.Result
-			var err error
-			if mSecret.Type() == "snapshot" {
-				fmt.Printf("nerla app/app.go calling Simulate on snapshottx %x\n", req.Tx)
-				gasInfo, response, err = app.BaseApp.Simulate(req.Tx)
-			} else if mSecret.Type() == "call_delivertx" {
-				victimTx := mSecret.GetTx()
-				fmt.Printf("nerla app/app.go calling Simulate on victimTx %x\n", victimTx)
-				gasInfo, response, err = app.BaseApp.Simulate(victimTx)
+			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			if err != nil {
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
 			}
-			// fmt.Printf("nerla app/app.go Simulate response %v err %v\n", response, err)
-			// app.BaseApp.FakeCommit()
 			return abci.ResponseCheckTx{
-				Code: 1,
+				Code: abci.CodeTypeOK,
+				Log: response.Log,
+				Data: response.Data,
 				GasWanted: int64(gasInfo.GasWanted),
 				GasUsed: int64(gasInfo.GasUsed),
+				Events: response.Events,
 			}
-
-		}
-		
+		case *compute.MsgClearSnapshot:
+			fmt.Println("nerla app/app.go MsgClearSnapshot calling Simulate\n")
+			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
+			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			if err != nil {
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
+			}
+			return abci.ResponseCheckTx{
+				Code: abci.CodeTypeOK,
+				Log: response.Log,
+				Data: response.Data,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed: int64(gasInfo.GasUsed),
+				Events: response.Events,
+			}
+		case *compute.MsgSimulateTx:
+			fmt.Println("nerla app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
+			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
+			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
+			if err != nil {
+				return abci.ResponseCheckTx{
+					Code: 1,
+				}
+			}
+			return abci.ResponseCheckTx{
+				Code: 1,
+				Log: response.Log,
+				Data: response.Data,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed: int64(gasInfo.GasUsed),
+				Events: response.Events,
+			}
+		default:
+		}		
 	}
-	fmt.Printf("nerla app/app.go CheckTx tx %x\n", req.Tx)
-	resp := app.BaseApp.CheckTx(req)
-	fmt.Printf("nerla app/app.go CheckTx resp %v\n", resp)
-	return resp
+	return app.BaseApp.CheckTx(req)
 }
-
-// func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
-// 	fmt.Printf("nerla app/app.go DeliverTx tx %x\n", req.Tx)
-// 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
-// 	if err != nil {
-// 			fmt.Println( "nerla app/app.go error TxDecoder")
-// 			panic(err)
-// 	}
-// 	msgs := dTx.GetMsgs()
-// 	for _, m := range msgs {
-// 		mSecret := m.(compute.SecretNetworkMsg)
-// 		if mSecret.Type() == "call_delivertx" || mSecret.Type() == "snapshot" {
-// 			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
-// 			// ctx := app.BaseApp.GetContextForDeliverTx(req.Tx)
-// 			// sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-// 			// if !ok {
-// 			// 		fmt.Println("nerla app/app.go invalid transaction type")
-// 			// 		panic(sdkerrors.ErrTxDecode)
-// 			// }
-
-// 			// sigs, err := sigTx.GetSignaturesV2()
-// 			// if err != nil {
-// 			// 		fmt.Println("nerla app/app.go GetSignaturesV2 err")
-// 			// 		panic(err)
-// 			// }
-// 			// signerAddrs := sigTx.GetSigners()
-
-// 			// for i, sig := range sigs {
-// 			// 		addr := signerAddrs[i]
-// 			// 		acc := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-// 			// 		fmt.Printf("nerla app/app.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence+1)
-// 			// 		if err := acc.SetSequence(sig.Sequence+1); err != nil {
-// 			// 				panic(err)
-// 			// 		}
-// 			// 		app.AppKeepers.AccountKeeper.SetAccount(ctx, acc)
-// 			// 		acc2 := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-// 			// 		fmt.Printf("nerla app/app.go after addr %s acc.seq %d\n", addr.String(), acc2.GetSequence())
-// 			// }
-
-// 			gasInfo, resp, err := app.BaseApp.Simulate(req.Tx)
-// 			fmt.Printf("nerla app/app.go Simulate gasInfo %d res %v err %v\n", gasInfo, resp, err)
-// 			return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
-// 		}
-// 	}
-
-// 	// if compute.GetFakeDeliver() {
-// 	// 	fmt.Printf("nerla app/app.go DeliverTx FAKE_DELIVER is true\n", )
-// 	// 	return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
-// 	// }
-// 	resp := app.BaseApp.DeliverTx(req)
-// 	fmt.Printf("nerla app/app.go DeliverTx res %v\n", resp)
-// 	return resp
-// }
 
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig

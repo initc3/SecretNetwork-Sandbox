@@ -16,8 +16,9 @@ import (
 )
 
 func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/snapshot", snapshotHandlerFn(cliCtx)).Methods("POST")
-	r.HandleFunc("/delivertx", fakeCallDeliverHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/snapshot", snapshotStartHandlerFn(cliCtx)).Methods("POST")
+	r.HandleFunc("/snapshot", snapshotClearHandlerFn(cliCtx)).Methods("DELETE")
+	r.HandleFunc("/simulatetx", callSimulateHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/code", storeCodeHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/code/{codeId}", instantiateContractHandlerFn(cliCtx)).Methods("POST")
 	r.HandleFunc("/wasm/contract/{contractAddr}", executeContractHandlerFn(cliCtx)).Methods("POST")
@@ -31,7 +32,7 @@ type snapshotReq struct {
 	SnapshotName []byte       `json:"snapshot_name"`
 }
 
-type callDeliverReq struct {
+type callSimulatTxReq struct {
 	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Tx []byte      `json:"tx"`
 }
@@ -52,7 +53,7 @@ type executeContractReq struct {
 	Amount  sdk.Coins    `json:"coins" yaml:"coins"`
 }
 
-func snapshotHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func snapshotStartHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req snapshotReq
 		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
@@ -72,7 +73,7 @@ func snapshotHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 		// build and sign the transaction, then broadcast to Tendermint
-		msg := types.MsgSnapshotDB{
+		msg := types.MsgStartSnapshot{
 			Sender:       	fromAddr,
 			SnapshotName:	snapshot_name,
 		}		
@@ -86,10 +87,43 @@ func snapshotHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	}
 }
 
-
-func fakeCallDeliverHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func snapshotClearHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req callDeliverReq
+		var req snapshotReq
+		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		var err error
+		snapshot_name := req.SnapshotName		
+		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		// build and sign the transaction, then broadcast to Tendermint
+		msg := types.MsgClearSnapshot{
+			Sender:       	fromAddr,
+			SnapshotName:	snapshot_name,
+		}		
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, &msg)
+	}
+}
+
+func callSimulateHandlerFn(cliCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req callSimulatTxReq
 		if !rest.ReadRESTReq(w, r, cliCtx.LegacyAmino, &req) {
 			return
 		}
@@ -107,7 +141,7 @@ func fakeCallDeliverHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 		// build and sign the transaction, then broadcast to Tendermint
-		msg := types.MsgCallFakeDeliver{
+		msg := types.MsgSimulateTx{
 			Sender:       	fromAddr,
 			Tx:	tx_bytes,
 		}		
@@ -120,6 +154,7 @@ func fakeCallDeliverHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		tx.WriteGeneratedTxResponse(cliCtx, w, req.BaseReq, &msg)
 	}
 }
+
 func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req storeCodeReq

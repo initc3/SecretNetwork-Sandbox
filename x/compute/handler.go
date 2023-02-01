@@ -20,10 +20,12 @@ func NewHandler(k Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
-		case *MsgSnapshotDB:
+		case *MsgStartSnapshot:
 			return handleSnapshot(ctx, k, msg)
-		case *MsgCallFakeDeliver:
-			return handleCallFakeDeliver(ctx, k, msg)
+		case *MsgClearSnapshot:
+			return handleSnapshotClear(ctx, k, msg)
+		case *MsgSimulateTx:
+			return handleSimulateTx(ctx, k, msg)
 		case *MsgStoreCode:
 			return handleStoreCode(ctx, k, msg)
 		case *MsgInstantiateContract:
@@ -50,7 +52,7 @@ func filteredMessageEvents(manager *sdk.EventManager) []abci.Event {
 	return res
 }
 
-func handleSnapshot(ctx sdk.Context, k Keeper, msg *MsgSnapshotDB) (*sdk.Result, error) {
+func handleSnapshot(ctx sdk.Context, k Keeper, msg *MsgStartSnapshot) (*sdk.Result, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
@@ -62,12 +64,24 @@ func handleSnapshot(ctx sdk.Context, k Keeper, msg *MsgSnapshotDB) (*sdk.Result,
 	}, nil
 }
 
-func handleCallFakeDeliver(ctx sdk.Context, k Keeper, msg *MsgCallFakeDeliver) (*sdk.Result, error) {
+func handleSnapshotClear(ctx sdk.Context, k Keeper, msg *MsgClearSnapshot) (*sdk.Result, error) {
 	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("nerla x/compute/handler.go handleCallFakeDeliver Tx %x\n", msg.Tx)
+	fmt.Printf("nerla x/compute/handler.go handleSnapshotClear SnapshotName %s\n", msg.SnapshotName)
+	return &sdk.Result{
+		Data:   []byte(fmt.Sprintf("%s", msg.SnapshotName)),
+		Events: ctx.EventManager().ABCIEvents(),
+	}, nil
+}
+
+func handleSimulateTx(ctx sdk.Context, k Keeper, msg *MsgSimulateTx) (*sdk.Result, error) {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("nerla x/compute/handler.go handleSimulateTx Tx %x\n", msg.Tx)
 	return &sdk.Result{
 		Data:   msg.Tx,
 		Events: ctx.EventManager().ABCIEvents(),

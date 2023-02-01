@@ -71,13 +71,12 @@ type Keeper struct {
 	bankKeeper       bankkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
-	DummyStore       map[string][]byte
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
-	DummyStore map[string][]byte
+	DummyStore map[string]map[string][]byte
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -114,17 +113,14 @@ func NewKeeper(
 	customEncoders *MessageEncoders,
 	customPlugins *QueryPlugins,
 ) Keeper {
-    dummy_store := make(map[string][]byte)
-
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
 	}
-	dummy_store := make(map[string][]byte)
+	dummy_store := make(map[string]map[string][]byte)
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
-		DummyStore:       dummy_store,
 		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,
@@ -143,7 +139,13 @@ func NewKeeper(
 
 func ChangeSnapshot(name string) {
 	snapshot_name = name
-	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", snapshot_name)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", name)
+}
+
+
+func (k Keeper) ClearSnapshot(name string) {
+	delete(k.DummyStore, name)
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ClearSnapshot name %s\n", name)
 
 }
 
@@ -411,7 +413,12 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x snapshot_name %s\n", prefixStoreKey, snapshot_name)
 
@@ -540,7 +547,12 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 	// add more funds
 	if !coins.IsZero() {
 		if k.bankKeeper.BlockedAddr(caller) {
@@ -644,7 +656,12 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	}
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -701,7 +718,12 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 		return result
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	snapshot_dummy_store, ok := k.DummyStore[snapshot_name]
+	if !ok {
+		snapshot_dummy_store = make(map[string][]byte)
+		k.DummyStore[snapshot_name] = snapshot_dummy_store
+	}
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, snapshot_dummy_store)
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{

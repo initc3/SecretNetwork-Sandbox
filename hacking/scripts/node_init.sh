@@ -9,9 +9,8 @@ set -euo pipefail
 set -x
 export RPC_URL="localsecret-1:26657"
 export CHAINID="secretdev-1"
-file=/root/.secretd/config/started.txt
-if [ ! -e "$file" ]
-then
+file=/root/.secretd/config/genesis.json
+if [ ! -f "$file" ];then
   echo "Starting from scratch~~~~~~~~~~~~~"
 
   mkdir -p /root/.secretd/.node
@@ -31,18 +30,14 @@ then
   echo $d_mnemonic | secretd keys add d --recover
 
   mkdir -p /root/.secretd/.node
-
+  #PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   secretd init "$(hostname)" --chain-id $CHAINID || true
-
-  PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
+  eval PEERID=$(secretd status | jq .NodeInfo.id)
+  PERSISTENT_PEERS="$PEERID@localsecret-1:26656"
   sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
   sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.secretd/config/config.toml
   sed -i 's/trust_period = "168h0m0s"/trust_period = "168h"/g' ~/.secretd/config/config.toml
-  sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
   echo "Set persistent_peers: $PERSISTENT_PEERS"
-
-  echo "Waiting for bootstrap to start..."
-  sleep 5
 
   secretd q block 1
 
@@ -72,7 +67,7 @@ then
   cp /genesis/genesis.json /root/.secretd/config/genesis.json
   
   secretd validate-genesis
-  RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &> /root/out &
+  RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
   PID=$!
   echo "waiting for state sync to end.."
   sleep 5
@@ -84,24 +79,14 @@ then
       state_sync=$(secretd status | jq .SyncInfo.catching_up)
       echo "state_sync $state_sync"
   done 
-  set +e
-  kill $PID
-  set -e
-  echo "started" > $file
+  cat /root/out
   secretd config node "http://localhost:26657"
+  kill $PID
+  while [ $(secretd status) ];
+  do
+    sleep 5
+  done  
 else
-  echo "Restarting node~~~~~~~~~~~~~"
-  # curr_dir=$(pwd)
-  # cd /go/src/github.com/enigmampc/SecretNetwork/
-  # # make build_cli
-  # ls
-  # make build_local_no_rust
-  # cp secretd /usr/bin/secretd
-  # chmod +x secretd
-  # cd $curr_dir
-  # PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
-  # sed -i 's/persistent_peers = "'$PERSISTENT_PEERS'"/persistent_peers = ""/g' ~/.secretd/config/config.toml
-  # sed -i 's/pex = true/pex = false/g' ~/.secretd/config/config.toml
-  # echo "Set pex = false"
+  echo "$file exists restarting node"
 fi
-RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657"
+RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
