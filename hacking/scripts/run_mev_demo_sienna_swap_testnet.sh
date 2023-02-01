@@ -29,7 +29,7 @@ deposit_sSCRT() {
 
 query_snip_20_balance() {
   viewing_key=vk
-#  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $1 "{\"set_viewing_key\": {\"key\":\"$viewing_key\"}}" --from $2 --amount=$amt -y)
+#  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $1 "{\"set_viewing_key\": {\"key\":\"$viewing_key\"}}" --from $2 -y)
 #  wait_for_tx $TX
   echo $PASSPHRASE | $SECRETD q compute query $1 "{\"balance\": {\"key\":\"$viewing_key\",\"address\":\"$2\"}}"
 }

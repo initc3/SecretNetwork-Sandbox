@@ -27,13 +27,13 @@ init_contract() {
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/contract.wasm --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
   wait_for_tx $STORE_TX_HASH
-  eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key=="code_id") | .value ")
+  eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key==\"code_id\") | .value ")
 
   echo "Instantiating contract"
   INIT_TX=$($SECRETD tx compute instantiate $CODE_ID "{\"init\":{\"pool_a\":$1,\"pool_b\":$2}}" --from $ADMIN --label $UNIQUE_LABEL -y --broadcast-mode sync )
   eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
   wait_for_tx $INIT_TX_HASH
-  eval CONTRACT_ADDRESS=$($SECRETD q tx $INIT_TX_HASH | jq ".logs[].events[] | select(.type=="instantiate") | .attributes[] | select(.key=="contract_address") | .value ")
+  eval CONTRACT_ADDRESS=$($SECRETD q tx $INIT_TX_HASH | jq ".logs[].events[] | select(.type==\"instantiate\") | .attributes[] | select(.key==\"contract_address\") | .value ")
   echo $CONTRACT_ADDRESS > contractAddress.txt
 
   eval CODE_HASH=$($SECRETD q compute contract-hash $CONTRACT_ADDRESS)
