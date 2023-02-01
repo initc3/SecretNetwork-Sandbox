@@ -67,10 +67,6 @@ func (msg MsgExecuteContract) GetTx() []byte {
 	return nil
 }
 
-func (msg MsgStoreCode) GetTx() []byte {
-	return nil
-}
-
 func (msg MsgCallFakeDeliver) GetTx() []byte {
 	return msg.Tx
 }

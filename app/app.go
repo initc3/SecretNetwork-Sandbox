@@ -226,59 +226,6 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 	return resp
 }
 
-// func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
-// 	fmt.Printf("nerla app/app.go DeliverTx tx %x\n", req.Tx)
-// 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
-// 	if err != nil {
-// 			fmt.Println( "nerla app/app.go error TxDecoder")
-// 			panic(err)
-// 	}
-// 	msgs := dTx.GetMsgs()
-// 	for _, m := range msgs {
-// 		mSecret := m.(compute.SecretNetworkMsg)
-// 		if mSecret.Type() == "call_delivertx" || mSecret.Type() == "snapshot" {
-// 			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
-// 			// ctx := app.BaseApp.GetContextForDeliverTx(req.Tx)
-// 			// sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-// 			// if !ok {
-// 			// 		fmt.Println("nerla app/app.go invalid transaction type")
-// 			// 		panic(sdkerrors.ErrTxDecode)
-// 			// }
-
-// 			// sigs, err := sigTx.GetSignaturesV2()
-// 			// if err != nil {
-// 			// 		fmt.Println("nerla app/app.go GetSignaturesV2 err")
-// 			// 		panic(err)
-// 			// }
-// 			// signerAddrs := sigTx.GetSigners()
-
-// 			// for i, sig := range sigs {
-// 			// 		addr := signerAddrs[i]
-// 			// 		acc := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-// 			// 		fmt.Printf("nerla app/app.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence+1)
-// 			// 		if err := acc.SetSequence(sig.Sequence+1); err != nil {
-// 			// 				panic(err)
-// 			// 		}
-// 			// 		app.AppKeepers.AccountKeeper.SetAccount(ctx, acc)
-// 			// 		acc2 := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-// 			// 		fmt.Printf("nerla app/app.go after addr %s acc.seq %d\n", addr.String(), acc2.GetSequence())
-// 			// }
-
-// 			gasInfo, resp, err := app.BaseApp.Simulate(req.Tx)
-// 			fmt.Printf("nerla app/app.go Simulate gasInfo %d res %v err %v\n", gasInfo, resp, err)
-// 			return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}                    
-// 		}
-// 	}
-
-// 	// if compute.GetFakeDeliver() {
-// 	// 	fmt.Printf("nerla app/app.go DeliverTx FAKE_DELIVER is true\n", )
-// 	// 	return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
-// 	// }
-// 	resp := app.BaseApp.DeliverTx(req)
-// 	fmt.Printf("nerla app/app.go DeliverTx res %v\n", resp)
-// 	return resp
-// }
-
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
 type WasmWrapper struct {
@@ -305,7 +252,6 @@ func NewSecretNetworkApp(
 
 	// BaseApp handles interactions with Tendermint through the ABCI protocol
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	compute.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
 	
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)

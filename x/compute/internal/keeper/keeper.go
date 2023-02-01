@@ -44,7 +44,6 @@ import (
 	v1wasmTypes "github.com/scrtlabs/SecretNetwork/go-cosmwasm/types/v1"
 
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 	//tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -77,6 +76,7 @@ type Keeper struct {
 	messenger        Messenger
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
+	DummyStore map[string][]byte
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -117,6 +117,7 @@ func NewKeeper(
 	if err != nil {
 		panic(err)
 	}
+	dummy_store := make(map[string][]byte)
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
@@ -128,6 +129,7 @@ func NewKeeper(
 		capabilityKeeper: capabilityKeeper,
 		messenger:        NewMessageHandler(msgRouter, legacyMsgRouter, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
+		DummyStore: 	  dummy_store,
 	}
 	keeper.queryPlugins = DefaultQueryPlugins(govKeeper, distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go NewKeeper storeKey %s\n", storeKey.String())
@@ -405,7 +407,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x snapshot_name %s\n", prefixStoreKey, snapshot_name)
 
@@ -534,8 +536,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
-
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+	// prefixStore.Delete()
 	// add more funds
 	if !coins.IsZero() {
 		if k.bankKeeper.BlockedAddr(caller) {
@@ -639,7 +641,7 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	}
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
 	// prepare querier
 	querier := QueryHandler{
 		Ctx:     ctx,
@@ -695,7 +697,7 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 		return result
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{
