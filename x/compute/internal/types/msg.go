@@ -5,62 +5,60 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (msg MsgStoreCode) GetTx() []byte {
-	return nil
-}
-
-func (msg MsgCallFakeDeliver) GetTx() []byte {
-	return msg.Tx
-}
-
-func (msg MsgSnapshotDB) GetTx() []byte {
-	return nil
-}
-
-func (msg MsgInstantiateContract) GetTx() []byte {
-	return nil
-}
-
-func (msg MsgExecuteContract) GetTx() []byte {
-	return nil
-}
-
-func (msg MsgSnapshotDB) Route() string {
+func (msg MsgStartSnapshot) Route() string {
 	return RouterKey
 }
 
-func (msg MsgSnapshotDB) Type() string {
+func (msg MsgStartSnapshot) Type() string {
 	return "snapshot"
 }
 
-func (msg MsgSnapshotDB) ValidateBasic() error {
-	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
-		return err
-	}
+func (msg MsgStartSnapshot) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
-func (msg MsgSnapshotDB) GetSigners() []sdk.AccAddress {
+func (msg MsgStartSnapshot) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 
-func (msg MsgCallFakeDeliver) Route() string {
+func (msg MsgClearSnapshot) Route() string {
 	return RouterKey
 }
 
-func (msg MsgCallFakeDeliver) Type() string {
-	return "call_delivertx"
+func (msg MsgClearSnapshot) Type() string {
+	return "snapshot_clear"
 }
 
-
-func (msg MsgCallFakeDeliver) ValidateBasic() error {
-	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
-		return err
-	}
+func (msg MsgClearSnapshot) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
-func (msg MsgCallFakeDeliver) GetSigners() []sdk.AccAddress {
+func (msg MsgClearSnapshot) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Sender}
+}
+
+func (msg MsgSimulateTx) Route() string {
+	return RouterKey
+}
+
+func (msg MsgSimulateTx) Type() string {
+	return "simulatetx"
+}
+
+func (msg MsgSimulateTx) ValidateBasic() error {
+	// if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	// 	return err
+	// }
+	return nil
+}
+
+func (msg MsgSimulateTx) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Sender}
 }
 func (msg MsgStoreCode) Route() string {

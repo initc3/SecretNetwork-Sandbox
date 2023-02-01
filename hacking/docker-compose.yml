@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: devlocalsecret-1
+    image: devlocalsecret
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -13,29 +13,29 @@ services:
         SGX_MODE: SW
         SECRET_NODE_TYPE: BOOTSTRAP
         CHAIN_ID: secretdev-1
-      secrets:
-        - API_KEY
-        - SPID
+    secrets:
+      - API_KEY
+      - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
-      - "26658:26657"
-      - "26659:26656"
-      - "9092:9090"
-      - "9093:9091"
-      - "1318:1317"
+      - "26657:26657"
+      - "26656:26656"
+      - "9090:9090"
+      - "9091:9091"
+      - "1317:1317"
       # faucet
-      - "5001:5000"
+      - "5000:5000"
     environment:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: BOOTSTRAP
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
-      - ./secretd-1:/root/.secretd/
       - ./scripts/:/root/scripts
+      - genesis:/genesis
 
   localsecret-2:
-    image: devlocalsecret-1
+    image: devlocalsecret
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -46,31 +46,29 @@ services:
         FEATURES_U: ${FEATURES_U}
         SGX_MODE: SW
         CHAIN_ID: secretdev-1
-      secrets:
-        - API_KEY
-        - SPID
+    secrets:
+      - API_KEY
+      - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
-      - "36658:26657"
-      - "36659:26656"
-      - "9392:9091"
-      - "9393:9090"
-      - "3318:1317"
+      - "36657:26657"
+      - "36656:26656"
+      - "9391:9091"
+      - "9390:9090"
+      - "3317:1317"
       # faucet
-      - "5400:5000"
+      - "5300:5000"
     environment:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: NODE
-      DUMMY_STORE: "true"
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./scripts/:/root/scripts
-      - ./secretd-2:/root/.secretd/
-      - ./genesis:/tmp/genesis
+      - genesis:/genesis
       - ./contract-simple:/root/contract-simple
       - ./contract-toy-swap:/root/contract-toy-swap
       - ../cosmos-sdk:/go/src/github.com/enigmampc/SecretNetwork/cosmos-sdk
@@ -79,3 +77,5 @@ secrets:
     file: ../.env.local
   SPID:
     file: ../.env.local
+volumes:
+  genesis:

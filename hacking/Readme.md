@@ -12,7 +12,7 @@
 
 `./build_image.sh`
 
-### Start One node network
+### Start Two node network
 
 `./start_node.sh`
 
@@ -77,7 +77,6 @@
 [//]: # (    * [alias.go]&#40;../x/compute/alias.go&#41;)
 
 [//]: # (    * [cli/tx.go]&#40;x/compute/client/cli/tx.go&#41;)
-
 [//]: # (    * [rest/tx.go]&#40;x/compute/client/rest/tx.go&#41;)
 
 [//]: # (    * [handler.go]&#40;x/compute/handler.go&#41;)

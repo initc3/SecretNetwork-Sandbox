@@ -33,7 +33,7 @@ secretd tx compute execute $CONTRACT_ADDRESS --generate-only "{\"store1\":{\"mes
 echo "Signing Victim tx"
 secretd tx sign tx_victim.json --chain-id secretdev-1 --from $VICTIM_ADDR > tx_victim_sign.json
 
-echo $CONTRACT_ADDRESS > CONTRACT_ADDRESS
+echo $CONTRACT_ADDRESS > /root/scripts/CONTRACT_ADDRESS
 
 secretd config node "http://localhost:26657"
 exit 0

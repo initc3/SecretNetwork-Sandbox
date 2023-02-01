@@ -5,17 +5,18 @@ set -x
 
 docker-compose down
 
-rm -rf secretd-1
-rm -rf secretd-2
-
-mkdir -p secretd-1
-mkdir -p secretd-2
-mkdir -p genesis
-
 docker-compose up localsecret-1 -d
 sleep 5
-cp secretd-1/config/genesis.json genesis/genesis.json
-docker-compose up localsecret-2
+
+genesis=$(docker-compose exec localsecret-1 ls /genesis)
+while [[ "$genesis" != *"genesis.json"* ]] 
+do 
+    echo "Waiting for gensis file to be generated..."
+    genesis=$(docker-compose exec localsecret-1 ls /genesis)
+    docker-compose logs localsecret-1 --tail 10   
+    sleep 5
+done
+
 docker-compose up localsecret-2 -d
 
 #waiting to build secretd and start node
@@ -24,18 +25,18 @@ while [[ "$progs" != *"secretd start --rpc.laddr tcp://0.0.0.0:26657"* ]]
 do 
     echo "Waiting for secretd build and node start..."
     progs=$(docker-compose exec localsecret-2 ps -ef)
-    ./logs.sh    
+    docker-compose logs localsecret-2 --tail 10   
     sleep 5
 done
 
 #waiting for blocks to start being produced before turning off localsecret-1
-logs=$(docker-compose exec localsecret-2 cat /root/out )
+logs=$(docker-compose logs localsecret-2 --tail 10)
 while [[ "$logs" != *"executed block"* ]] 
 do 
     echo "Waiting for blocks to be produced..."
-    logs=$(docker-compose exec localsecret-2 cat /root/out )
-    ./logs.sh 
+    logs=$(docker-compose logs localsecret-2 --tail 10)
+    docker-compose logs localsecret-2 --tail 10   
     sleep 5
 done
 
-./logs.sh
+docker-compose logs localsecret-2 --tail 10 

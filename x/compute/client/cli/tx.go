@@ -45,8 +45,9 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		SnapshotDBCmd(),
-		CallFakeDeliverCmd(),
+		StartSnapshotCmd(),
+		ClearSnapshotCmd(),
+		SimulateTx(),
 		StoreCodeCmd(),
 		InstantiateContractCmd(),
 		ExecuteContractCmd(),
@@ -54,7 +55,7 @@ func GetTxCmd() *cobra.Command {
 	return txCmd
 }
 
-func SnapshotDBCmd() *cobra.Command {
+func StartSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "snapshot [name]",
 		Short: "Use a snapshot",
@@ -64,11 +65,13 @@ func SnapshotDBCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			snapshotName := args[0]
 
-			msg, err := parseSnapshotDBArgs(args, clientCtx, cmd.Flags())
-			if err != nil {
-				return err
+			msg := types.MsgStartSnapshot{
+				Sender:       clientCtx.GetFromAddress(),
+				SnapshotName: []byte(snapshotName),
 			}
+
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -81,22 +84,39 @@ func SnapshotDBCmd() *cobra.Command {
 	return cmd
 }
 
-func parseSnapshotDBArgs(args []string, cliCtx client.Context, initFlags *flag.FlagSet) (types.MsgSnapshotDB, error) {
-	snapshotName := args[0]
-	// fmt.Printf("nerla x/compute/client/cli/tx.go parseSnapshotDBArgs snapshot_name: %s\n", snapshotName)
+func ClearSnapshotCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "snapshot_clear [name]",
+		Short: "Clear a snapshot",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			snapshotName := args[0]
 
-	// build and sign the transaction, then broadcast to Tendermint
-	msg := types.MsgSnapshotDB{
-		Sender:       cliCtx.GetFromAddress(),
-		SnapshotName: []byte(snapshotName),
+			msg := types.MsgClearSnapshot{
+				Sender:       clientCtx.GetFromAddress(),
+				SnapshotName: []byte(snapshotName),
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
 	}
-	return msg, nil
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
-func CallFakeDeliverCmd() *cobra.Command {
+func SimulateTx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delivertx filename.json",
-		Short: "Call DeliverTx function",
+		Use:   "simulatetx filename.json",
+		Short: "Call Simulate function on a transaction",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -113,7 +133,7 @@ func CallFakeDeliverCmd() *cobra.Command {
 				return err
 			}
 
-			msg := types.MsgCallFakeDeliver{
+			msg := types.MsgSimulateTx{
 				Sender:		clientCtx.GetFromAddress(),
 				Tx: 		txBytes,
 			}

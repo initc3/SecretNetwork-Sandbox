@@ -7,14 +7,7 @@ package compute
 import (
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/keeper"
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type SecretNetworkMsg interface {
-	sdk.Msg
-	Type() string
-	GetTx() []byte
-}
 
 const (
 	ModuleName                    = types.ModuleName
@@ -117,8 +110,9 @@ type (
 	GenesisState            = types.GenesisState
 	Code                    = types.Code
 	Contract                = types.Contract
-	MsgSnapshotDB           = types.MsgSnapshotDB
-	MsgCallFakeDeliver      = types.MsgCallFakeDeliver
+	MsgStartSnapshot        = types.MsgStartSnapshot
+	MsgClearSnapshot        = types.MsgClearSnapshot
+	MsgSimulateTx      	= types.MsgSimulateTx
 	MsgStoreCode            = types.MsgStoreCode
 	MsgInstantiateContract  = types.MsgInstantiateContract
 	MsgExecuteContract      = types.MsgExecuteContract

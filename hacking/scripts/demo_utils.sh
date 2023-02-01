@@ -60,8 +60,8 @@ generate_and_sign_tx() {
   $SECRETD tx sign tx_$5.json --chain-id $CHAIN_ID --from $4 -y > tx_$5_sign.json
 }
 
-deliver_tx() {
-  $SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN -y > /dev/null
+simulate_tx() {
+  $SECRETD tx compute simulatetx tx_$1_sign.json --from $ADMIN -y > /dev/null
 }
 
 execute_tx() {
