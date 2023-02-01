@@ -25,10 +25,10 @@ while true; do
 done
 
 mkdir -p /root/hist_data
-mkdir -p /root/hist_data2
-files=$(ls -1 -a /root/.secretd)
-cp -r /root/.secretd/ /root/hist_data4
-cp -r /root/.secretd/* /root/hist_data2
+#mkdir -p /root/hist_data2
+#files=$(ls -1 -a /root/.secretd)
+cp -r /root/.secretd/ /root/hist_data
+#cp -r /root/.secretd/* /root/hist_data2
 
 RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &
 sleep infinity

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 	"path/filepath"
 
 	"github.com/scrtlabs/SecretNetwork/app/keepers"
@@ -85,10 +86,11 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	// authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	// unnamed import of statik for swagger UI support
 	_ "github.com/scrtlabs/SecretNetwork/client/docs/statik"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const appName = "secret"
@@ -145,6 +147,7 @@ type SecretNetworkApp struct {
 	sm *module.SimulationManager
 
 	configurator module.Configurator
+	// chainID String
 }
 
 func (app *SecretNetworkApp) GetBaseApp() *baseapp.BaseApp {
@@ -179,8 +182,7 @@ func (app *SecretNetworkApp) RegisterTendermintService(clientCtx client.Context)
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
-func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
-	fmt.Printf("nerla app/app.go DeliverTx tx %x\n", req.Tx)
+func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
 	if err != nil {
 			fmt.Println( "nerla app/app.go error TxDecoder")
@@ -190,47 +192,80 @@ func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.Resp
 	for _, m := range msgs {
 		mSecret := m.(compute.SecretNetworkMsg)
 		if mSecret.Type() == "call_delivertx" || mSecret.Type() == "snapshot" {
-				fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
-			ctx := app.BaseApp.GetContextForDeliverTx(req.Tx)
-			sigTx, ok := dTx.(authsigning.SigVerifiableTx)
-			if !ok {
-					fmt.Println("nerla app/app.go invalid transaction type")
-					panic(sdkerrors.ErrTxDecode)
-			}
+			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
+			fmt.Printf("nerla app/app.go CheckTx actually calling DeliverTx tx %x\n", req.Tx)
+			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
+			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
+			fmt.Printf("nerla app/app.go Simulate response %v err %v\n", response, err)
+			app.BaseApp.FakeCommit()
 
-			sigs, err := sigTx.GetSignaturesV2()
-			if err != nil {
-					fmt.Println("nerla app/app.go GetSignaturesV2 err")
-					panic(err)
-			}
-			signerAddrs := sigTx.GetSigners()
 
-			for i, sig := range sigs {
-					addr := signerAddrs[i]
-					acc := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-					fmt.Printf("nerla app/app.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence+1)
-					if err := acc.SetSequence(sig.Sequence+1); err != nil {
-							panic(err)
-					}
-					app.AppKeepers.AccountKeeper.SetAccount(ctx, acc)
-					acc2 := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
-					fmt.Printf("nerla app/app.go after addr %s acc.seq %d\n", addr.String(), acc2.GetSequence())
+			// resp := app.DeliverTx(abci.RequestDeliverTx{Tx: req.Tx})
+			return abci.ResponseCheckTx{
+				Code: abci.CodeTypeOK,
+				GasWanted: int64(gasInfo.GasWanted),
+				GasUsed: int64(gasInfo.GasUsed),
 			}
-
-			gasInfo, resp, err := app.BaseApp.Simulate(req.Tx)
-			fmt.Printf("nerla app/app.go Simulate gasInfo %d res %v err %v\n", gasInfo, resp, err)
-			return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}                    
 		}
 	}
-
-	// if compute.GetFakeDeliver() {
-	// 	fmt.Printf("nerla app/app.go DeliverTx FAKE_DELIVER is true\n", )
-	// 	return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
-	// }
-	resp := app.BaseApp.DeliverTx(req)
-	fmt.Printf("nerla app/app.go DeliverTx res %v\n", resp)
+	fmt.Printf("nerla app/app.go CheckTx tx %x\n", req.Tx)
+	resp := app.BaseApp.CheckTx(req)
+	fmt.Printf("nerla app/app.go CheckTx resp %v\n", resp)
 	return resp
 }
+
+// func (app *SecretNetworkApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+// 	fmt.Printf("nerla app/app.go DeliverTx tx %x\n", req.Tx)
+// 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
+// 	if err != nil {
+// 			fmt.Println( "nerla app/app.go error TxDecoder")
+// 			panic(err)
+// 	}
+// 	msgs := dTx.GetMsgs()
+// 	for _, m := range msgs {
+// 		mSecret := m.(compute.SecretNetworkMsg)
+// 		if mSecret.Type() == "call_delivertx" || mSecret.Type() == "snapshot" {
+// 			fmt.Printf("nerla app/app.go m.Type() %s calling Simulate\n", mSecret.Type())
+// 			// ctx := app.BaseApp.GetContextForDeliverTx(req.Tx)
+// 			// sigTx, ok := dTx.(authsigning.SigVerifiableTx)
+// 			// if !ok {
+// 			// 		fmt.Println("nerla app/app.go invalid transaction type")
+// 			// 		panic(sdkerrors.ErrTxDecode)
+// 			// }
+
+// 			// sigs, err := sigTx.GetSignaturesV2()
+// 			// if err != nil {
+// 			// 		fmt.Println("nerla app/app.go GetSignaturesV2 err")
+// 			// 		panic(err)
+// 			// }
+// 			// signerAddrs := sigTx.GetSigners()
+
+// 			// for i, sig := range sigs {
+// 			// 		addr := signerAddrs[i]
+// 			// 		acc := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
+// 			// 		fmt.Printf("nerla app/app.go before addr %s acc.seq %d sig.seq %d\n", addr.String(), acc.GetSequence(), sig.Sequence+1)
+// 			// 		if err := acc.SetSequence(sig.Sequence+1); err != nil {
+// 			// 				panic(err)
+// 			// 		}
+// 			// 		app.AppKeepers.AccountKeeper.SetAccount(ctx, acc)
+// 			// 		acc2 := app.AppKeepers.AccountKeeper.GetAccount(ctx, addr)
+// 			// 		fmt.Printf("nerla app/app.go after addr %s acc.seq %d\n", addr.String(), acc2.GetSequence())
+// 			// }
+
+// 			gasInfo, resp, err := app.BaseApp.Simulate(req.Tx)
+// 			fmt.Printf("nerla app/app.go Simulate gasInfo %d res %v err %v\n", gasInfo, resp, err)
+// 			return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
+// 		}
+// 	}
+
+// 	// if compute.GetFakeDeliver() {
+// 	// 	fmt.Printf("nerla app/app.go DeliverTx FAKE_DELIVER is true\n", )
+// 	// 	return abci.ResponseDeliverTx{Code: abci.CodeTypeOK}
+// 	// }
+// 	resp := app.BaseApp.DeliverTx(req)
+// 	fmt.Printf("nerla app/app.go DeliverTx res %v\n", resp)
+// 	return resp
+// }
 
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
@@ -259,7 +294,7 @@ func NewSecretNetworkApp(
 	// BaseApp handles interactions with Tendermint through the ABCI protocol
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	compute.SetTxDecoder(encodingConfig.TxConfig.TxDecoder())
-	
+
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -273,6 +308,7 @@ func NewSecretNetworkApp(
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		bootstrap:         bootstrap,
+		// chainID: appOpts.Get(server.Blockchain),
 	}
 
 	app.AppKeepers.InitKeys()
@@ -473,6 +509,7 @@ func (app *SecretNetworkApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBloc
 
 // InitChainer application update at chain initialization
 func (app *SecretNetworkApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	fmt.Println("nerla app/app.go InitChainer")
 	var genesisState simapp.GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

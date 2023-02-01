@@ -31,7 +31,6 @@ secretd tx compute execute $CONTRACT_ADDRESS --generate-only "{\"store1\":{\"mes
 echo "Signing Victim tx"
 secretd tx sign tx_victim.json --chain-id secretdev-1 --from $VICTIM_ADDR > tx_victim_sign.json
 
-cp -rf /root/.secretd/data/ /root/hist_data
 echo $CONTRACT_ADDRESS > CONTRACT_ADDRESS
 exit 0
 

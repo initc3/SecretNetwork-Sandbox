@@ -3,7 +3,7 @@ set -x
 
 USER=secret15vya8x6l5qcf0xw28xwehjxd9stymtvf4sqr6q
 PASSPHRASE=password
-SECRETD=secretcli
+SECRETD=./secretd
 sSCRT_ADDR=secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg
 SHD_ADDR=secret19ymc8uq799zf36wjsgu4t0pk8euddxtx5fggn8
 exchange_addr=secret1pak8feexy97myp22pjkxmsp5p8dmlkp4mkfxsl
@@ -40,13 +40,20 @@ swap_sSCRT_to_SHD() {
   wait_for_tx $TX
 }
 
+query_pool() {
+  pool=$(echo $PASSPHRASE | $SECRETD q compute query $exchange_addr "{\"pair_info\": {}}")
+  echo $pool
+}
+
 # turn SCRT to sSCRT
 #deposit_sSCRT amt=1000000uscrt
-
-query_snip_20_balance $sSCRT_ADDR $USER
+#
+#query_snip_20_balance $sSCRT_ADDR $USER
+#query_snip_20_balance $SHD_ADDR $USER
+#
+#swap_sSCRT_to_SHD 100000 $USER 0
+#
+#query_snip_20_balance $sSCRT_ADDR $USER
 query_snip_20_balance $SHD_ADDR $USER
 
-swap_sSCRT_to_SHD 100000 $USER 0
-
-query_snip_20_balance $sSCRT_ADDR $USER
-query_snip_20_balance $SHD_ADDR $USER
+#query_pool
