@@ -7,7 +7,14 @@ package compute
 import (
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/keeper"
 	"github.com/scrtlabs/SecretNetwork/x/compute/internal/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+type SecretNetworkMsg interface {
+	sdk.Msg
+	Type() string
+	GetTx() []byte
+}
 
 const (
 	ModuleName                    = types.ModuleName
