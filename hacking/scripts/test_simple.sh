@@ -2,6 +2,7 @@
 set -x
 ADDR=$(secretd keys show --address b)
 CONTRACT_ADDRESS=$(cat CONTRACT_ADDRESS)
+secretd tx compute snapshot --from $ADDR "snapshot" -y --broadcast-mode sync
 secretd tx compute delivertx tx_victim_sign.json --from $ADDR -y 
 secretd q compute query $CONTRACT_ADDRESS "{\"store1_q\":{}}" 
 

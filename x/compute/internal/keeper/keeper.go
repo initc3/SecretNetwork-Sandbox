@@ -75,6 +75,7 @@ type Keeper struct {
 	bankKeeper       bankkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
+	DummyStore       map[string][]byte
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
@@ -118,6 +119,8 @@ func NewKeeper(
 	customEncoders *MessageEncoders,
 	customPlugins *QueryPlugins,
 ) Keeper {
+    dummy_store := make(map[string][]byte)
+
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
@@ -125,6 +128,7 @@ func NewKeeper(
 	keeper := Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
+		DummyStore:       dummy_store,
 		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,
@@ -468,7 +472,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Instantiate prefixStoreKey %x snapshot_name %s\n", prefixStoreKey, snapshot_name)
 
@@ -597,7 +602,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+
 
 	// add more funds
 	if !coins.IsZero() {
@@ -702,7 +708,8 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	}
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+
 	// prepare querier
 	querier := QueryHandler{
 		Ctx:     ctx,
@@ -758,7 +765,8 @@ func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []
 		return result
 	}
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name)
+prefixStore := NewDummyStore(ctx.KVStore(k.storeKey), prefixStoreKey, snapshot_name, k.DummyStore)
+
 
 	if val := prefixStore.Get(key); val != nil {
 		return append(result, types.Model{
