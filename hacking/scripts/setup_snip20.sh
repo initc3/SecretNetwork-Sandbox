@@ -39,7 +39,7 @@ done
     sleep 5
 echo "Storing contract"
 
-STORE_TX=$(secretd tx compute store /root/secretSCRT/contract.wasm --from $ACC0 -y --broadcast-mode sync --gas=5000000)
+STORE_TX=$(secretd tx compute store /root/secretSCRT/contract.wasm.gz --from $ACC0 -y --broadcast-mode sync --gas=5000000)
 eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
 while true; do 
     eval CODE_ID=$(secretd q tx $STORE_TX_HASH | jq '.logs[].events[].attributes[] | select(.key=="code_id") | .value ')

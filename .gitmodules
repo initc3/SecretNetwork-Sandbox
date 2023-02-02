@@ -1,11 +1,11 @@
 [submodule "third_party/incubator-teaclave-sgx-sdk"]
-	path = third_party/incubator-teaclave-sgx-sdk
-	url = https://github.com/scrtlabs/incubator-teaclave-sgx-sdk
-	branch = master
+   path = third_party/incubator-teaclave-sgx-sdk
+   url = https://github.com/scrtlabs/incubator-teaclave-sgx-sdk
+   branch = secret-new-1.1.5
 [submodule "cosmos-sdk"]
-	path = cosmos-sdk
-	url = https://github.com/initc3/cosmos-sdk.git
-	branch = pulp
+   path = cosmos-sdk
+   url = https://github.com/initc3/cosmos-sdk.git
+   branch = pulp
 [submodule "hacking/secretSCRT"]
 	path = hacking/secretSCRT
 	url = https://github.com/scrtlabs/secretSCRT.git
