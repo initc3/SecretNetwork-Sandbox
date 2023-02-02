@@ -41,4 +41,4 @@ done
 
 docker-compose logs localsecret-2 --tail 10
 
-./setup_simple.sh
+./scripts/setup.sh

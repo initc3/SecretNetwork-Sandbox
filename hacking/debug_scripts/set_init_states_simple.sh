@@ -29,7 +29,6 @@ eval CODE_HASH=$(secretd q compute contract-hash $CONTRACT_ADDRESS)
 CODE_HASH=${CODE_HASH:2} #strip of 0x.. from CODE_HASH hex string
 
 echo "Generating Victim tx"
-#secretd tx compute execute $CONTRACT_ADDRESS --generate-only "{\"store1\":{\"message\":\"hello2\"}}" --from $VICTIM_ADDR --enclave-key io-master-cert.der --code-hash $CODE_HASH --label $UNIQUE_LABEL  -y  --broadcast-mode sync > tx_victim.json
 secretd tx compute execute $CONTRACT_ADDRESS --generate-only "{\"store1\":{\"message\":\"hello2\"}}" --from $VICTIM_ADDR --enclave-key io-master-key.txt --code-hash $CODE_HASH --label $UNIQUE_LABEL  -y  --broadcast-mode sync > tx_victim.json
 echo "Signing Victim tx"
 secretd tx sign tx_victim.json --chain-id secretdev-1 --from $VICTIM_ADDR > tx_victim_sign.json
