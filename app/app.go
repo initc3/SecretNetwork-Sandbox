@@ -234,6 +234,7 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 		case *compute.MsgSimulateTx:
 			fmt.Println("nerla app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
 			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
+			fmt.Println("nerla app/app.go MsgSimulateTx done executing Simulate\n")
 			if err != nil {
 				return abci.ResponseCheckTx{
 					Code: 1,
