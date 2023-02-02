@@ -7,7 +7,7 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 file=~/.secretd/config/genesis.json
 if [ ! -e "$file" ]
 then
-    echo "~~~init the node from scratch"
+    echo "init the node from scratch"
     rm -rf ~/.secretd/*
     rm -rf /opt/secret/.sgx_secrets/*
 
@@ -50,6 +50,7 @@ then
 
     secretd init-bootstrap
     secretd validate-genesis
+    cp /root/.secretd/config/genesis.json /genesis/genesis.json
 
     # Setup CORS for LCD & gRPC-web
     perl -i -pe 's;address = "tcp://0.0.0.0:1317";address = "tcp://0.0.0.0:1316";' .secretd/config/app.toml
@@ -58,15 +59,9 @@ then
 
     # Setup faucet
     setsid node faucet_server.js &
-
-    # Setup secretcli
-    cp $(which secretd) $(dirname $(which secretd))/secretcli
-
-    # hack to change permission of data after starting node
-    # sleep 10 && chmod -R ugo+rwx ~/.secretd/* &
+    sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
 else
-    echo "~~~~~~$file exists restarting node"
+    echo "$file exists restarting node"
 fi 
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.secretd/config/config.toml
 source /opt/sgxsdk/environment && RUST_BACKTRACE=1 LOG_LEVEL="$LOG_LEVEL" secretd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap
 

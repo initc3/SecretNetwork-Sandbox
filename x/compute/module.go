@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,18 +31,6 @@ var (
 
 // AppModuleBasic defines the basic application module used by the compute module.
 type AppModuleBasic struct{}
-
-func GetFakeDeliver() bool {
-	return keeper.FAKE_DELIVER
-}
-
-func SetBaseApp(app *baseapp.BaseApp) {
-	keeper.SetBaseApp(app)
-}
-
-func SetTxDecoder(txd sdk.TxDecoder) {
-	keeper.SetTxDecoder(txd)
-}
 
 func (b AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	RegisterCodec(amino)

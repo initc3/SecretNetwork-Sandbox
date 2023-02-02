@@ -1,10 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+set -e
 set -x
+
 SECRETD=secretd
-ADV='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
+ADMIN='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
 
 start_secretd() {
-    dev=$($SECRETD q account $ADV)
+    dev=$($SECRETD q account $ADMIN)
     echo "$?"
 }
 
@@ -13,7 +16,7 @@ query_tx_res() {
     echo "$?"
 }
 
-pkill -f "secretd start --rpc.laddr tcp://0.0.0.0:26657"
+pkill -f "$SECRET start --rpc.laddr tcp://0.0.0.0:26657"
 sleep_time=3
 cnt=0
 cnt_max=5
@@ -25,10 +28,7 @@ while true; do
 done
 
 mkdir -p /root/hist_data
-#mkdir -p /root/hist_data2
-#files=$(ls -1 -a /root/.secretd)
 cp -r /root/.secretd/ /root/hist_data
-#cp -r /root/.secretd/* /root/hist_data2
 
-RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &
-sleep infinity
+RUST_BACKTRACE=1 $SECRET start --rpc.laddr "tcp://0.0.0.0:26657" &
+disown

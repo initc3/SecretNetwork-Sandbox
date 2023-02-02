@@ -2,7 +2,7 @@ VICTIM="secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf"
 ADV="secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq"
 ADMIN="secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne"
 UNIQUE_LABEL=$(date "+%Y-%m-%d-%H:%M:%S")
-CONTRACT_LOC=contract-sienna-swap
+CONTRACT_LOC=contract-toy-swap
 SECRETD=secretd
 CHAIN_ID="secretdev-1"
 
@@ -19,10 +19,6 @@ wait_for_tx() {
 }
 
 init_contract() {
-#  cd $CONTRACT_LOC
-#  make
-#  cd ..
-
   echo "Storing contract"
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/contract.wasm --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
@@ -60,8 +56,8 @@ generate_and_sign_tx() {
   $SECRETD tx sign tx_$5.json --chain-id $CHAIN_ID --from $4 -y > tx_$5_sign.json
 }
 
-deliver_tx() {
-  $SECRETD tx compute delivertx tx_$1_sign.json --from $ADMIN -y > /dev/null
+simulate_tx() {
+  $SECRETD tx compute simulatetx tx_$1_sign.json --from $ADMIN -y > /dev/null
 }
 
 execute_tx() {
