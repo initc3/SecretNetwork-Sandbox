@@ -81,7 +81,7 @@ ENV CGO_LDFLAGS=${CGO_LDFLAGS}
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
-COPY cosmos-sdk cosmos-sdk
+#COPY cosmos-sdk cosmos-sdk
 
 # This is due to some esoteric docker bug with the underlying filesystem, so until I figure out a better way, this should be a workaround
 RUN true
