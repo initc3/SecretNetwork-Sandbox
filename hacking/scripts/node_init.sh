@@ -89,4 +89,10 @@ if [ ! -f "$file" ];then
 else
   echo "$file exists restarting node"
 fi
-RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657
+curr_dir=$(pwd)
+cd /go/src/github.com/enigmampc/SecretNetwork/
+make build_local_no_rust
+cp secretd /usr/bin/secretd
+chmod +x secretd
+cd $curr_dir
+RUST_BACKTRACE=1 secretd start --rpc.laddr tcp://0.0.0.0:26657 &
