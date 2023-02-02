@@ -41,5 +41,4 @@ done
 
 docker-compose logs localsecret-2 --tail 10
 
-./setup_simple.sh
-./setup_snip20.sh
+#./setup.sh
