@@ -3,8 +3,6 @@
 set -e
 set -x
 
-SECRETD=./secretd
-
 #exchange_addr=secret1pak8feexy97myp22pjkxmsp5p8dmlkp4mkfxsl
 CONTRACT_ADDRESS=secret1pak8feexy97myp22pjkxmsp5p8dmlkp4mkfxsl
 
@@ -14,8 +12,8 @@ sSCRT_ADDR=secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg ### token_1
 
 source ./scripts/demo_utils.sh
 
-deposit_sSCRT() {
-  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $sSCRT_ADDR "{\"deposit\": {}}" --from $USER --amount=$1 -y)
+deposit_sSCRT() { ### turn SCRT to sSCRT
+  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $sSCRT_ADDR "{\"deposit\": {}}" --from $1 --amount=$2 -y)
   wait_for_tx $TX
 }
 
@@ -65,18 +63,8 @@ set_viewing_keys() {
   set_snip_20_viewing_key $sSCRT_ADDR $ADV
 }
 
-## turn SCRT to sSCRT
-#deposit_sSCRT amt=1000000uscrt
-#
-#query_snip_20_balance $sSCRT_ADDR $USER
-#query_snip_20_balance $SHD_ADDR $USER
-#
-#swap_sSCRT_to_SHD 100000 $USER 0
-#
-#query_snip_20_balance $sSCRT_ADDR $USER
-#query_snip_20_balance $SHD_ADDR $USER
-#
-#set_viewing_keys
+deposit_sSCRT $ADV 1000000uscrt
+deposit_sSCRT $VICTIM 1000000uscrt
 
 query_pools
 query_balances
