@@ -1,7 +1,7 @@
 [submodule "third_party/incubator-teaclave-sgx-sdk"]
 	path = third_party/incubator-teaclave-sgx-sdk
 	url = https://github.com/scrtlabs/incubator-teaclave-sgx-sdk
-	branch = master
+	branch = secret-new-1.1.5
 [submodule "cosmos-sdk"]
 	path = cosmos-sdk
 	url = https://github.com/initc3/cosmos-sdk.git
