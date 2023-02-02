@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
+	// "time"
 	"path/filepath"
 
 	"github.com/scrtlabs/SecretNetwork/app/keepers"
@@ -90,7 +90,6 @@ import (
 	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	// unnamed import of statik for swagger UI support
 	_ "github.com/scrtlabs/SecretNetwork/client/docs/statik"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const appName = "secret"
@@ -193,7 +192,6 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 		switch typedTx := m.(type) {
 		case *compute.MsgStartSnapshot:
 			fmt.Println("nerla app/app.go MsgStartSnapshot calling Simulate\n")
-			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
 			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
 			if err != nil {
 				return abci.ResponseCheckTx{
@@ -210,7 +208,6 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 			}
 		case *compute.MsgClearSnapshot:
 			fmt.Println("nerla app/app.go MsgClearSnapshot calling Simulate\n")
-			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
 			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
 			if err != nil {
 				return abci.ResponseCheckTx{
@@ -227,7 +224,6 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 			}
 		case *compute.MsgSimulateTx:
 			fmt.Println("nerla app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
-			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
 			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
 			if err != nil {
 				return abci.ResponseCheckTx{
