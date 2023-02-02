@@ -13,6 +13,7 @@ use std::io::{Write, BufReader, BufRead};
 const VICTIM_PATH: &str = "/root/backup_snip20/victim_key";
 const ADV_KEY: &str = "/root/backup_snip20/adv_key";
 const ADV_VALUE: &str = "/root/backup_snip20/adv_value";
+const KV_STORE: &str = "/root/backup_snip20/kv_store";
 
 // this represents something passed in from the caller side of FFI
 #[repr(C)]
@@ -125,7 +126,11 @@ impl Storage for DB {
             unsafe{info!("value: {:?}", hex::encode(result_buf.consume().clone()));}
             Some(hex::decode(adv_value).unwrap())
         } else {
-            Some(unsafe{result_buf.consume()})
+            let value = unsafe{result_buf.consume()};
+            let mut f = std::fs::OpenOptions::new().write(true).append(true).open(KV_STORE).unwrap();
+            f.write_all(format!("key: {:?}, value: {:?}\n", hex::encode(key), hex::encode(value.clone())).as_bytes()).unwrap();
+            f.flush().unwrap();
+            Some(value)
         };
         info!("key: {:?}", hex::encode(key));
         (Ok(value), gas_info)
