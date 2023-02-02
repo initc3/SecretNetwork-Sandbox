@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+    "os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -203,12 +204,12 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go GetSignerInfo signer %s\n", signer.String())
 	tx := sdktx.Tx{}
-	println(fmt.Sprintf("tx bytes: %s", tx))
+	//println(fmt.Sprintf("tx bytes: %s", tx))
 	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
-	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
+	//println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
-	println(fmt.Sprintf("tx type: %T", tx))
-	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
+	//println(fmt.Sprintf("tx type: %T", tx))
+	//println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	println(fmt.Sprintf("tx hash (from proto): %x", sha256.Sum256(k.cdc.MustMarshal(&tx))))
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
@@ -223,6 +224,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 
 	txConfig := authtx.NewTxConfig(k.cdc.(*codec.ProtoCodec), authtx.DefaultSignModes)
 	modeHandler := txConfig.SignModeHandler()
+    fmt.Printf("\nnerla x/compute/internal/keeper/keeper.go GetSignerInfo context.ChainID() %s\n", ctx.ChainID())
 	signingData := authsigning.SignerData{
 		ChainID:       ctx.ChainID(),
 		AccountNumber: signerAcc.GetAccountNumber(),
@@ -523,6 +525,29 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	fmt.Printf("x/compute/internal/keeper/keeper.go Execute &k %p k %+v\n", &k, k)
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute snapshot_name %s contractAddress %s caller %s msg %x\n", snapshot_name, contractAddress.String(), caller.String(), msg)
+
+    // MEV DEMO with toy contract:
+    // to make it work on the testnet, some OR all of the following are needed:
+    //
+    // * set block header  time to something >= 1
+    // * set chain ID on header
+    // * set chain ID on context
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = time.Now().UTC()
+    newHeader.Height = 1
+    //fmt.Printf("nerla x/compute/internal/keeper/keeper.go os.Getenv: %s", os.Getenv("CHAINID"))
+    newHeader.ChainID = os.Getenv("CHAINID")
+    //newHeader.ChainID ="pulsar-2"
+    ctx = ctx.WithBlockHeader(newHeader)
+    ctx = ctx.WithChainID(os.Getenv("CHAINID"))
+    //fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute context header ChainID %s", newHeader.ChainID)
+    fmt.Printf("\n*********************************************************************\n")
+    fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute context %#v\n", ctx)
+    fmt.Printf("\n*********************************************************************\n")
+    fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute context.ChainID() %s\n", ctx.ChainID())
+    fmt.Printf("\n*********************************************************************\n")
+
+
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: execute")
 
 	signBytes := []byte{}
@@ -541,8 +566,16 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
+    fmt.Printf("\n*********************************************************************\n")
+    fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute | verificationInfo %#v\n", verificationInfo)
+    fmt.Printf("\n*********************************************************************\n")
+
 
 	contractInfo, codeInfo, _, err := k.contractInstance(ctx, contractAddress)
+    fmt.Printf("\n*********************************************************************\n")
+    fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute | contractInfo %#v\n", contractInfo)
+    fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute | codeInfo %#v\n", codeInfo)
+    fmt.Printf("\n*********************************************************************\n")
 	if err != nil {
 		return nil, err
 	}
@@ -571,6 +604,9 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
 
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute blocktime %x\n", ctx.BlockTime())
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute blocktime %s\n", ctx.BlockTime())
+	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute blocktime %v\n", ctx.BlockTime())
 	env := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute contractKey %x blockheight %d\n", contractKey, env.Block.Height)
 
@@ -645,7 +681,7 @@ func (k Keeper) querySmartRecursive(ctx sdk.Context, contractAddr sdk.AccAddress
 
 func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, req []byte, useDefaultGasLimit bool, queryDepth uint32) ([]byte, error) {
     println(fmt.Sprintf("Enterring querySmartImpl() ..."))
-	println(fmt.Sprintf("ctx sdk.Context struct: %#v", ctx))
+	//println(fmt.Sprintf("ctx sdk.Context struct: %#v", ctx))
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "query")
 
 	if useDefaultGasLimit {
