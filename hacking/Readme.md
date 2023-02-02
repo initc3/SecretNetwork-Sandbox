@@ -2,27 +2,21 @@
 # Steps
 
 ### Update git submodules
-`git submodule update --init --recursive`
-
-### Build contracts
-
-`make`
+fetch third_party/incubator-teaclave-sgx-sdk & cosmos-sdk
+`git submodule update --init --recursive --remote`
 
 ### Build Secret Network Node image
-
 `./build_image.sh`
 
-### Start Two node network
-
+### Setup environment for demo
+start a validator node (node-1) and a non-validator node (node-2)
+set up initial states for our demo
+shut down the validator node (node-1)
+take snapshot of the current states (used in rewinding attack later)
 `./start_node.sh`
 
-### Setup environment for emo
-
-`./setup_simple.sh`
-
 ### Run mev demo on local network
-
-`docker exec -it hacking-localsecret-2-1 bash "./scripts/run_mev_demo_local.sh"`
+`docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh`
 
 
 [//]: # ()

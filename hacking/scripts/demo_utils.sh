@@ -19,10 +19,6 @@ wait_for_tx() {
 }
 
 init_contract() {
-  cd $CONTRACT_LOC
-  make
-  cd ..
-
   echo "Storing contract"
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/contract.wasm --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )

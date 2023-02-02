@@ -13,9 +13,9 @@ services:
         SGX_MODE: SW
         SECRET_NODE_TYPE: BOOTSTRAP
         CHAIN_ID: secretdev-1
-    secrets:
-      - API_KEY
-      - SPID
+      secrets:
+        - API_KEY
+        - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
@@ -46,9 +46,9 @@ services:
         FEATURES_U: ${FEATURES_U}
         SGX_MODE: SW
         CHAIN_ID: secretdev-1
-    secrets:
-      - API_KEY
-      - SPID
+      secrets:
+        - API_KEY
+        - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
@@ -69,8 +69,6 @@ services:
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./scripts/:/root/scripts
       - genesis:/genesis
-      - ./contract-simple:/root/contract-simple
-      - ./contract-toy-swap:/root/contract-toy-swap
       - ../cosmos-sdk:/go/src/github.com/enigmampc/SecretNetwork/cosmos-sdk
 secrets:
   API_KEY:
