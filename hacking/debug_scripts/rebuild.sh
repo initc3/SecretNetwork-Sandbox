@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
+set -e
 set -x
+
+### stop node
 pkill -f "secretd start --rpc.laddr tcp://0.0.0.0:26657"
 
+### recover from backup data
 sleep 3
 rm -rf /root/.secretd/.*
 rm -rf /root/.secretd/*
 cp -rf /root/hist_data/.secretd/. /root/.secretd/
 
+### rebuild secretd
 cd /go/src/github.com/enigmampc/SecretNetwork/
 rm secretd
 set -e
@@ -15,5 +20,6 @@ chmod +x secretd
 cp secretd /usr/bin/secretd
 cd /root
 
+### resume node
 RUST_BACKTRACE=1 secretd start --rpc.laddr "tcp://0.0.0.0:26657" &
 sleep infinity

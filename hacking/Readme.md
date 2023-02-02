@@ -2,14 +2,21 @@
 # Running the MEV Demo
 
 ### Update Git Submodules
-Fetch the third_party/incubator-teaclave-sgx-sdk and cosmos-sdk submodules by running the following command:
+Fetch the `third_party/incubator-teaclave-sgx-sdk` and `cosmos-sdk` submodules by running the following command:
 
 `git submodule update --init --recursive --remote`
 
+### Requirements
+
+Docker Engine: TODO
+Docker Compose version: v2.12^
+
 ### Build Secret Network Node Image
+Run all the command below under directory `hacking`.
+
 The demo contracts are built when building the image. Run the following command to build the image:
 
-`./build_image.sh`
+`docker-compose build`
 
 ### Setup Environment
 1) start a validator node (node-1) and a non-validator node (node-2)
@@ -18,13 +25,9 @@ The demo contracts are built when building the image. Run the following command 
 The pool sizes are 1000 for token_a and 2000 for token_b. 
 The victim and adversary account in the toy-swap contract each have a balance of 100 token_a and token_b.
 
-3) Shut down the validator node (node-1).
+3) Shut down node-1 to launch the attack in simulation mode without broadcasting any transactions to the network.
 
-4) Temporarily shut down node-2 and take a snapshot of the current states for later rewinding.
-
-5) Restart node-2 to launch the attack in simulation mode without broadcasting any transactions to the network.
-
-`./start_node.sh`
+`./scripts/start_node.sh`
 
 ### Launch MEV Attack
 In the MEV demo, the adversary executes the following steps:
@@ -36,6 +39,10 @@ In the MEV demo, the adversary executes the following steps:
 3) After the victim's transaction, the adversary executes a back-run transaction to sell the 40 token_b, increasing their balance of token_a by 1 and maintaining their balance of token_b.
 
 `docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh`
+
+### Cleanup
+
+TODO
 
 
 [//]: # ()

@@ -29,8 +29,8 @@ deposit_sSCRT() {
 
 query_snip_20_balance() {
   viewing_key=vk
-#  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $1 "{\"set_viewing_key\": {\"key\":\"$viewing_key\"}}" --from $2 -y)
-#  wait_for_tx $TX
+  TX=$(echo $PASSPHRASE | $SECRETD tx compute execute $1 "{\"set_viewing_key\": {\"key\":\"$viewing_key\"}}" --from $2 -y)
+  wait_for_tx $TX
   echo $PASSPHRASE | $SECRETD q compute query $1 "{\"balance\": {\"key\":\"$viewing_key\",\"address\":\"$2\"}}"
 }
 
@@ -46,14 +46,14 @@ query_pool() {
 }
 
 # turn SCRT to sSCRT
-#deposit_sSCRT amt=1000000uscrt
-#
-#query_snip_20_balance $sSCRT_ADDR $USER
-#query_snip_20_balance $SHD_ADDR $USER
-#
-#swap_sSCRT_to_SHD 100000 $USER 0
-#
-#query_snip_20_balance $sSCRT_ADDR $USER
+deposit_sSCRT amt=1000000uscrt
+
+query_snip_20_balance $sSCRT_ADDR $USER
 query_snip_20_balance $SHD_ADDR $USER
 
-#query_pool
+swap_sSCRT_to_SHD 100000 $USER 0
+
+query_snip_20_balance $sSCRT_ADDR $USER
+query_snip_20_balance $SHD_ADDR $USER
+
+query_pool

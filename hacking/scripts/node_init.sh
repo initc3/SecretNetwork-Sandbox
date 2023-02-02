@@ -30,7 +30,6 @@ if [ ! -f "$file" ];then
   echo $d_mnemonic | secretd keys add d --recover
 
   mkdir -p /root/.secretd/.node
-  #PERSISTENT_PEERS="115aa0a629f5d70dd1d464bc7e42799e00f4edae@localsecret-1:26656"
   secretd init "$(hostname)" --chain-id $CHAINID || true
   eval PEERID=$(secretd status | jq .NodeInfo.id)
   PERSISTENT_PEERS="$PEERID@localsecret-1:26656"
@@ -62,7 +61,6 @@ if [ ! -f "$file" ];then
 
   secretd q register secret-network-params
 
-  #secretd configure-secret node-master-cert.der "$SEED"
   secretd configure-secret node-master-key.txt "$SEED"
 
   cp /genesis/genesis.json /root/.secretd/config/genesis.json
