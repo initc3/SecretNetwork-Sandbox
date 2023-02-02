@@ -64,7 +64,6 @@ simulate_tx adv_back
 #broadcast_tx victim
 ## send back-run tx
 #execute_tx token_b $dif_pool_b 0 $ADV
-#query_balances
 
 query_balances
 echo "pool_a $(query_pool pool_a)"

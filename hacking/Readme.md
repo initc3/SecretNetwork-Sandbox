@@ -38,7 +38,7 @@ In the MEV demo, the adversary executes the following steps:
 
 3) After the victim's transaction, the adversary executes a back-run transaction to sell the 40 token_b, increasing their balance of token_a by 1 and maintaining their balance of token_b.
 
-`docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh`
+`docker-compose exec localsecret-2 ./scripts/run_mev_demo_toy_swap_local.sh`
 
 ### Cleanup
 
