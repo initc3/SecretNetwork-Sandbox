@@ -62,7 +62,8 @@ if [ ! -f "$file" ];then
 
   secretd q register secret-network-params
 
-  secretd configure-secret node-master-cert.der "$SEED"
+  #secretd configure-secret node-master-cert.der "$SEED"
+  secretd configure-secret node-master-key.txt "$SEED"
 
   cp /genesis/genesis.json /root/.secretd/config/genesis.json
   

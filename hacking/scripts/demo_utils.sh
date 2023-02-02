@@ -52,7 +52,8 @@ prepare() {
 }
 
 generate_and_sign_tx() {
-  $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only "{\"swap\":{\"token_type\":\"$1\",\"offer_amt\":$2,\"expected_return_amt\":$3,\"receiver\":\"$4\"}}" --from $4 --enclave-key io-master-cert.der --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$5.json
+  #$SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only "{\"swap\":{\"token_type\":\"$1\",\"offer_amt\":$2,\"expected_return_amt\":$3,\"receiver\":\"$4\"}}" --from $4 --enclave-key io-master-cert.der --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$5.json
+  $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only "{\"swap\":{\"token_type\":\"$1\",\"offer_amt\":$2,\"expected_return_amt\":$3,\"receiver\":\"$4\"}}" --from $4 --enclave-key io-master-key.txt --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$5.json
   $SECRETD tx sign tx_$5.json --chain-id $CHAIN_ID --from $4 -y > tx_$5_sign.json
 }
 
