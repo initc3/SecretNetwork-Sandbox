@@ -69,7 +69,6 @@ services:
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./scripts/:/root/scripts
       - genesis:/genesis
-      - ../cosmos-sdk:/go/src/github.com/enigmampc/SecretNetwork/cosmos-sdk
 secrets:
   API_KEY:
     file: ../.env.local
