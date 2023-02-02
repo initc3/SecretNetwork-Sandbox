@@ -13,9 +13,15 @@ AMOUNT='10'
 snapshot_uniq_label=$(date '+%Y-%m-%d-%H:%M:%S')
 set_snapshot "${snapshot_uniq_label}-start"
 
-# generate victim tx
+# generate victim tx: ACC0 -> ACC2
 generate_and_sign_transfer $CONTRACT $CODEHASH $ACC0 $ACC2 $AMOUNT snip20_victim
 
+rm -r $BACKUP/victim_key
+rm -f $BACKUP/adv_key
+rm -f $BACKUP/adv_value
+touch $BACKUP/victim_key
+touch $BACKUP/adv_key
+touch $BACKUP/adv_value
 
 # get victim key
 generate_and_sign_transfer $CONTRACT $CODEHASH $ACC1 $ACC0 $AMOUNT snip20_getkey

@@ -5,6 +5,7 @@ set -e
 source ./scripts/demo_utils.sh
 
 init_balance=10000
+victim_balance=12343
 
 echo "Storing contract"
 
@@ -15,7 +16,7 @@ eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] 
 
 
 echo "Instantiating contract"
-INIT_TX=$(secretd tx compute instantiate $CODE_ID "{\"name\":\"SSCRT\", \"symbol\":\"SSCRT\", \"decimals\": 6, \"prng_seed\": \"MDAwMA==\", \"initial_balances\":[{\"address\": \"$ACC0\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC1\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC2\", \"amount\": \"340282366920938463463374607431768180000\"}]}" --from $ACC0 --label $UNIQUE_LABEL  -y  --broadcast-mode sync --gas=5000000)
+INIT_TX=$(secretd tx compute instantiate $CODE_ID "{\"name\":\"SSCRT\", \"symbol\":\"SSCRT\", \"decimals\": 6, \"prng_seed\": \"MDAwMA==\", \"initial_balances\":[{\"address\": \"$ACC0\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC1\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC2\", \"amount\": \"$victim_balance\"}]}" --from $ACC0 --label $UNIQUE_LABEL  -y  --broadcast-mode sync --gas=5000000)
 eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
 wait_for_tx $INIT_TX_HASH
 eval CONTRACT_ADDRESS=$(secretd q tx $INIT_TX_HASH | jq '.logs[].events[] | select(.type=="wasm") | .attributes[] | select(.key=="contract_address") | .value ') 
