@@ -7,7 +7,6 @@ services:
       dockerfile: hacking/Dockerfile
       target: build-localsecret
       args:
-        #BUILD_VERSION: ${VERSION}
         FEATURES: "${FEATURES},debug-print"
         FEATURES_U: ${FEATURES_U}
         SGX_MODE: SW
@@ -41,7 +40,6 @@ services:
       dockerfile: hacking/Dockerfile
       target: build-localsecret
       args:
-        #BUILD_VERSION: ${VERSION}
         FEATURES: "${FEATURES},debug-print"
         FEATURES_U: ${FEATURES_U}
         SGX_MODE: SW
@@ -68,6 +66,7 @@ services:
       - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./scripts/:/root/scripts
+      - ./debug_scripts/:/root/debug_scripts
       - genesis:/genesis
 secrets:
   API_KEY:
