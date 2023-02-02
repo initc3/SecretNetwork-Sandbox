@@ -18,11 +18,7 @@ The demo contracts are built when building the image. Run the following command 
 The pool sizes are 1000 for token_a and 2000 for token_b. 
 The victim and adversary account in the toy-swap contract each have a balance of 100 token_a and token_b.
 
-3) Shut down the validator node (node-1).
-
-4) Temporarily shut down node-2 and take a snapshot of the current states for later rewinding.
-
-5) Restart node-2 to launch the attack in simulation mode without broadcasting any transactions to the network.
+3) Launch the attack in simulation mode without broadcasting any transactions to the network.
 
 `./start_node.sh`
 
