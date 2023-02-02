@@ -1,12 +1,3 @@
-# syntax=docker/dockerfile:1.4
-# To try and avoid the dockerfile clutter I've included everything in this single file
-# To use you want to choose a specific target based on your use case:
-#
-#   `--target release-image` - a full node docker image
-#   `--target build-deb` - the image used to generate a .deb package
-#   `--target build-deb-mainnet` - the image used to generate deb package for mainnet (will pull precompiled enclave)
-#   `--target compile-secretd` - image with compiled enclave and secretd
-
 ARG SCRT_BASE_IMAGE_SECRETD=enigmampc/rocksdb:v6.24.2-1.1.5
 ARG TEST=enigmampc/rocksdb:v6.24.2
 ARG SCRT_BASE_IMAGE_ENCLAVE=enigmampc/rocksdb:v6.24.2-1.1.5
@@ -61,6 +52,7 @@ RUN --mount=type=cache,target=/root/.cargo/registry  . /opt/sgxsdk/environment &
 ENTRYPOINT ["/bin/bash"]
 
 # ***************** COMPILE SECRETD ************** #
+
 FROM $TEST AS compile-secretd
 
 ENV GOROOT=/usr/local/go
@@ -111,7 +103,6 @@ RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/relea
 
 COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
 COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so
-# COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so
 
 RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop
 RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy
@@ -134,7 +125,6 @@ COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwa
 COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
 
 # ******************* RELEASE IMAGE ******************** #
-#FROM $SCRT_RELEASE_BASE_IMAGE as release-image
 FROM compile-secretd as release-image
 
 # wasmi-sgx-test script requirements
@@ -173,9 +163,6 @@ RUN ln -s /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/x86_64-linux-gnu/
 WORKDIR /root
 
 # Copy over binaries from the build-env
-#COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-#COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
-#COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
@@ -201,8 +188,6 @@ ENV GENESISPATH="${GENESISPATH}"
 ENV CHAINID="${CHAINID}"
 ENV MONIKER="${MONIKER}"
 ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
-
-#ENV LD_LIBRARY_PATH=/opt/sgxsdk/libsgx-enclave-common/:/opt/sgxsdk/lib64/
 
 # Run secretd by default, omit entrypoint to ease using container with secretcli
 ENTRYPOINT ["/bin/bash", "startup.sh"]
@@ -231,5 +216,6 @@ COPY hacking/scripts ./scripts
 RUN chmod +x ./scripts/startup.sh
 RUN chmod +x ./scripts/bootstrap_init.sh
 RUN chmod +x ./scripts/node_init.sh
-RUN chmod +x ./scripts/set_init_states_for_demo.sh
+RUN chmod +x ./scripts/set_init_states_toy_swap.sh
+
 ENTRYPOINT ["./scripts/startup.sh"]

