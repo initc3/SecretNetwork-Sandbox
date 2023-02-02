@@ -4,13 +4,6 @@ set -e
 
 source ./scripts/demo_utils.sh
 
-UNIQUE_LABEL=$(date '+%Y-%m-%d-%H:%M:%S')
-ACC0='secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03'
-ACC1='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
-ACC2='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
-ACC3='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
-BACKUP='/root/backup_snip20'
-
 init_balance=10000
 
 echo "Storing contract"
@@ -31,5 +24,5 @@ eval CODE_HASH=$(secretd q compute contract-hash $CONTRACT_ADDRESS)
 CODE_HASH=${CODE_HASH:2} #strip of 0x.. from CODE_HASH hex string
 
 echo $CONTRACT_ADDRESS > $BACKUP/contractAddress.txt
-echo $CODE_HASH > $BACKUP/code.txt
+echo $CODE_HASH > $BACKUP/codeHash.txt
 

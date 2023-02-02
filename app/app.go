@@ -94,6 +94,7 @@ import (
 )
 
 const appName = "secret"
+const OUTPUTFILE = "/root/backup_snip20/simulate_result"
 
 
 var (
@@ -230,10 +231,19 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 			app.BaseApp.SetDeliverState(tmproto.Header{Time: time.Now(), ChainID:  os.Getenv("CHAINID"), Height: 1})
 			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
 			if err != nil {
+                err := os.WriteFile(OUTPUTFILE, []byte("1"), 0222)
+                if err != nil {
+                    panic(err)
+                }
+
 				return abci.ResponseCheckTx{
 					Code: 1,
 				}
-			}
+            }
+            err = os.WriteFile(OUTPUTFILE, []byte("0"), 0222)
+            if err != nil {
+                panic(err)
+            }
 			return abci.ResponseCheckTx{
 				Code: 1,
 				Log: response.Log,
