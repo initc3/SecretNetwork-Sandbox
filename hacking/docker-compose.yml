@@ -69,7 +69,9 @@ services:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
-      - ./scripts/:/root/scripts
+      - ./scripts:/root/scripts
+      - ./secretSCRT:/root/secretSCRT
+      - ./backup_snip20:/root/backup_snip20
       - genesis:/genesis
       - ../cosmos-sdk:/go/src/github.com/enigmampc/SecretNetwork/cosmos-sdk
 secrets:

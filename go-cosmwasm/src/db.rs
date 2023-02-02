@@ -10,9 +10,9 @@ use crate::memory::Buffer;
 
 use std::fs::File;
 use std::io::{Write, BufReader, BufRead};
-const VICTIM_PATH: &str = "/root/.secretd/victim_key";
-const ADV_KEY: &str = "/root/.secretd/adv_key";
-const ADV_VALUE: &str = "/root/.secretd/adv_value";
+const VICTIM_PATH: &str = "/root/backup_snip20/victim_key";
+const ADV_KEY: &str = "/root/backup_snip20/adv_key";
+const ADV_VALUE: &str = "/root/backup_snip20/adv_value";
 
 // this represents something passed in from the caller side of FFI
 #[repr(C)]
