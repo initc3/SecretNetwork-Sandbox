@@ -81,7 +81,6 @@ ENV CGO_LDFLAGS=${CGO_LDFLAGS}
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
-COPY cosmos-sdk cosmos-sdk
 
 # This is due to some esoteric docker bug with the underlying filesystem, so until I figure out a better way, this should be a workaround
 RUN true
@@ -203,11 +202,23 @@ RUN make
 WORKDIR /root/contract-simple
 RUN make
 
+FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
+COPY hacking/secretSCRT /contract
+
+RUN RUSTFLAGS='-C link-arg=-s' \
+        cargo build --release --target wasm32-unknown-unknown --locked && \
+        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
+        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
+        rm -f ./contract.wasm
+#--mount type=volume,source="$$(basename "$$(pwd)")_cache",target=/code/target \
+#--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+
 # ***************** LOCALSECRET ************** #
 FROM release-image as build-localsecret
 
 COPY --from=compile-contract /root/contract-toy-swap /root/contract-toy-swap
 COPY --from=compile-contract /root/contract-simple /root/contract-simple
+COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
 COPY deployment/docker/localsecret/faucet/faucet_server.js .
 
 HEALTHCHECK --interval=5s --timeout=1s --retries=120 CMD bash -c 'curl -sfm1 http://localhost:26657/status && curl -s http://localhost:26657/status | jq -e "(.result.sync_info.latest_block_height | tonumber) > 0"'
