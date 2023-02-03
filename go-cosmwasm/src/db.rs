@@ -107,7 +107,7 @@ impl Storage for DB {
             adv_key = line.unwrap();
         }
         info!("adv_key: {:?}", adv_key);
-        
+
         let input_adv_value = File::open(ADV_VALUE).unwrap();
         let buffered_adv_value = BufReader::new(input_adv_value);
         let mut adv_value = "".to_string();
@@ -115,7 +115,7 @@ impl Storage for DB {
             adv_value = line.unwrap();
         }
         info!("adv_value: {:?}", adv_value);
-        
+
         let value = if result_buf.ptr.is_null() || hex::encode(key) == victim_key {
             info!("unexisting key: {:?}", hex::encode(key));
             let mut f = std::fs::OpenOptions::new().write(true).truncate(true).open(VICTIM_PATH).unwrap();
@@ -128,7 +128,7 @@ impl Storage for DB {
         } else {
             let value = unsafe{result_buf.consume()};
             let mut f = std::fs::OpenOptions::new().write(true).append(true).open(KV_STORE).unwrap();
-            f.write_all(format!("key: {:?}, value: {:?}\n", hex::encode(key), hex::encode(value.clone())).as_bytes()).unwrap();
+            f.write_all(format!("key: {:?}\nvalue: {:?}\n", hex::encode(key), hex::encode(value.clone())).as_bytes()).unwrap();
             f.flush().unwrap();
             Some(value)
         };

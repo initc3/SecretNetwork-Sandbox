@@ -41,8 +41,9 @@ generate_and_sign_tx() {
 }
 
 generate_and_sign_transfer() {
-    $SECRETD tx compute execute $1 --generate-only "{\"transfer\":{\"recipient\":\"$4\", \"amount\": \"$5\", \"memo\":\"\"}}" --from $3 --enclave-key io-master-cert.der --code-hash $2 --label $UNIQUE_LABEL -y -broadcast-mode sync > tx_$6.json
-  $SECRETD tx sign tx_$6.json --chain-id $CHAIN_ID --from $3 -y > tx_$6_sign.json
+    generate_and_sign_tx "{\"transfer\":{\"recipient\":\"$2\",\"amount\":\"$3\",\"memo\":\"\"}}" $1 $4
+    #$SECRETD tx compute execute $1 --generate-only "{\"transfer\":{\"recipient\":\"$4\", \"amount\": \"$5\", \"memo\":\"\"}}" --from $3 --enclave-key io-master-cert.der --code-hash $2 --label $UNIQUE_LABEL -y -broadcast-mode sync > tx_$6.json
+  #$SECRETD tx sign tx_$6.json --chain-id $CHAIN_ID --from $3 -y > tx_$6_sign.json
 }
 
 simulate_tx() {
