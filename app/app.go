@@ -185,10 +185,6 @@ func (app *SecretNetworkApp) RegisterTendermintService(clientCtx client.Context)
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
-func (app *SecretNetworkApp) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
-}
-
 func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
 	if err != nil {
