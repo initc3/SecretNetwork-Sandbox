@@ -94,10 +94,13 @@ import (
 )
 
 const appName = "secret"
-const OUTPUTFILE = "/root/backup_snip20/simulate_result"
+//const OUTPUTFILE = "/root/backup_snip20/simulate_result"
 
 
 var (
+    snip20AttackDir = os.Getenv("SNIP20_ATTACK_DIR")
+	OUTPUTFILE = filepath.Join(snip20AttackDir, "simulate_result")
+
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
 	DefaultCLIHome = filepath.Join(homeDir, ".secretd")

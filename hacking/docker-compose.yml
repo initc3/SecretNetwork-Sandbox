@@ -28,11 +28,13 @@ services:
     environment:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: BOOTSTRAP
+      SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ./scripts/:/root/scripts
-      - ./backup_snip20:/root/backup_snip20
+      #- ./backup_snip20:/root/backup_snip20
+      - ./backup_snip20:${SNIP20_ATTACK_DIR}
       - genesis:/genesis
 
   localsecret-2:
@@ -63,6 +65,7 @@ services:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: NODE
+      SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
@@ -70,7 +73,8 @@ services:
       - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
       - ./debug_scripts/:/root/debug_scripts
       - ./scripts:/root/scripts
-      - ./backup_snip20:/root/backup_snip20
+      #- ./backup_snip20:/root/backup_snip20
+      - ./backup_snip20:${SNIP20_ATTACK_DIR}
       - genesis:/genesis
 secrets:
   API_KEY:
