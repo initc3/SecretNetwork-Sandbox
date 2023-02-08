@@ -240,7 +240,7 @@ compile-secretd:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-rc.2 \
+			--build-arg BUILD_VERSION=1.6.0 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--secret id=API_KEY,src=ias_keys/sw_dummy/api_key.txt \
@@ -254,7 +254,7 @@ artifacts:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-rc.2 \
+			--build-arg BUILD_VERSION=1.6.0 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--secret id=API_KEY,src=ias_keys/api_key.txt \
@@ -295,7 +295,7 @@ libgo_cosmwasm:
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.7.0-rc.2 \
+			--build-arg BUILD_VERSION=1.6.0 \
 			--build-arg SGX_MODE=HW \
 			--file deployment/dockerfiles/Dockerfile \
 			--target libgo_cosmwasm \
