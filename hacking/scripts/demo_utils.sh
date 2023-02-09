@@ -3,6 +3,9 @@ ACC1='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
 ACC2='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
 ACC3='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
 BACKUP="${SNIP20_ATTACK_DIR:-$HOME/snip20}"
+#IO_MASTER_KEY="${SCRT_IO_MASTER_KEY:-io-master-key.txt}"
+ENCLAVE_KEY=${ENCLAVE_KEY:-io-master-cert.der}
+
 
 wait_for_tx() {
   set +e
@@ -36,7 +39,7 @@ init_contract() {
 }
 
 generate_and_sign_tx() {
-  $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only $1 --from $2 --enclave-key io-master-key.txt --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$3.json
+  $SECRETD tx compute execute $CONTRACT_ADDRESS --generate-only $1 --from $2 --enclave-key ${ENCLAVE_KEY} --code-hash $CODE_HASH --label $UNIQUE_LABEL -y --broadcast-mode sync > tx_$3.json
   $SECRETD tx sign tx_$3.json --chain-id $CHAIN_ID --from $2 -y > tx_$3_sign.json
 }
 

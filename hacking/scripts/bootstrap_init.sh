@@ -50,7 +50,7 @@ then
 
     secretd init-bootstrap
     secretd validate-genesis
-    cp /root/.secretd/config/genesis.json /genesis/genesis.json
+    cp ~/.secretd/config/genesis.json /genesis/genesis.json
 
     # Setup CORS for LCD & gRPC-web
     perl -i -pe 's;address = "tcp://0.0.0.0:1317";address = "tcp://0.0.0.0:1316";' .secretd/config/app.toml
