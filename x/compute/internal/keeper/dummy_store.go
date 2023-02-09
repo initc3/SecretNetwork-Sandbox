@@ -29,16 +29,16 @@ func NewDummyStore(
 
 func (d DummyStore) Get(key []byte) []byte {
 	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s| key %x\n", d.snapshot_name, key)
-	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get dummy_store %v\n", d.map_dummy_store)
+	// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get dummy_store %v\n", d.map_dummy_store)
 	if d.snapshot_name == "" {
 		return d.real_store.Get(key)
 	} else {
 		v, ok := d.map_dummy_store[d.snapshot_name + string(key)]
-		fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get setting key in map %s\n", d.snapshot_name + string(key))
+		// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get setting key in map %s\n", d.snapshot_name + string(key))
 		if ok { //the value was set in dummy_store so return that value
 			return v
 		} else { //value was not set in dummy_store so get it from the real store and update it to dummy_store
-			fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s| key %x not in dummy_store getting from real_store\n", d.snapshot_name, key)
+			// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Get snapshot_name: |%s| key %x not in dummy_store getting from real_store\n", d.snapshot_name, key)
 			v := d.real_store.Get(key)
 			// d.map_dummy_store[d.snapshot_name + string(key)] = v
 
@@ -48,7 +48,7 @@ func (d DummyStore) Get(key []byte) []byte {
 }
 
 func (d DummyStore) Has(key []byte) bool {
-	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Has snapshot_name |%s| key %x\n", d.snapshot_name, key)
+	// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Has snapshot_name |%s| key %x\n", d.snapshot_name, key)
 	if d.snapshot_name == "" {
 		return d.real_store.Has(key)
 	} else {
@@ -62,13 +62,13 @@ func (d DummyStore) Has(key []byte) bool {
 
 func (d DummyStore) Set(key, value []byte) {
 	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set snapshot_name |%s| key %x value %x\n", d.snapshot_name, key, value)
-	fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set dummy_store %v\n", d.map_dummy_store)
+	// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set dummy_store %v\n", d.map_dummy_store)
 	if d.snapshot_name == "" {
 		d.real_store.Set(key, value)
 	} else {
-		fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set setting key in map %s\n", d.snapshot_name + string(key))
+		//fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set setting key in map %s\n", d.snapshot_name + string(key))
 		d.map_dummy_store[d.snapshot_name + string(key)] = value
-		fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set after dummy_store %v\n", d.map_dummy_store)
+		// fmt.Printf("nerla x/compute/internal/keeper/dummy_store.go Set after dummy_store %v\n", d.map_dummy_store)
 	}
 }
 

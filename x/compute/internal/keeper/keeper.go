@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"os"
 
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
@@ -519,10 +520,16 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddre
 // Execute executes the contract instance
 func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "execute")
-	fmt.Printf("x/compute/internal/keeper/keeper.go Execute &k %p k %+v\n", &k, k)
+	// fmt.Printf("x/compute/internal/keeper/keeper.go Execute &k %p k %+v\n", &k, k)
 
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go Execute snapshot_name %s contractAddress %s caller %s msg %x\n", snapshot_name, contractAddress.String(), caller.String(), msg)
-	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: execute")
+
+	newHeader := ctx.BlockHeader()
+	newHeader.Time = time.Now().UTC()
+	ctx = ctx.WithBlockHeader(newHeader)
+	ctx = ctx.WithChainID(os.Getenv("CHAIN_ID"))
+
+	// ctx.GasMeter().ConsumeGas(type s.InstanceCost, "Loading Compute module: execute")
 
 	signBytes := []byte{}
 	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
