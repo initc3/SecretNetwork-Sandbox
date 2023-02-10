@@ -26,7 +26,7 @@ services:
       - "5000:5000"
     environment:
       LOG_LEVEL: "TRACE"
-      #SECRET_NODE_TYPE: BOOTSTRAP
+      SECRET_NODE_TYPE: BOOTSTRAP
       SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
@@ -67,7 +67,7 @@ services:
     environment:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
-      #SECRET_NODE_TYPE: NODE
+      SECRET_NODE_TYPE: NODE
       SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:

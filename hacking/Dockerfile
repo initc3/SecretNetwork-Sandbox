@@ -1,7 +1,5 @@
-ARG SCRT_BASE_IMAGE_SECRETD=enigmampc/rocksdb:v6.24.2-1.1.5
 ARG TEST=enigmampc/rocksdb:v6.24.2
 ARG SCRT_BASE_IMAGE_ENCLAVE=enigmampc/rocksdb:v6.24.2-1.1.5
-ARG SCRT_RELEASE_BASE_IMAGE=enigmampc/enigma-sgx-base:2004-1.1.5
 
 # ***************** PREPARE COMPILE ENCLAVE ************** #
 
@@ -46,14 +44,40 @@ ENV MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551}
 
 WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
 
-RUN --mount=type=cache,target=/root/.cargo/registry  . /opt/sgxsdk/environment && env \
-    && MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    . /opt/sgxsdk/environment && env && \
+    MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551} \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    FEATURES_U=${FEATURES_U} \
+    SGX_MODE=${SGX_MODE} \
+    make build-rust
 
 ENTRYPOINT ["/bin/bash"]
 
 # ***************** COMPILE SECRETD ************** #
 
-FROM $TEST AS compile-secretd
+FROM $TEST as base
+# Base dependencies needed to run localsecret node
+# wasmi-sgx-test script requirements
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    #### Base utilities ####
+#    openssl \
+#    curl \
+#    wget \
+#    libgflags-dev \
+    bash-completion \
+    jq
+
+RUN echo "source /etc/profile.d/bash_completion.sh" >> ~/.bashrc
+
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm i -g local-cors-proxy
+
+FROM base AS compile-secretd
 
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go/
@@ -65,6 +89,18 @@ RUN go install github.com/jteeuwen/go-bindata/go-bindata@latest && go-bindata -v
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/enigmampc/SecretNetwork
+RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop
+RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy
+RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production
+
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/spid.txt
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/spid.txt
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/spid.txt
+
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/api_key.txt
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/api_key.txt
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
+
 
 ARG BUILD_VERSION="v0.0.0"
 ARG SGX_MODE=SW
@@ -82,7 +118,8 @@ ENV CGO_LDFLAGS=${CGO_LDFLAGS}
 # Add source files
 COPY go-cosmwasm go-cosmwasm
 
-# This is due to some esoteric docker bug with the underlying filesystem, so until I figure out a better way, this should be a workaround
+# This is due to some esoteric docker bug with the underlying filesystem,
+# so until I figure out a better way, this should be a workaround
 RUN true
 COPY x x
 RUN true
@@ -96,30 +133,30 @@ COPY Makefile .
 RUN true
 COPY client client
 
-RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
+RUN go mod graph | awk '$1 !~ /@/ { print $2 }' | xargs -r go get
+
+RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && \
+    ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
 
 RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/
 
 COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
 COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so
 
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production
-
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/spid.txt
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/spid.txt
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/spid.txt
-
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/api_key.txt
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/api_key.txt
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
-RUN go mod tidy
-
-#RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
-#RUN . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
-RUN --mount=type=cache,target=/root/.cache/go-build . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
-#RUN --mount=type=cache,target=/root/.cache/go-build . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
+RUN --mount=type=cache,target=/root/.cache/go-build \
+   . /opt/sgxsdk/environment && env && \
+    CGO_LDFLAGS=${CGO_LDFLAGS} \
+    DB_BACKEND=${DB_BACKEND} \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    SGX_MODE=${SGX_MODE} \
+    make build_local_no_rust
+RUN --mount=type=cache,target=/root/.cache/go-build \
+   . /opt/sgxsdk/environment && env && \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    SGX_MODE=${SGX_MODE} \
+    make build_cli
 
 FROM scratch as secret-artifacts
 COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
@@ -128,25 +165,6 @@ COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
 
 # ******************* RELEASE IMAGE ******************** #
 FROM compile-secretd as release-image
-
-# wasmi-sgx-test script requirements
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    #### Base utilities ####
-    jq \
-    openssl \
-    curl \
-    wget \
-    libsnappy-dev \
-    libgflags-dev \
-    bash-completion
-
-RUN echo "source /etc/profile.d/bash_completion.sh" >> ~/.bashrc
-
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/* && \
-    npm i -g local-cors-proxy
 
 ARG SGX_MODE=SW
 ENV SGX_MODE=${SGX_MODE}
@@ -201,20 +219,19 @@ FROM rust as compile-contract
 COPY hacking/contract-simple /root/contract-simple
 COPY hacking/contract-toy-swap /root/contract-toy-swap
 WORKDIR /root/contract-toy-swap
-RUN make
+RUN --mount=type=cache,target=/root/.cargo/registry make
 WORKDIR /root/contract-simple
-RUN make
+RUN --mount=type=cache,target=/root/.cargo/registry make
 
 FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
 COPY hacking/secretSCRT /contract
 
-RUN RUSTFLAGS='-C link-arg=-s' \
-        cargo build --release --target wasm32-unknown-unknown --locked && \
-        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
-        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
-        rm -f ./contract.wasm
-#--mount type=volume,source="$$(basename "$$(pwd)")_cache",target=/code/target \
-#--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    RUSTFLAGS='-C link-arg=-s' \
+    cargo build --release --target wasm32-unknown-unknown --locked && \
+    wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
+    cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
+    rm -f ./contract.wasm
 
 # ***************** LOCALSECRET ************** #
 FROM release-image as build-localsecret
