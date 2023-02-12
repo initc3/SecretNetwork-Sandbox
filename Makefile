@@ -235,8 +235,29 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 	$(MAKE) -C check-hw clean
 
+compile-enclave:
+	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
+			--build-arg BUILD_VERSION=1.6.1 \
+			--build-arg SGX_MODE=HW \
+			--file deployment/dockerfiles/Dockerfile \
+			--target compile-enclave \
+			--tag scrt-enclave \
+			.
+
+compile-libgo-cosmwasm:
+	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
+			--build-arg BUILD_VERSION=1.6.1 \
+			--build-arg SGX_MODE=HW \
+			--file deployment/dockerfiles/Dockerfile \
+			--target compile-libgo-cosmwasm \
+			--tag scrt-libgo-cosmwasm \
+			.
+
 compile-secretd:
 	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg CGO_LDFLAGS= \
@@ -251,13 +272,14 @@ compile-secretd:
 
 artifacts:
 	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
 			--build-arg FEATURES=production \
 			--build-arg FEATURES_U=production \
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg BUILD_VERSION=1.6.1 \
 			--build-arg SGX_MODE=HW \
-			--file deployment/dockerfiles/Dockerfile \
+			--file deployment/dockerfiles/artifacts.Dockerfile \
 			--secret id=API_KEY,src=ias_keys/api_key.txt \
 			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
 			--target secret-artifacts \
