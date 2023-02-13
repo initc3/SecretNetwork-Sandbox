@@ -235,33 +235,41 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 	$(MAKE) -C check-hw clean
 
-compile-secretd:
+# use for testnet or mainnet
+untrusted-artifacts:
 	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
+			--build-arg FEATURES=$(FEATURES) \
+			--build-arg FEATURES_U=$(FEATURES) \
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
-			--build-arg CGO_LDFLAGS= \
 			--build-arg BUILD_VERSION=1.7.0-rc.2 \
 			--build-arg SGX_MODE=HW \
-			--file deployment/dockerfiles/Dockerfile \
-			--secret id=API_KEY,src=ias_keys/sw_dummy/api_key.txt \
-			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
-			--target compile-secretd \
-			--tag secretd \
+			--build-arg IAS_BUILD=$(IAS_BUILD) \
+			--file deployment/dockerfiles/untrusted-artifacts.Dockerfile \
+			--secret id=API_KEY,src=ias_keys/$(IAS_BUILD)/api_key.txt \
+			--secret id=SPID,src=ias_keys/$(IAS_BUILD)/spid.txt \
+			--target untrusted-artifacts \
+			--tag scrt-untrusted-artifacts \
+			--output type=local,dest=release \
 			.
 
-artifacts:
+# use for testnet or mainnet
+compile-secretd:
 	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
+			--build-arg FEATURES=$(FEATURES) \
+			--build-arg FEATURES_U=$(FEATURES) \
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
-			--build-arg CGO_LDFLAGS= \
 			--build-arg BUILD_VERSION=1.7.0-rc.2 \
 			--build-arg SGX_MODE=HW \
-			--file deployment/dockerfiles/Dockerfile \
-			--secret id=API_KEY,src=ias_keys/api_key.txt \
-			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
-			--target secret-artifacts \
-			--tag secret-artifacts \
-			--output type=local,dest=release \
+			--build-arg IAS_BUILD=$(IAS_BUILD) \
+			--file deployment/dockerfiles/untrusted-artifacts.Dockerfile \
+			--secret id=API_KEY,src=ias_keys/$(IAS_BUILD)/api_key.txt \
+			--secret id=SPID,src=ias_keys/$(IAS_BUILD)/spid.txt \
+			--target compile-secretd \
+			--tag secretd \
 			.
 
 localsecret:
