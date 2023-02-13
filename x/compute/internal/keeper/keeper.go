@@ -6,10 +6,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
-	"os"
 
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
@@ -78,7 +78,7 @@ type Keeper struct {
 	queryGasLimit uint64
 	HomeDir       string
 	snapshot_name string
-	DummyStore map[string]map[string][]byte
+	DummyStore    map[string]map[string][]byte
 	// authZPolicy   AuthorizationPolicy
 	// paramSpace    subspace.Subspace
 }
@@ -133,7 +133,7 @@ func NewKeeper(
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		HomeDir:          homeDir,
 		snapshot_name:    "",
-		DummyStore:	      dummy_store,
+		DummyStore:       dummy_store,
 	}
 	keeper.queryPlugins = DefaultQueryPlugins(govKeeper, distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go NewKeeper storeKey %s\n", storeKey.String())
@@ -145,7 +145,6 @@ func ChangeSnapshot(name string) {
 	snapshot_name = name
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go ChangeSnapshot name %s\n", name)
 }
-
 
 func (k Keeper) ClearSnapshot(name string) {
 	delete(k.DummyStore, name)
@@ -203,9 +202,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go GetSignerInfo signer %s\n", signer.String())
 	tx := sdktx.Tx{}
-	println(fmt.Sprintf("tx bytes: %s", tx))
 	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
-	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
 	println(fmt.Sprintf("tx type: %T", tx))
 	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
@@ -530,6 +527,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	ctx = ctx.WithChainID(os.Getenv("CHAIN_ID"))
 
 	// ctx.GasMeter().ConsumeGas(type s.InstanceCost, "Loading Compute module: execute")
+	println(fmt.Sprintf("contract address: %s\n", contractAddress.String()))
 
 	signBytes := []byte{}
 	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
@@ -650,7 +648,7 @@ func (k Keeper) querySmartRecursive(ctx sdk.Context, contractAddr sdk.AccAddress
 }
 
 func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, req []byte, useDefaultGasLimit bool, queryDepth uint32) ([]byte, error) {
-    println(fmt.Sprintf("Enterring querySmartImpl() ..."))
+	println(fmt.Sprintf("Enterring querySmartImpl() ..."))
 	println(fmt.Sprintf("ctx sdk.Context struct: %#v", ctx))
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "query")
 
@@ -684,20 +682,20 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	// 0x01 | codeID (uint64) -> ContractInfo
 	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
 
-    println(fmt.Sprintf("Calling NewEnv ..."))
+	println(fmt.Sprintf("Calling NewEnv ..."))
 
 	//ctx.header.Time = 1
 	println(fmt.Sprintf("ctx type: %T", ctx))
-    //header = tmproto.Header
+	//header = tmproto.Header
 	//header.Time = header.Time.UTC()
-    //ctxh = ctx.WithBlockHeader(header)
+	//ctxh = ctx.WithBlockHeader(header)
 
 	newHeader := ctx.BlockHeader()
 	// https://github.com/gogo/protobuf/issues/519
 	//newHeader.Time = time.Unix(1e9, 0).UTC()
 	newHeader.Time = time.Now().UTC()
-    ctxh := ctx.WithBlockHeader(newHeader)
-    //ctxh := ctx.WithBlockTime(time.Now().UTC())
+	ctxh := ctx.WithBlockHeader(newHeader)
+	//ctxh := ctx.WithBlockTime(time.Now().UTC())
 	params := types.NewEnv(
 		ctxh,
 		sdk.AccAddress{}, /* empty because it's unused in queries */
@@ -713,8 +711,8 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddress sdk.AccAddress, 
 	telemetry.SetGauge(float32(gasUsed), "compute", "keeper", "query", contractAddress.String(), "gasUsed")
 
 	if qErr != nil {
-	    println(fmt.Sprintf("qErr struct: %#v", qErr))
-	    println(fmt.Sprintf("qErr.Error(): %s", qErr.Error()))
+		println(fmt.Sprintf("qErr struct: %#v", qErr))
+		println(fmt.Sprintf("qErr.Error(): %s", qErr.Error()))
 		return nil, sdkerrors.Wrap(types.ErrQueryFailed, qErr.Error())
 	}
 	return queryResult, nil
