@@ -235,33 +235,20 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 	$(MAKE) -C check-hw clean
 
-compile-secretd:
+untrusted-artifacts:
 	DOCKER_BUILDKIT=1 docker build \
-			--build-arg SECRET_NODE_TYPE=NODE \
-			--build-arg DB_BACKEND=goleveldb \
-			--build-arg CGO_LDFLAGS= \
-			--build-arg BUILD_VERSION=1.6.1 \
-			--build-arg SGX_MODE=HW \
-			--file deployment/dockerfiles/Dockerfile \
-			--secret id=API_KEY,src=ias_keys/sw_dummy/api_key.txt \
-			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
-			--target compile-secretd \
-			--tag secretd \
-			.
-
-artifacts:
-	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
 			--build-arg FEATURES=production \
 			--build-arg FEATURES_U=production \
 			--build-arg SECRET_NODE_TYPE=NODE \
 			--build-arg DB_BACKEND=goleveldb \
 			--build-arg BUILD_VERSION=1.6.1 \
 			--build-arg SGX_MODE=HW \
-			--file deployment/dockerfiles/Dockerfile \
-			--secret id=API_KEY,src=ias_keys/api_key.txt \
+			--file deployment/dockerfiles/untrusted-artifacts.Dockerfile \
+			--secret id=API_KEY,src=ias_keys/sw_dummy/api_key.txt \
 			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
-			--target secret-artifacts \
-			--tag secret-artifacts \
+			--target untrusted-artifacts \
+			--tag scrt-untrusted-artifacts \
 			--output type=local,dest=release \
 			.
 
