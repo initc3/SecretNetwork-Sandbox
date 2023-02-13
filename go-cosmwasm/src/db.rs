@@ -1,3 +1,6 @@
+use log::*;
+use hex;
+
 use cosmwasm_sgx_vm::{FfiResult, GasInfo, Storage, StorageIterator};
 
 use crate::error::GoResult;
@@ -86,6 +89,7 @@ impl Storage for DB {
         } else {
             Some(unsafe { result_buf.consume() })
         };
+        info!("key: {:?}", hex::encode(key));
         (Ok(value), gas_info)
     }
 
