@@ -67,6 +67,12 @@ build-rust: build-enclave
 	cp target/$(BUILD_PROFILE)/libgo_cosmwasm.$(DLL_EXT) api
 	@ #this pulls out ELF symbols, 80% size reduction!
 
+.PHONY: build-libgo-cosmwasm
+build-libgo-cosmwasm: lib/libEnclave_u.a
+	cargo build -Z unstable-options --profile $(BUILD_PROFILE) --features "$(FEATURES_U)"
+	cp target/$(BUILD_PROFILE)/libgo_cosmwasm.$(DLL_EXT) api
+	@ #this pulls out ELF symbols, 80% size reduction!
+
 .PHONY: build-enclave
 build-enclave: librust_cosmwasm_enclave.signed.so lib/libEnclave_u.a
 
