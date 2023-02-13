@@ -6,10 +6,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
-	"os"
 
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
@@ -202,9 +202,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
 	fmt.Printf("nerla x/compute/internal/keeper/keeper.go GetSignerInfo signer %s\n", signer.String())
 	tx := sdktx.Tx{}
-	println(fmt.Sprintf("tx bytes: %s", tx))
 	println(fmt.Sprintf("tx hash: %x", sha256.Sum256(ctx.TxBytes())))
-	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
 	println(fmt.Sprintf("tx type: %T", tx))
 	println(fmt.Sprintf("tx.Tx struct: %#v", tx))
@@ -529,6 +527,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	ctx = ctx.WithChainID(os.Getenv("CHAIN_ID"))
 
 	// ctx.GasMeter().ConsumeGas(type s.InstanceCost, "Loading Compute module: execute")
+	println(fmt.Sprintf("contract address: %s\n", contractAddress.String()))
 
 	signBytes := []byte{}
 	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
