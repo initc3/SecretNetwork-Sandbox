@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+
 	// "time"
 	"path/filepath"
 
@@ -86,6 +87,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+
 	// authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	// unnamed import of statik for swagger UI support
@@ -93,12 +95,12 @@ import (
 )
 
 const appName = "secret"
+
 //const OUTPUTFILE = "/root/backup_snip20/simulate_result"
 
-
 var (
-    snip20AttackDir = os.Getenv("SNIP20_ATTACK_DIR")
-	OUTPUTFILE = filepath.Join(snip20AttackDir, "simulate_result")
+	snip20AttackDir = os.Getenv("SNIP20_ATTACK_DIR")
+	OUTPUTFILE      = filepath.Join(snip20AttackDir, "simulate_result")
 
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
@@ -188,8 +190,8 @@ func (app *SecretNetworkApp) RegisterTendermintService(clientCtx client.Context)
 func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
 	if err != nil {
-			fmt.Println( "cypherpunk app/app.go error TxDecoder")
-			panic(err)
+		fmt.Println("cypherpunk app/app.go error TxDecoder")
+		panic(err)
 	}
 	msgs := dTx.GetMsgs()
 	for _, m := range msgs {
@@ -203,12 +205,12 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 				}
 			}
 			return abci.ResponseCheckTx{
-				Code: abci.CodeTypeOK,
-				Log: response.Log,
-				Data: response.Data,
+				Code:      abci.CodeTypeOK,
+				Log:       response.Log,
+				Data:      response.Data,
 				GasWanted: int64(gasInfo.GasWanted),
-				GasUsed: int64(gasInfo.GasUsed),
-				Events: response.Events,
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
 			}
 		case *compute.MsgClearSnapshot:
 			fmt.Println("cypherpunk app/app.go MsgClearSnapshot calling Simulate\n")
@@ -219,40 +221,40 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 				}
 			}
 			return abci.ResponseCheckTx{
-				Code: abci.CodeTypeOK,
-				Log: response.Log,
-				Data: response.Data,
+				Code:      abci.CodeTypeOK,
+				Log:       response.Log,
+				Data:      response.Data,
 				GasWanted: int64(gasInfo.GasWanted),
-				GasUsed: int64(gasInfo.GasUsed),
-				Events: response.Events,
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
 			}
 		case *compute.MsgSimulateTx:
 			fmt.Println("cypherpunk app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
 			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
 			if err != nil {
-                err := os.WriteFile(OUTPUTFILE, []byte("1"), 0222)
-                if err != nil {
-                    panic(err)
-                }
+				err := os.WriteFile(OUTPUTFILE, []byte("1"), 0222)
+				if err != nil {
+					panic(err)
+				}
 
 				return abci.ResponseCheckTx{
 					Code: 1,
 				}
-            }
-            err = os.WriteFile(OUTPUTFILE, []byte("0"), 0222)
-            if err != nil {
-                panic(err)
-            }
+			}
+			err = os.WriteFile(OUTPUTFILE, []byte("0"), 0222)
+			if err != nil {
+				panic(err)
+			}
 			return abci.ResponseCheckTx{
-				Code: 1,
-				Log: response.Log,
-				Data: response.Data,
+				Code:      1,
+				Log:       response.Log,
+				Data:      response.Data,
 				GasWanted: int64(gasInfo.GasWanted),
-				GasUsed: int64(gasInfo.GasUsed),
-				Events: response.Events,
+				GasUsed:   int64(gasInfo.GasUsed),
+				Events:    response.Events,
 			}
 		default:
-		}		
+		}
 	}
 	return app.BaseApp.CheckTx(req)
 }
