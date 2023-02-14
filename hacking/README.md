@@ -1,5 +1,40 @@
-
 # Running the MEV Demo
+
+## Pre-requisites
+You need a recent docker version (23+) that has the management commands
+[`buildx`][buildx] & [`compose`][compose].
+
+See installation instructions for your operating systems at the following
+link:
+
+* https://docs.docker.com/get-docker/
+
+[buildx]: https://docs.docker.com/build/install-buildx/
+[compose]: https://docs.docker.com/compose/install/
+
+~~## Getting the Source Code~~
+~~Clone the repository at [link][repolink], making sure to also fetch the git~~
+~~submodule, e.g.:~~
+~~
+~~```shell~~
+~~git clone --recurse-submodules https://github.com/subatomiks/partiklz~~
+~~```~~
+~~[repolink]: https://github.com/someuser/somerepo~~
+
+SCRATCH this: provide a docker image instead. Or maybe, just provide getting the source
+as an alternative ... (?)
+
+## Pull the Docker Image
+
+```shell
+docker pull namespace/reponame
+```
+
+
+
+
+
+
 
 ### Update Git Submodules
 Fetch the `third_party/incubator-teaclave-sgx-sdk` and `cosmos-sdk` submodules by running the following command:
