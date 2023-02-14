@@ -41,8 +41,6 @@ def fetch_balance(addr):
                 print(line)
                 log.append(line)
                 yield line
-            db.put(addr.encode('utf-8'), b''.join(log))
-            print('wrote')
         return app.response_class(stream_with_context(generate()),mimetype='text/event-stream')
 
 
