@@ -21,6 +21,21 @@ VICTIM="secret1klkjyu278c72rcwe46el769vgv4vdqjrcg5533"
 SSCRT_HASH = get_codehash(SSCRT)
 
 
+
+class Unbuffered(object):
+    def __init__(self, stream):
+        self.stream = stream
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+    def writelines(self, datas):
+        self.stream.writelines(datas)
+        self.stream.flush()
+    def __getattr__(self, attr):
+        return getattr(self.stream, attr)
+sys.stdout = Unbuffered(sys.stdout)
+
+
 def probe_victim(victim, amt):
     # Returns True if the victim has (bal[victim] < amt)
     snapname = f"{UNIQUE_LABEL}_probe_victim_{time.time()}"

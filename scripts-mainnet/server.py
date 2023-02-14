@@ -41,7 +41,15 @@ def fetch_balance(addr):
                 print(line)
                 log.append(line)
                 yield line
-        return app.response_class(stream_with_context(generate()),mimetype='text/event-stream')
+
+        response = app.response_class(stream_with_context(generate()),mimetype='text/event-stream')
+        @response.call_on_close
+        def on_close():
+            p.kill()
+            p.wait()
+            if p.returncode == 0:
+                db.put(addr.encode('utf-8'), b''.join(log))
+        return response
 
 
     ## Working with an api
