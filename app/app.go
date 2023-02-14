@@ -188,14 +188,14 @@ func (app *SecretNetworkApp) RegisterTendermintService(clientCtx client.Context)
 func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.ResponseCheckTx) {
 	dTx, err := app.GetTxConfig().TxDecoder()(req.Tx)
 	if err != nil {
-			fmt.Println( "nerla app/app.go error TxDecoder")
+			fmt.Println( "cypherpunk app/app.go error TxDecoder")
 			panic(err)
 	}
 	msgs := dTx.GetMsgs()
 	for _, m := range msgs {
 		switch typedTx := m.(type) {
 		case *compute.MsgStartSnapshot:
-			fmt.Println("nerla app/app.go MsgStartSnapshot calling Simulate\n")
+			fmt.Println("cypherpunk app/app.go MsgStartSnapshot calling Simulate\n")
 			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
 			if err != nil {
 				return abci.ResponseCheckTx{
@@ -211,7 +211,7 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 				Events: response.Events,
 			}
 		case *compute.MsgClearSnapshot:
-			fmt.Println("nerla app/app.go MsgClearSnapshot calling Simulate\n")
+			fmt.Println("cypherpunk app/app.go MsgClearSnapshot calling Simulate\n")
 			gasInfo, response, err := app.BaseApp.Simulate(req.Tx)
 			if err != nil {
 				return abci.ResponseCheckTx{
@@ -227,7 +227,7 @@ func (app *SecretNetworkApp) CheckTx(req abci.RequestCheckTx) (res abci.Response
 				Events: response.Events,
 			}
 		case *compute.MsgSimulateTx:
-			fmt.Println("nerla app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
+			fmt.Println("cypherpunk app/app.go MsgSimulateTx calling Simulate on Victim transaction\n")
 			gasInfo, response, err := app.BaseApp.Simulate(typedTx.Tx)
 			if err != nil {
                 err := os.WriteFile(OUTPUTFILE, []byte("1"), 0222)
@@ -496,7 +496,7 @@ func (app *SecretNetworkApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBloc
 
 // InitChainer application update at chain initialization
 func (app *SecretNetworkApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	fmt.Println("nerla app/app.go InitChainer")
+	fmt.Println("cypherpunk app/app.go InitChainer")
 	var genesisState simapp.GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

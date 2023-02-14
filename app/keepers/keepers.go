@@ -286,7 +286,7 @@ func (ak *SecretAppKeepers) InitCustomKeepers(
 		nil,
 	)
 	ak.ComputeKeeper = &computeKeeper
-	fmt.Printf("nerla app/keepers/keepers.go InitCustomKeepers\n")
+	fmt.Printf("cypherpunk app/keepers/keepers.go InitCustomKeepers\n")
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
 		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,

@@ -57,7 +57,7 @@ func handleSnapshot(ctx sdk.Context, k Keeper, msg *MsgStartSnapshot) (*sdk.Resu
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("nerla x/compute/handler.go handleSnapshot SnapshotName %s\n", msg.SnapshotName)
+	fmt.Printf("cypherpunk x/compute/handler.go handleSnapshot SnapshotName %s\n", msg.SnapshotName)
 	return &sdk.Result{
 		Data:   []byte(fmt.Sprintf("%s", msg.SnapshotName)),
 		Events: ctx.EventManager().ABCIEvents(),
@@ -69,7 +69,7 @@ func handleSnapshotClear(ctx sdk.Context, k Keeper, msg *MsgClearSnapshot) (*sdk
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("nerla x/compute/handler.go handleSnapshotClear SnapshotName %s\n", msg.SnapshotName)
+	fmt.Printf("cypherpunk x/compute/handler.go handleSnapshotClear SnapshotName %s\n", msg.SnapshotName)
 	return &sdk.Result{
 		Data:   []byte(fmt.Sprintf("%s", msg.SnapshotName)),
 		Events: ctx.EventManager().ABCIEvents(),
@@ -81,7 +81,7 @@ func handleSimulateTx(ctx sdk.Context, k Keeper, msg *MsgSimulateTx) (*sdk.Resul
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("nerla x/compute/handler.go handleSimulateTx Tx %x\n", msg.Tx)
+	fmt.Printf("cypherpunk x/compute/handler.go handleSimulateTx Tx %x\n", msg.Tx)
 	return &sdk.Result{
 		Data:   msg.Tx,
 		Events: ctx.EventManager().ABCIEvents(),
