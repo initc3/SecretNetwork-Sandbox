@@ -115,3 +115,15 @@ def clear_snapshot(snapname):
 
 
     
+"""
+SNIP20
+   Just use a fixed viewing key, set it on demand if needed
+"""
+def set_snip20viewing_key(contract,addr):
+    query = {"set_viewing_key":{"key":"vk"}}
+    tx = generate_and_sign_tx(contract,addr,query)
+    assert(simulate_tx(tx))
+
+def query_snip20balance(contract,addr):
+    query = {"balance": {"address":addr, "key":"vk"}}
+    return query_contract(contract, query)
