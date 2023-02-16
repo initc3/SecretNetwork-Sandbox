@@ -61,7 +61,11 @@ if [ ! -f "$file" ];then
 
   secretd q register secret-network-params
 
+  # FIXME: for testnet -- use an env var
   secretd configure-secret node-master-key.txt "$SEED"
+
+  # FIXME: for mainnet -- use an env var
+  #secretd configure-secret node-master-cert.der "$SEED"
 
   cp /genesis/genesis.json /root/.secretd/config/genesis.json
   

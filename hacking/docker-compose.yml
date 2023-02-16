@@ -12,6 +12,7 @@ services:
         SGX_MODE: SW
         SECRET_NODE_TYPE: BOOTSTRAP
         CHAIN_ID: secretdev-1
+        IAS_BUILD: sw_dummy
       secrets:
         - API_KEY
         - SPID
@@ -48,6 +49,7 @@ services:
         FEATURES_U: ${FEATURES_U}
         SGX_MODE: SW
         CHAIN_ID: secretdev-1
+        IAS_BUILD: sw_dummy
       secrets:
         - API_KEY
         - SPID
@@ -66,6 +68,7 @@ services:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: NODE
       SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
+      ENCLAVE_KEY: ${ENCLAVE_KEY}
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
