@@ -2,7 +2,7 @@ ACC0='secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03'
 ACC1='secret1fc3fzy78ttp0lwuujw7e52rhspxn8uj52zfyne'
 ACC2='secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq'
 ACC3='secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf'
-BACKUP="${SNIP20_ATTACK_DIR:-$HOME/snip20}"
+BACKUP="${SNIP20_ATTACK_DIR:-$HOME}"
 #IO_MASTER_KEY="${SCRT_IO_MASTER_KEY:-io-master-key.txt}"
 ENCLAVE_KEY=${ENCLAVE_KEY:-io-master-cert.der}
 

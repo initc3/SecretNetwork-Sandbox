@@ -25,4 +25,4 @@ docker compose exec localsecret-2 ./scripts/setup_snip20.sh
 
 docker compose stop localsecret-1
 
-docker compose logs localsecret-2 --follow
+docker compose logs localsecret-2 --tail 10

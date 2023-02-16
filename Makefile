@@ -235,6 +235,22 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 	$(MAKE) -C check-hw clean
 
+secretd-image:
+	DOCKER_BUILDKIT=1 docker build \
+			$(DOCKER_BUILD_ARGS) \
+			--build-arg SECRET_NODE_TYPE=NODE \
+			--build-arg DB_BACKEND=goleveldb \
+			--build-arg CGO_LDFLAGS= \
+			--build-arg BUILD_VERSION=1.7.0-rc.2 \
+			--build-arg SGX_MODE=HW \
+			--build-arg IAS_BUILD=$(IAS_BUILD) \
+			--file deployment/dockerfiles/untrusted-artifacts.Dockerfile \
+			--secret id=API_KEY,src=ias_keys/$(IAS_BUILD)/api_key.txt \
+			--secret id=SPID,src=ias_keys/$(IAS_BUILD)/spid.txt \
+			--target compile-secretd \
+			--tag secretd \
+			.
+
 untrusted-artifacts:
 	DOCKER_BUILDKIT=1 docker build \
 			$(DOCKER_BUILD_ARGS) \
@@ -243,9 +259,10 @@ untrusted-artifacts:
 			--build-arg CGO_LDFLAGS= \
 			--build-arg BUILD_VERSION=1.7.0-rc.2 \
 			--build-arg SGX_MODE=HW \
+			--build-arg IAS_BUILD=$(IAS_BUILD) \
 			--file deployment/dockerfiles/untrusted-artifacts.Dockerfile \
-			--secret id=API_KEY,src=ias_keys/sw_dummy/api_key.txt \
-			--secret id=SPID,src=ias_keys/sw_dummy/spid.txt \
+			--secret id=API_KEY,src=ias_keys/$(IAS_BUILD)/api_key.txt \
+			--secret id=SPID,src=ias_keys/$(IAS_BUILD)/spid.txt \
 			--target untrusted-artifacts \
 			--tag scrt-untrusted-artifacts \
 			--output type=local,dest=release \

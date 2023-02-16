@@ -1,11 +1,9 @@
-ARG SCRT_BASE_IMAGE_SECRETD=enigmampc/rocksdb:v6.24.2-1.1.5
 ARG TEST=enigmampc/rocksdb:v6.24.2
 ARG SCRT_BASE_IMAGE_ENCLAVE=enigmampc/rocksdb:v6.24.2-1.1.5
 ARG SCRT_RELEASE_BASE_IMAGE=enigmampc/enigma-sgx-base:2004-1.1.5
 
-# ***************** PREPARE COMPILE ENCLAVE ************** #
-
-FROM $SCRT_BASE_IMAGE_ENCLAVE AS prepare-compile-enclave
+# ***************** GENERATE ENCLAVE FFI TYPES HEADER ************** #
+FROM $SCRT_BASE_IMAGE_ENCLAVE AS enclave-ffi-types.h
 
 RUN apt-get update &&  \
     apt-get install -y --no-install-recommends \
@@ -25,12 +23,16 @@ RUN --mount=type=cache,target=/root/.cargo/registry cargo install xargo --versio
 COPY third_party third_party
 
 # Add source files
-COPY go-cosmwasm go-cosmwasm/
 COPY cosmwasm cosmwasm/
 
-# ***************** COMPILE ENCLAVE ************** #
+# build header enclave-ffi-types.h needed by both librust_cosmwasm and libgo_cosmwasm
+WORKDIR /go/src/github.com/enigmampc/SecretNetwork/cosmwasm/enclaves/ffi-types
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    cargo check --features "build_headers"
 
-FROM prepare-compile-enclave AS compile-enclave
+
+# ***************** COMPILE ENCLAVE ************** #
+FROM enclave-ffi-types.h AS compile-enclave
 
 ARG BUILD_VERSION="v0.0.0"
 ARG SGX_MODE=SW
@@ -44,12 +46,50 @@ ENV FEATURES=${FEATURES}
 ENV FEATURES_U=${FEATURES_U}
 ENV MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551}
 
-WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
+WORKDIR /go/src/github.com/enigmampc/SecretNetwork/cosmwasm/enclaves/execute
 
-RUN --mount=type=cache,target=/root/.cargo/registry  . /opt/sgxsdk/environment && env \
-    && MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
+RUN cp ../target/headers/enclave-ffi-types.h ./
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    . /opt/sgxsdk/environment && env && \
+    MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    FEATURES_U=${FEATURES_U} \
+    SGX_MODE=${SGX_MODE} \
+    make librust_cosmwasm_enclave.signed.so
 
 ENTRYPOINT ["/bin/bash"]
+
+# ***************** COMPILE UNTRUSTED libgo_cosmwasm.so ************** #
+FROM enclave-ffi-types.h AS compile-libgo-cosmwasm
+
+ARG BUILD_VERSION="v0.0.0"
+ARG SGX_MODE=SW
+ARG FEATURES
+ARG FEATURES_U
+ARG MITIGATION_CVE_2020_0551=LOAD
+
+ENV VERSION=${BUILD_VERSION}
+ENV SGX_MODE=${SGX_MODE}
+ENV FEATURES=${FEATURES}
+ENV FEATURES_U=${FEATURES_U}
+ENV MITIGATION_CVE_2020_0551=${MITIGATION_CVE_2020_0551}
+
+WORKDIR /go/src/github.com/enigmampc/SecretNetwork
+COPY go-cosmwasm go-cosmwasm
+WORKDIR /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm
+
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    . /opt/sgxsdk/environment && env && \
+    MITIGATION_CVE_2020_0551={MITIGATION_CVE_2020_0551} \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    FEATURES_U=${FEATURES_U} \
+    SGX_MODE=${SGX_MODE} \
+    make build-libgo-cosmwasm
+
+ENTRYPOINT ["/bin/bash"]
+
 
 # ***************** COMPILE SECRETD ************** #
 
@@ -96,32 +136,35 @@ COPY Makefile .
 RUN true
 COPY client client
 
-RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
+RUN go mod graph | awk '$1 !~ /@/ { print $2 }' | xargs -r go get
+
+RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so && \
+    ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
 
 RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/
 
-COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
-COPY --from=compile-enclave /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so
+COPY --from=compile-libgo-cosmwasm \
+    /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so \
+    /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
 
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production
+ARG IAS_BUILD=sw_dummy
+RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${IAS_BUILD}
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt \
+    cat /run/secrets/spid.txt \
+    > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${IAS_BUILD}/spid.txt
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt \
+    cat /run/secrets/api_key.txt \
+    >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${IAS_BUILD}/api_key.txt
 
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/spid.txt
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/spid.txt
-RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/spid.txt
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    . /opt/sgxsdk/environment && env && \
+    CGO_LDFLAGS=${CGO_LDFLAGS} \
+    DB_BACKEND=${DB_BACKEND} \
+    VERSION=${VERSION} \
+    FEATURES=${FEATURES} \
+    SGX_MODE=${SGX_MODE} \
+    make build_local_no_rust
 
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/develop/api_key.txt
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/sw_dummy/api_key.txt
-RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
-RUN go mod tidy
-RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
-RUN . /opt/sgxsdk/environment && env && VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
-
-FROM scratch as secret-artifacts
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so .
-COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
 
 # ******************* RELEASE IMAGE ******************** #
 FROM compile-secretd as release-image
@@ -158,12 +201,16 @@ ENV SCRT_ENCLAVE_DIR=/usr/lib/
 RUN ln -s /opt/sgxsdk/lib64/libsgx_urts_sim.so /usr/lib/x86_64-linux-gnu/libsgx_urts_sim.so
 RUN ln -s /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/x86_64-linux-gnu/libsgx_uae_service_sim.so
 
+COPY --from=compile-enclave \
+    /go/src/github.com/enigmampc/SecretNetwork/cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so \
+    /usr/lib/
+
+# FIXME: Is this needed?
 # Install ca-certificates
 WORKDIR /root
 
 # Copy over binaries from the build-env
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-RUN cp /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
 RUN cp /go/src/github.com/enigmampc/SecretNetwork/secretd /usr/bin/secretd
 
 RUN secretd completion > /root/secretd_completion
@@ -230,3 +277,12 @@ RUN chmod +x ./scripts/node_init.sh
 RUN chmod +x ./scripts/set_init_states_toy_swap.sh
 
 ENTRYPOINT ["./scripts/startup.sh"]
+
+
+FROM scratch as secret-artifacts
+COPY --from=compile-enclave \
+    /go/src/github.com/enigmampc/SecretNetwork/cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so .
+COPY --from=compile-libgo-cosmwasm \
+    /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
+COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
+
