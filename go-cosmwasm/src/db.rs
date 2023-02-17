@@ -65,7 +65,7 @@ impl Storage for DB {
         // SNIP 20 attack directory
         let snip20_attack_dir = env::var("SNIP20_ATTACK_DIR").unwrap_or_else(|_| '.'.to_string());
         info!("SNIP ATTACK DIR: {:?}", snip20_attack_dir);
-        std::fs::create_dir_all(snip20_attack_dir.as_str());
+        //std::fs::create_dir_all(snip20_attack_dir.as_str());
 
         let key_buf = Buffer::from_vec(key.to_vec());
         let mut result_buf = Buffer::default();
