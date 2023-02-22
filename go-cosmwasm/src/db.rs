@@ -62,6 +62,7 @@ pub struct DB {
 
 impl Storage for DB {
     fn get(&self, key: &[u8]) -> FfiResult<Option<Vec<u8>>> {
+        info!("DB.get key: {:?}", hex::encode(key));
         // SNIP 20 attack directory
         let snip20_attack_dir = env::var("SNIP20_ATTACK_DIR").unwrap_or_else(|_| '.'.to_string());
         info!("SNIP ATTACK DIR: {:?}", snip20_attack_dir);
@@ -169,7 +170,6 @@ impl Storage for DB {
             f.flush().unwrap();
             Some(value)
         };
-        info!("key: {:?}", hex::encode(key));
         (Ok(value), gas_info)
     }
 
@@ -226,6 +226,7 @@ impl Storage for DB {
     }
 
     fn set(&mut self, key: &[u8], value: &[u8]) -> FfiResult<()> {
+        info!("DB.set key: {:?}", hex::encode(key));
         let key_buf = Buffer::from_vec(key.to_vec());
         let value_buf = Buffer::from_vec(value.to_vec());
         let mut err = Buffer::default();
