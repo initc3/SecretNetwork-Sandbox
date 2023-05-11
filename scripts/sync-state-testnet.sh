@@ -45,7 +45,7 @@ reset_data() {
     mkdir -p ${scrt_home}/data/snapshots
 }
 
-systemctl --quiet is-active $username && exit_script ||
+systemctl --quiet is-active ${username} && exit_script ||
 
 edit_config_app
 reset_tmp_dir
