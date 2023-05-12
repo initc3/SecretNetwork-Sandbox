@@ -132,15 +132,16 @@ COPY --from=compile-libgo-cosmwasm \
     /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so \
     /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
 
-RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production
+ARG ias_build=production
+RUN mkdir -p /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${ias_build}
 
 RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt \
     cat /run/secrets/spid.txt \
-    > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/spid.txt
+    > /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${ias_build}/spid.txt
 
 RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt \
     cat /run/secrets/api_key.txt \
-    >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/production/api_key.txt
+    >  /go/src/github.com/enigmampc/SecretNetwork/ias_keys/${ias_build}/api_key.txt
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     . /opt/sgxsdk/environment && env && \
