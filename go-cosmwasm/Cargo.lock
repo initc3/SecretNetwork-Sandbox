@@ -278,6 +278,7 @@ dependencies = [
  "cosmwasm-sgx-vm",
  "ctor",
  "errno",
+ "hex",
  "log",
  "secret-cosmwasm-std",
  "serde",
