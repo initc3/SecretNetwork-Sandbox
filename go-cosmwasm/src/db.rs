@@ -89,7 +89,7 @@ impl Storage for DB {
         } else {
             Some(unsafe { result_buf.consume() })
         };
-        info!("key: {:?}", hex::encode(key));
+        info!("-peekaboo- key: {:?}", hex::encode(key));
         (Ok(value), gas_info)
     }
 
