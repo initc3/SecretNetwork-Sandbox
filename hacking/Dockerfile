@@ -4,6 +4,24 @@
 ARG SCRT_BASE_IMAGE_ENCLAVE=ghcr.io/scrtlabs/sgx-base:20.04-2.17-6.24.2
 ARG SCRT_RELEASE_BASE_IMAGE=ghcr.io/scrtlabs/release-base:20.04-2.17
 
+#FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contracts
+#ENV PATH="/root/.cargo/bin:$PATH"
+#FROM rust as contracts
+#RUN apt-get update && apt-get install -y --no-install-recommends \
+#        wabt \
+#    && rm -rf /var/lib/apt/lists/*
+#COPY hacking/contract-simple /usr/src/contract-simple
+#WORKDIR /usr/src/contract-simple
+#RUN make clean
+#RUN --mount=type=cache,target=/root/.cargo/registry make
+#
+##FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contract-toy-swap
+##ENV PATH="/root/.cargo/bin:$PATH"
+#COPY hacking/contract-toy-swap /usr/src/contract-toy-swap
+#WORKDIR /usr/src/contract-toy-swap
+#RUN make clean
+#RUN --mount=type=cache,target=/root/.cargo/registry make
+
 # ***************** GENERATE ENCLAVE FFI TYPES HEADER ************** #
 FROM $SCRT_BASE_IMAGE_ENCLAVE AS enclave-ffi-types.h
 
@@ -242,24 +260,24 @@ ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 ENTRYPOINT ["/bin/bash", "startup.sh"]
 
 # ***************** BUILD_CONTRACTS ************** #
-#FROM rust as compile-contract
-FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contract
+#FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contract-simple
+#ENV PATH="/root/.cargo/bin:$PATH"
+FROM rust as compile-contracts
 RUN apt-get update && apt-get install -y --no-install-recommends \
         wabt \
     && rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/root/.cargo/bin:$PATH"
-
 COPY hacking/contract-simple /root/contract-simple
 WORKDIR /root/contract-simple
-RUN make clean && make
-#COPY hacking/contract-toy-swap /root/contract-toy-swap
-#WORKDIR /root/contract-toy-swap
-#RUN make
+RUN make clean
+RUN --mount=type=cache,target=/root/.cargo/registry make
+COPY hacking/contract-toy-swap /root/contract-toy-swap
+WORKDIR /root/contract-toy-swap
+RUN make clean
+RUN --mount=type=cache,target=/root/.cargo/registry make
 
-#FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
-#COPY hacking/secretSCRT /contract
-#
+FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
+COPY hacking/secretSCRT /contract
+
 #RUN RUSTFLAGS='-C link-arg=-s' \
 #        cargo build --release --target wasm32-unknown-unknown --locked && \
 #        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
@@ -273,13 +291,8 @@ FROM release-image as build-localsecret
 
 ENV PATH="/root/.cargo/bin:$PATH"
 
-#COPY hacking/contract-simple /root/contract-simple
-
-#COPY hacking/contract-toy-swap /root/contract-toy-swap
-#WORKDIR /root/contract-toy-swap
-#RUN make
-#COPY --from=compile-contract /root/contract-toy-swap /root/contract-toy-swap
-COPY --from=compile-contract /root/contract-simple /root/contract-simple
+COPY --from=compile-contracts /root/contract-simple /root/contract-simple
+COPY --from=compile-contracts /root/contract-toy-swap /root/contract-toy-swap
 #COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
 
 WORKDIR /root
@@ -303,4 +316,3 @@ COPY --from=compile-enclave \
 COPY --from=compile-libgo-cosmwasm \
     /go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so .
 COPY --from=compile-secretd /go/src/github.com/enigmampc/SecretNetwork/secretd .
-

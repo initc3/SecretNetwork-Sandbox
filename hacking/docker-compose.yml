@@ -1,12 +1,11 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: devlocalsecret-x
+    image: devlocalsecret
     build:
       context: ..
       dockerfile: hacking/Dockerfile
-      #target: build-localsecret
-      target: compile-contract
+      target: build-localsecret
       args:
         FEATURES: "${FEATURES},debug-print"
         FEATURES_U: ${FEATURES_U}
@@ -40,7 +39,7 @@ services:
       - genesis:/genesis
 
   localsecret-2:
-    image: devlocalsecret-z
+    image: devlocalsecret
     build:
       context: ..
       dockerfile: hacking/Dockerfile
