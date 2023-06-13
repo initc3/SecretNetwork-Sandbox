@@ -52,6 +52,9 @@ jobs:
             SECRET_NODE_TYPE: ${{ matrix.node_type }}
             CHAIN_ID: secretdev-1
             IAS_BUILD: sw_dummy
+          secrets: |
+            "API_KEY=${{ secrets.IAS_API_KEY }}"
+            "SPID=${{ secrets.IAS_SPID }}"
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.node_type }},
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.node_type }}-${{ steps.vars.outputs.short_sha }},
