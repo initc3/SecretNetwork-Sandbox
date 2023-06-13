@@ -10,7 +10,7 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  publish-prysm:
+  publish-devnet-image:
     env:
       IMAGE_NAME: initc3/scrt-devnet
     strategy:
