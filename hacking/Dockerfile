@@ -1,6 +1,8 @@
-ARG TEST=enigmampc/rocksdb:v6.24.2
-ARG SCRT_BASE_IMAGE_ENCLAVE=enigmampc/rocksdb:v6.24.2-1.1.5
-ARG SCRT_RELEASE_BASE_IMAGE=enigmampc/enigma-sgx-base:2004-1.1.5
+#ARG TEST=enigmampc/rocksdb:v6.24.2
+#ARG SCRT_BASE_IMAGE_ENCLAVE=enigmampc/rocksdb:v6.24.2-1.1.5
+#ARG SCRT_RELEASE_BASE_IMAGE=enigmampc/enigma-sgx-base:2004-1.1.5
+ARG SCRT_BASE_IMAGE_ENCLAVE=ghcr.io/scrtlabs/sgx-base:20.04-2.17-6.24.2
+ARG SCRT_RELEASE_BASE_IMAGE=ghcr.io/scrtlabs/release-base:20.04-2.17
 
 # ***************** GENERATE ENCLAVE FFI TYPES HEADER ************** #
 FROM $SCRT_BASE_IMAGE_ENCLAVE AS enclave-ffi-types.h
@@ -93,7 +95,7 @@ ENTRYPOINT ["/bin/bash"]
 
 # ***************** COMPILE SECRETD ************** #
 
-FROM $TEST AS compile-secretd
+FROM $SCRT_BASE_IMAGE_ENCLAVE AS compile-secretd
 
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go/
@@ -170,16 +172,17 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM compile-secretd as release-image
 
 # wasmi-sgx-test script requirements
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    #### Base utilities ####
-    jq \
-    openssl \
-    curl \
-    wget \
-    libsnappy-dev \
-    libgflags-dev \
-    bash-completion
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        #### Base utilities #### \
+        jq \
+        openssl \
+        curl \
+        wget \
+        libsnappy-dev \
+        libgflags-dev \
+        bash-completion \
+        wabt \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /etc/profile.d/bash_completion.sh" >> ~/.bashrc
 
@@ -239,33 +242,48 @@ ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 ENTRYPOINT ["/bin/bash", "startup.sh"]
 
 # ***************** BUILD_CONTRACTS ************** #
+#FROM rust as compile-contract
+FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contract
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        wabt \
+    && rm -rf /var/lib/apt/lists/*
 
-FROM rust as compile-contract
+ENV PATH="/root/.cargo/bin:$PATH"
 
 COPY hacking/contract-simple /root/contract-simple
-COPY hacking/contract-toy-swap /root/contract-toy-swap
-WORKDIR /root/contract-toy-swap
-RUN make
 WORKDIR /root/contract-simple
-RUN make
+RUN make clean && make
+#COPY hacking/contract-toy-swap /root/contract-toy-swap
+#WORKDIR /root/contract-toy-swap
+#RUN make
 
-FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
-COPY hacking/secretSCRT /contract
-
-RUN RUSTFLAGS='-C link-arg=-s' \
-        cargo build --release --target wasm32-unknown-unknown --locked && \
-        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
-        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
-        rm -f ./contract.wasm
+#FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
+#COPY hacking/secretSCRT /contract
+#
+#RUN RUSTFLAGS='-C link-arg=-s' \
+#        cargo build --release --target wasm32-unknown-unknown --locked && \
+#        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
+#        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
+#        rm -f ./contract.wasm
 #--mount type=volume,source="$$(basename "$$(pwd)")_cache",target=/code/target \
 #--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 
 # ***************** LOCALSECRET ************** #
 FROM release-image as build-localsecret
 
-COPY --from=compile-contract /root/contract-toy-swap /root/contract-toy-swap
+ENV PATH="/root/.cargo/bin:$PATH"
+
+#COPY hacking/contract-simple /root/contract-simple
+
+#COPY hacking/contract-toy-swap /root/contract-toy-swap
+#WORKDIR /root/contract-toy-swap
+#RUN make
+#COPY --from=compile-contract /root/contract-toy-swap /root/contract-toy-swap
 COPY --from=compile-contract /root/contract-simple /root/contract-simple
-COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
+#COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
+
+WORKDIR /root
+
 COPY deployment/docker/localsecret/faucet/faucet_server.js .
 
 HEALTHCHECK --interval=5s --timeout=1s --retries=120 CMD bash -c 'curl -sfm1 http://localhost:26657/status && curl -s http://localhost:26657/status | jq -e "(.result.sync_info.latest_block_height | tonumber) > 0"'
