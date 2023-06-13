@@ -278,11 +278,11 @@ RUN --mount=type=cache,target=/root/.cargo/registry make
 FROM enigmampc/secret-contract-optimizer:1.0.4 as compile-sscrt-contract
 COPY hacking/secretSCRT /contract
 
-#RUN RUSTFLAGS='-C link-arg=-s' \
-#        cargo build --release --target wasm32-unknown-unknown --locked && \
-#        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
-#        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
-#        rm -f ./contract.wasm
+RUN RUSTFLAGS='-C link-arg=-s' \
+        cargo build --release --target wasm32-unknown-unknown --locked && \
+        wasm-opt -Oz ./target/wasm32-unknown-unknown/release/*.wasm -o ./contract.wasm && \
+        cat ./contract.wasm | gzip -n -9 > ./contract.wasm.gz && \
+        rm -f ./contract.wasm
 #--mount type=volume,source="$$(basename "$$(pwd)")_cache",target=/code/target \
 #--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
 
@@ -293,7 +293,7 @@ ENV PATH="/root/.cargo/bin:$PATH"
 
 COPY --from=compile-contracts /root/contract-simple /root/contract-simple
 COPY --from=compile-contracts /root/contract-toy-swap /root/contract-toy-swap
-#COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
+COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
 
 WORKDIR /root
 
