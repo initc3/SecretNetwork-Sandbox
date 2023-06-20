@@ -262,7 +262,7 @@ ENTRYPOINT ["/bin/bash", "startup.sh"]
 # ***************** BUILD_CONTRACTS ************** #
 #FROM $SCRT_BASE_IMAGE_ENCLAVE as compile-contract-simple
 #ENV PATH="/root/.cargo/bin:$PATH"
-FROM rust as compile-contracts
+FROM rust:1.70.0 as compile-contracts
 RUN apt-get update && apt-get install -y --no-install-recommends \
         wabt \
     && rm -rf /var/lib/apt/lists/*
