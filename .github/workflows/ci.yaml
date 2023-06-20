@@ -40,7 +40,7 @@ jobs:
       - name: Install xargo
         run: |
           cargo --version
-          rustc --version  
+          rustc --version
           cargo +stable install xargo --version 0.3.25
           xargo --version
       - name: Download sccache
