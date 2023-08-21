@@ -1,3 +1,82 @@
+# SGXonerated Artifacts for Secret Network Attacks
+**PoPETS 2024 Artifacts Submission for SGX**
+
+## Prerequisites
+These prerequisites assume a linux operating system and have been tested on Ubuntu 22.04.
+
+### Get the code
+Clone the repository, making sure you fetch the submodules, e.g.:
+
+```shell
+git clone --recurse-submodules https://github.com/initc3/sgxonerated-secretnetwork.git
+```
+
+If you are missing the submodules after having cloned, run:
+
+```shell
+git submodule update --init --recursive --remote
+```
+
+### Install Docker
+Docker Engine: https://docs.docker.com/engine/install/
+
+
+## The Attacks
+
+### MEV Sandwich Attack
+Go into the `hacking` directory:
+
+```shell
+cd hacking/
+```
+
+Setup and start the local network with:
+
+```shell
+./scripts/start_node.sh
+```
+
+<details>
+<summary>What does the above command do?</summary>
+1) Start a validator node (node-1) and a non-validator node (node-2)
+
+2) Store and instantiate demo contracts and set up the initial states.
+The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
+The victim and adversary account in the toy-swap contract each have a balance
+of 100 `token_a` and `token_b`.
+
+3) Shut down node-1 to launch the attack in simulation mode without broadcasting
+any transactions to the network.
+</details>
+
+Launch the sandwich attack
+
+```shell
+docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.shi
+```
+
+<details>
+<summary>What does the above command do?</summary>
+The above command simulates an adversary executing the following steps:
+
+1) Generate a victim swap transaction to swap 10 `token_a` for at least 20 `token_b`.
+
+2) Find a front-run transaction by bisection search that, when executed before the
+   victim's transaction, won't fail the victim's transaction. The front-run transaction
+   found swaps 20 `token_a` with a slippage limit of 0, resulting in obtaining 40
+   `token_b`.
+
+3) After the victim's transaction, the adversary executes a back-run transaction to
+   sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
+   their balance of `token_b`.
+</details>
+
+### Receiver Privacy Breaking
+
+
+
+---
+
 ![Secret Network](sn-logo.png)
 
 <div align="center">
