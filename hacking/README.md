@@ -1,44 +1,62 @@
-
 # Running the MEV Demo
 
 ### Update Git Submodules
-Fetch the `third_party/incubator-teaclave-sgx-sdk` and `cosmos-sdk` submodules by running the following command:
+Fetch the git submodules by running the following command:
 
-`git submodule update --init --recursive --remote`
+```shell
+git submodule update --init --recursive --remote
+```
 
 ### Requirements
-
-Docker Engine: TODO
-Docker Compose version: v2.12^
+Docker Engine: https://docs.docker.com/engine/install/
 
 ### Build Secret Network Node Image
 Run all the command below under directory `hacking`.
 
-The demo contracts are built when building the image. Run the following command to build the image:
+The demo contracts are built when building the image. Run the following
+command to build the image:
 
-`docker-compose build`
+```shell
+docker compose build
+```
 
 ### Setup Environment
-1) start a validator node (node-1) and a non-validator node (node-2)
+
+```shell
+./scripts/start_node.sh
+```
+
+The above command will:
+
+1) Start a validator node (node-1) and a non-validator node (node-2)
 
 2) Store and instantiate demo contracts and set up the initial states. 
-The pool sizes are 1000 for token_a and 2000 for token_b. 
-The victim and adversary account in the toy-swap contract each have a balance of 100 token_a and token_b.
+The pool sizes are 1000 for `token_a` and 2000 for `token_b`. 
+The victim and adversary account in the toy-swap contract each have a balance
+of 100 `token_a` and `token_b`.
 
-3) Shut down node-1 to launch the attack in simulation mode without broadcasting any transactions to the network.
+3) Shut down node-1 to launch the attack in simulation mode without broadcasting
+any transactions to the network.
 
-`./scripts/start_node.sh`
 
 ### Launch MEV Attack
-In the MEV demo, the adversary executes the following steps:
+```shell
+docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.shi
+```
 
-1) Generate a victim swap transaction to swap 10 token_a for at least 20 token_b.
+The above command simulates an adversary executing the following steps:
 
-2) Find a front-run transaction by bisection search that, when executed before the victim's transaction, won't fail the victim's transaction. The front-run transaction found swaps 20 token_a with a slippage limit of 0, resulting in obtaining 40 token_b.
+1) Generate a victim swap transaction to swap 10 `token_a` for at least 20 `token_b`.
 
-3) After the victim's transaction, the adversary executes a back-run transaction to sell the 40 token_b, increasing their balance of token_a by 1 and maintaining their balance of token_b.
+2) Find a front-run transaction by bisection search that, when executed before the
+   victim's transaction, won't fail the victim's transaction. The front-run transaction
+   found swaps 20 `token_a` with a slippage limit of 0, resulting in obtaining 40
+   `token_b`.
 
-`docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh`
+3) After the victim's transaction, the adversary executes a back-run transaction to
+   sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
+   their balance of `token_b`.
+
 
 ### Cleanup
 
