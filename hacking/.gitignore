@@ -1,8 +1,0 @@
-secretd-1
-secretd-2
-genesis
-node_modules
-Cargo.lock
-target
-contract.wasm
-passphrase.txt
