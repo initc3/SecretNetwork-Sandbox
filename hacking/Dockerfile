@@ -295,6 +295,10 @@ COPY --from=compile-contracts /root/contract-simple /root/contract-simple
 COPY --from=compile-contracts /root/contract-toy-swap /root/contract-toy-swap
 COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/contract.wasm.gz
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bc \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /root
 
 COPY deployment/docker/localsecret/faucet/faucet_server.js .
