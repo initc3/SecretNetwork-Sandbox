@@ -2,7 +2,8 @@
 **PoPETS 2024 Artifacts Submission for SGX**
 
 ## Prerequisites
-These prerequisites assume a linux operating system and have been tested on Ubuntu 22.04.
+These prerequisites assume a linux operating system and have been tested
+on Ubuntu 22.04.
 
 ### Get the code
 Clone the repository, making sure you fetch the submodules, e.g.:
@@ -52,7 +53,7 @@ any transactions to the network.
 Launch the sandwich attack
 
 ```shell
-docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.shi
+docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
 ```
 
 <details>
@@ -80,7 +81,7 @@ The above command simulates an adversary executing the following steps:
 ![Secret Network](sn-logo.png)
 
 <div align="center">
-  
+
 [![version](https://img.shields.io/badge/version-1.3.1-blue)](https://github.com/scrtlabs/SecretNetwork/releases/tag/v1.3.1)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 <a href="https://twitter.com/intent/follow?screen_name=SecretNetwork">
