@@ -26,8 +26,12 @@ assumptions of receivers of SNIP-20 tokens as described in section 5.1 of the pa
 Also, emphasize if your artifacts contain malware samples, or something similar, to be analyzed.
 In addition, you must highlight any ethical concerns regarding your artifacts here.
 -->
+### Artifact 1: Sandwich attacking a private swap
+?
+
+### Artifact 2: Tracing attacks on SNIP-20 Transfers
 One could use the code to break the privacy of receivers and to build a surveillance
- database of users who may mistakenly think that their privacy is safeguarded.
+database of users who may mistakenly think that their privacy is safeguarded.
 
 
 ## Basic Requirements
@@ -35,7 +39,15 @@ One could use the code to break the privacy of receivers and to build a surveill
 Describe the minimal hardware and software requirements of your artifacts and estimate the compute time and storage required to run the artifacts.
 -->
 ### Artifact 1: Sandwich attacking a private swap
+We recommend using a linux machine with a recent docker engine installed.
+
+Time to build the docker image: ?
+Time to bootstrap the local network: ?
+Time to run the attack: ?
+
 ### Artifact 2: Tracing attacks on SNIP-20 transfers
+An SGX-enabled machine is required. Point to or list SecretNetwork requirements.
+
 
 ### Hardware Requirements
 <!--
