@@ -27,11 +27,10 @@ Also, emphasize if your artifacts contain malware samples, or something similar,
 In addition, you must highlight any ethical concerns regarding your artifacts here.
 -->
 ### Artifact 1: Sandwich attacking a private swap
-?
+None.
 
 ### Artifact 2: Tracing attacks on SNIP-20 Transfers
-
-
+None.
 
 ## Basic Requirements
 <!--
@@ -40,12 +39,13 @@ Describe the minimal hardware and software requirements of your artifacts and es
 ### Artifact 1: Sandwich attacking a private swap
 We recommend using a linux machine with a recent docker engine installed.
 
-Time to build the docker image: ?
-Time to bootstrap the local network: ?
-Time to run the attack: ?
+* Time to build the docker image: ?
+* Time to bootstrap the local network: ?
+* Time to run the attack: ?
 
 ### Artifact 2: Tracing attacks on SNIP-20 transfers
-An SGX-enabled machine is required. Secret network node [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
+An SGX-enabled machine is required.
+See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
 
 
 ### Hardware Requirements
@@ -56,8 +56,10 @@ Make sure to preserve the anonymity of the reviewer at any time.
 -->
 #### Artifact 1: Sandwich attacking a private swap
 
+
 #### Artifact 2: Tracing attacks on SNIP-20 transfers
-An SGX-enabled machine is required
+An SGX-enabled machine is required.
+See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
 
 ### Software Requirements
 <!--
@@ -66,7 +68,11 @@ This description is essential if you rely on proprietary software or software th
 Describe how the reviewer can obtain and install all third-party software, data sets, and models.
 -->
 #### Artifact 1: Sandwich attacking a private swap
+Ordinary linux machine with docker engine installed.
+
 #### Artifact 2: Tracing attacks on SNIP-20 transfers
+Ordinary linux machine with docker engine installed to build the binaries and an
+SGX-enabled machine is required to run a [Secret Network Node](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
 
 ### Estimated Time and Storage Consumption
 <!--
@@ -110,6 +116,8 @@ apt install libxxx xxx
 Describe the expected results where it makes sense to do so.
 -->
 
+#### Artifact 1: Sandwich attacking a private swap
+#### Artifact 2: Tracing attacks on SNIP-20 transfers
 
 
 
@@ -125,6 +133,20 @@ Use code segments to simplify the workflow, e.g.,
 python envtest.py
 ```
 -->
+Check docker version:
+
+```shell
+docker version
+```
+
+Must be >= 24.0.5.
+
+Make sure the docker compose command is available:
+
+```shell
+docker compose
+```
+
 
 ## Artifact Evaluation
 <!--
@@ -154,7 +176,7 @@ List each experiment the reviewer has to execute. Describe:
  - Which claim and results does it support, and how.
 -->
 
-#### Experiment 1: Name
+#### Experiment 1: Sandwich attacking a private swap
 <!--
 Provide a short explanation of the experiment and expected results.
 Describe thoroughly the steps to perform the experiment and to collect and organize the results as expected from your paper.
@@ -163,9 +185,8 @@ Use code segments to support the reviewers, e.g.,
 python experiment_1.py
 ```
 -->
-#### Experiment 2: Name
+#### Experiment 2: Tracing attacks on SNIP-20 transfers
 
-#### Experiment 3: Name
 
 ## Limitations
 <!--
