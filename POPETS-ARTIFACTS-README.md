@@ -117,6 +117,26 @@ Describe the expected results where it makes sense to do so.
 -->
 
 #### Artifact 1: Sandwich attacking a private swap
+We assume a linux operating system and we have run the experiment on Ubuntu 22.04.
+
+##### Get the code
+Clone the repository, making sure you fetch the submodules, e.g.:
+
+```shell
+git clone --recurse-submodules https://github.com/initc3/SecretNetwork-Sandbox.git
+```
+
+If you are missing the submodules after having cloned, run:
+
+```shell
+git submodule update --init --recursive --remote
+```
+
+##### Install Docker
+Docker Engine: https://docs.docker.com/engine/install/
+
+
+
 #### Artifact 2: Tracing attacks on SNIP-20 transfers
 
 
@@ -185,6 +205,55 @@ Use code segments to support the reviewers, e.g.,
 python experiment_1.py
 ```
 -->
+Go into the `hacking` directory:
+
+```shell
+cd hacking/
+```
+
+Setup and start the local network with:
+
+```shell
+./scripts/start_node.sh
+```
+
+<details>
+<summary>What does the above command do?</summary>
+1) Start a validator node (node-1) and a non-validator node (node-2)
+
+2) Store and instantiate demo contracts and set up the initial states.
+The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
+The victim and adversary account in the toy-swap contract each have a balance
+of 100 `token_a` and `token_b`.
+
+3) Shut down node-1 to launch the attack in simulation mode without broadcasting
+any transactions to the network.
+</details>
+
+Launch the sandwich attack
+
+```shell
+docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
+```
+
+<details>
+<summary>What does the above command do?</summary>
+The above command simulates an adversary executing the following steps:
+
+1) Generate a victim swap transaction to swap 10 `token_a` for at least 20 `token_b`.
+
+2) Find a front-run transaction by bisection search that, when executed before the
+   victim's transaction, won't fail the victim's transaction. The front-run transaction
+   found swaps 20 `token_a` with a slippage limit of 0, resulting in obtaining 40
+   `token_b`.
+
+3) After the victim's transaction, the adversary executes a back-run transaction to
+   sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
+   their balance of `token_b`.
+</details>
+
+
+
 #### Experiment 2: Tracing attacks on SNIP-20 transfers
 
 
