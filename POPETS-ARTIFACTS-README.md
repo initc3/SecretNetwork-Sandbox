@@ -2,9 +2,9 @@
 Paper title: **SGXonerated: Finding (and Partially Fixing) Privacy Flaws in
 TEE-based Smart Contract Platforms Without Breaking the TEE**
 
-Artifacts HotCRP Id: **#Enter your HotCRP Id here**
+Artifacts HotCRP Id: 87
 
-Requested Badge: Either **Available**
+Requested Badge: **Available**
 <!-- Requested Badge: Either **Available** or **Reproducible** -->
 
 ## Description
@@ -30,8 +30,7 @@ In addition, you must highlight any ethical concerns regarding your artifacts he
 ?
 
 ### Artifact 2: Tracing attacks on SNIP-20 Transfers
-One could use the code to break the privacy of receivers and to build a surveillance
-database of users who may mistakenly think that their privacy is safeguarded.
+
 
 
 ## Basic Requirements
@@ -46,7 +45,7 @@ Time to bootstrap the local network: ?
 Time to run the attack: ?
 
 ### Artifact 2: Tracing attacks on SNIP-20 transfers
-An SGX-enabled machine is required. Point to or list SecretNetwork requirements.
+An SGX-enabled machine is required. Secret network node [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
 
 
 ### Hardware Requirements
@@ -56,7 +55,9 @@ Provide instructions on how a reviewer can gain access to that hardware through 
 Make sure to preserve the anonymity of the reviewer at any time.
 -->
 #### Artifact 1: Sandwich attacking a private swap
+
 #### Artifact 2: Tracing attacks on SNIP-20 transfers
+An SGX-enabled machine is required
 
 ### Software Requirements
 <!--
