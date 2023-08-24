@@ -37,7 +37,8 @@ services:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ./scripts/:/root/scripts
       #- ./backup_snip20:/root/backup_snip20
-      - ./backup_snip20:${SNIP20_ATTACK_DIR}
+      #- ./backup_snip20:${SNIP20_ATTACK_DIR}
+      - ./backup_snip20:/root/snip20
       - genesis:/genesis
 
   localsecret-2:
@@ -82,7 +83,8 @@ services:
       - ./debug_scripts/:/root/debug_scripts
       - ./scripts:/root/scripts
       #- ./backup_snip20:/root/backup_snip20
-      - ./backup_snip20:${SNIP20_ATTACK_DIR}
+      #- ./backup_snip20:${SNIP20_ATTACK_DIR}
+      - ./backup_snip20:/root/snip20
       - genesis:/genesis
 secrets:
   API_KEY:
