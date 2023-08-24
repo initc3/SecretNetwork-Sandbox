@@ -1,21 +1,22 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: devlocalsecret
-    build:
-      context: ..
-      dockerfile: hacking/Dockerfile
-      target: build-localsecret
-      args:
-        FEATURES: "${FEATURES},debug-print"
-        FEATURES_U: ${FEATURES_U}
-        SGX_MODE: SW
-        SECRET_NODE_TYPE: BOOTSTRAP
-        CHAIN_ID: secretdev-1
-        IAS_BUILD: sw_dummy
-      secrets:
-        - API_KEY
-        - SPID
+    #image: devlocalsecret
+    image: initc3/localsecret:3224c1a78
+    #build:
+    #  context: ..
+    #  dockerfile: hacking/Dockerfile
+    #  target: build-localsecret
+    #  args:
+    #    FEATURES: "${FEATURES},debug-print"
+    #    FEATURES_U: ${FEATURES_U}
+    #    SGX_MODE: SW
+    #    SECRET_NODE_TYPE: BOOTSTRAP
+    #    CHAIN_ID: secretdev-1
+    #    IAS_BUILD: sw_dummy
+    #  secrets:
+    #    - API_KEY
+    #    - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
@@ -29,7 +30,8 @@ services:
     environment:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: BOOTSTRAP
-      SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
+      #SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
+      SNIP20_ATTACK_DIR: /root/snip20
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
@@ -39,7 +41,8 @@ services:
       - genesis:/genesis
 
   localsecret-2:
-    image: devlocalsecret
+    #image: devlocalsecret
+    image: initc3/localsecret:3224c1a78
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -67,8 +70,10 @@ services:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: NODE
-      SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
-      ENCLAVE_KEY: ${ENCLAVE_KEY}
+      #SNIP20_ATTACK_DIR: ${SNIP20_ATTACK_DIR}
+      #ENCLAVE_KEY: ${ENCLAVE_KEY}
+      SNIP20_ATTACK_DIR: /root/snip20
+      ENCLAVE_KEY: io-master-key.txt
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
       - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
