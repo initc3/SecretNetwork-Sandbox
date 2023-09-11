@@ -9,40 +9,36 @@ git submodule update --init --recursive --remote
 
 ### Requirements
 Docker Engine: https://docs.docker.com/engine/install/
-
-### Build Secret Network Node Image
-Run all the command below under directory `hacking`.
-
-The demo contracts are built when building the image. Run the following
-command to build the image:
-
-```shell
-docker compose build
-```
+Docker compose
 
 ### Setup Environment
 
 ```shell
 ./scripts/start_node.sh
 ```
+[Full description of start_node.sh](./scripts/README.md#start_nodesh)
 
 The above command will:
 
 1) Start a validator node (node-1) and a non-validator node (node-2)
 
-2) Store and instantiate demo contracts and set up the initial states.
+2) Store and instantiate Toy uniswap demo contracts and set up the initial states for MEV sandwhich attack.
 The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
 The victim and adversary account in the toy-swap contract each have a balance
 of 100 `token_a` and `token_b`.
 
-3) Shut down node-1 to launch the attack in simulation mode without broadcasting
-any transactions to the network.
+3) Store and instantiate snip-20 contract and set up the initial states for the SNIP-20 privacy attack demos.
+The victim account has a balance of 12343. Two attacker accounts have balance of 10000 each.
 
+4) Shut down node-1 to launch the attack in simulation mode without broadcasting any transactions to the network.
 
 ### Launch MEV Attack
+
 ```shell
-docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.shi
+docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
 ```
+
+[Full description of run_mev_demo_local.sh](./scripts/README.md#run_mev_demo_localsh)
 
 The above command simulates an adversary executing the following steps:
 
@@ -57,10 +53,48 @@ The above command simulates an adversary executing the following steps:
    sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
    their balance of `token_b`.
 
+#### Transfer amount privacy attack
+Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
+
+```shell
+docker compose exec localsecret-2 ./scripts/test_snip20.sh
+```
+
+
+[Full description of test_snip20.sh](./scripts/README.md#test_snip20sh)
+
+The above command simulates an adversary executing the following steps:
+
+1) Generate a victim transaction to transfer 10 tokens to another account
+
+2) Find a transfer amount by bisection search to figure out the tranfer amount:
+   * that sets the victim's balance to 0
+   * sends an amount `guess` to the victim's account resulting in the victim's account having a balance of `guess`
+   * execute the victim's transaction to see if `guess` was enough to conver the victim's transfer transaction
+3) If the `guess` was enough to cover the victim's transfer transaction then `guess` is the transfer amount
+
+#### Account balance privacy attack
+Getting the account balance. The script prints out the victim's balance of 12343.
+
+```shell
+./scripts/test_balance.sh
+```
+
+[Full description test_balance.sh](./scripts/README.md#test_balancesh)
+
+The above command simulates an adversary executing the following steps:
+
+1) Execute balance inflation by creating transfers between the attacker's two accounts, reseting the account balance to the original value before the transfer, and repeating this until the balance has the maximum value.
+
+2) Find a transaction by bisection search that transfers `guess` from the attacker's account to the victim's account until it causes an overflow error.
+
+3) The victim's balance is the `2**128-1-guess`
 
 ### Cleanup
 
-TODO
+```shell
+docker compose down --volumes
+```
 
 
 [//]: # ()

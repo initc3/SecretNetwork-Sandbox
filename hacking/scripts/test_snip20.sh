@@ -37,7 +37,7 @@ tag=${tag:6:-1}
 echo $tag > $BACKUP/backup_victim_key
 
 lo=0
-hi=20
+hi=40
 cnt=0
 while [ $(expr $hi - $lo) -ne 0 ]; do
     midv=$(( (hi + lo ) / 2))

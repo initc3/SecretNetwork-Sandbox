@@ -4,7 +4,7 @@ TEE-based Smart Contract Platforms Without Breaking the TEE**
 
 Artifacts HotCRP Id: 87
 
-Requested Badge: **Available**
+Requested Badge: **Reproducible**
 <!-- Requested Badge: Either **Available** or **Reproducible** -->
 
 ## Description
@@ -15,10 +15,13 @@ There are two main artifacts, briefly described below.
 Contains the source code and docker-based environment to simulate a sandwich attack on
 a private swap as described in section 6.2 of the paper.
 
-### Artifact 2: Tracing attacks on SNIP-20 Transfers
-Contains the source code, building toolchain and instructions to break the privacy
-assumptions of receivers of SNIP-20 tokens as described in section 5.1 of the paper.
+### Artifact 2: Transfer Amount Privacy attacks on SNIP-20 Transaction
+Contains the source code, building toolchain and instructions to break the transfer amount privacy
+assumptions of receivers of SNIP-20 tokens as described in section 5.3 of the paper.
 
+### Artifact 3: Account Balance Privacy attacks on SNIP-20
+Contains the source code, building toolchain and instructions to break the account balance amount privacy
+assumptions of SNIP-20 accounts as described in section 5.5 of the paper.
 
 ### Security/Privacy Issues and Ethical Concerns
 <!--
@@ -29,23 +32,27 @@ In addition, you must highlight any ethical concerns regarding your artifacts he
 ### Artifact 1: Sandwich attacking a private swap
 None.
 
-### Artifact 2: Tracing attacks on SNIP-20 Transfers
+### Artifact 2: Transfer Amount Privacy attacks on SNIP-20 Transaction
+None.
+
+### Artifact 3: Balance Privacy attacks on SNIP-20
 None.
 
 ## Basic Requirements
 <!--
 Describe the minimal hardware and software requirements of your artifacts and estimate the compute time and storage required to run the artifacts.
 -->
-### Artifact 1: Sandwich attacking a private swap
+### Artifact 1-3
 We recommend using a linux machine with a recent docker engine installed.
 
-* Time to build the docker image: ?
-* Time to bootstrap the local network: ?
-* Time to run the attack: ?
+* Time to build the docker image: N/A we provide a prebuilt image
+* Time to bootstrap the local network: < 5 minutes
+* Time to run each attack for artifact 1 and 2: < 1 minute each
+* Time to run attack for artifact 3: < 5 minutes
 
-### Artifact 2: Tracing attacks on SNIP-20 transfers
+<!-- ### Artifact 4: Tracing attacks on SNIP-20 transfers
 An SGX-enabled machine is required.
-See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
+See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator). -->
 
 
 ### Hardware Requirements
@@ -54,12 +61,13 @@ If your artifacts require specific hardware to be executed, mention that here.
 Provide instructions on how a reviewer can gain access to that hardware through remote access, buying or renting, or even emulating the hardware.
 Make sure to preserve the anonymity of the reviewer at any time.
 -->
-#### Artifact 1: Sandwich attacking a private swap
+#### Artifact 1-3: 
 
+None
 
-#### Artifact 2: Tracing attacks on SNIP-20 transfers
+<!-- #### Artifact 4: Tracing attacks on SNIP-20 transfers
 An SGX-enabled machine is required.
-See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
+See [Secret Network Node Setup](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator). -->
 
 ### Software Requirements
 <!--
@@ -67,12 +75,12 @@ Describe the OS and software packages required to evaluate your artifact.
 This description is essential if you rely on proprietary software or software that might not be easily accessible for other reasons.
 Describe how the reviewer can obtain and install all third-party software, data sets, and models.
 -->
-#### Artifact 1: Sandwich attacking a private swap
+#### Artifact 1-3
 Ordinary linux machine with docker engine installed.
 
-#### Artifact 2: Tracing attacks on SNIP-20 transfers
+<!-- #### Artifact 4: Tracing attacks on SNIP-20 transfers
 Ordinary linux machine with docker engine installed to build the binaries and an
-SGX-enabled machine is required to run a [Secret Network Node](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator).
+SGX-enabled machine is required to run a [Secret Network Node](https://docs.scrt.network/secret-network-documentation/infrastructure/setting-up-a-node-validator). -->
 
 ### Estimated Time and Storage Consumption
 <!--
@@ -80,16 +88,23 @@ Provide an estimated value for the time the evaluation will take and the space o
 This helps reviewers to schedule the evaluation in their time plan and to see if everything is running as intended.
 More specifically, a reviewer, who knows that the evaluation might take 10 hours, does not expect an error if,  after 1 hour, the computer is still calculating things.
 -->
-#### Artifact 1: Sandwich attacking a private swap
-#### Artifact 2: Tracing attacks on SNIP-20 transfers
+#### Artifact 1-3: Sandwich attacking a private swap
+
+* 5 minutes setup
+
+* <1 minute for each artifacts 1 and 2
+
+* 5 minute artifact 3
+
+<!-- #### Artifact 4: Tracing attacks on SNIP-20 transfers -->
+
+<!-- * TODO time and storage consumption for secret network node?? -->
 
 ## Environment
 <!--
 In the following, describe how to access our artifact and all related and necessary data and software components.
 Afterward, describe how to set up everything and how to verify that everything is set up correctly.
 -->
-### Artifact 1: Sandwich attacking a private swap
-### Artifact 2: Tracing attacks on SNIP-20 transfers
 
 ### Accessibility
 <!--
@@ -99,8 +114,9 @@ Do not use personal web pages.
 For repositories that evolve over time (e.g., Git Repositories ), specify a specific commit-id or tag to be evaluated.
 In case your repository changes during the evaluation to address the reviewer's feedback, please provide an updated link (or commit-id / tag) in a comment.
 -->
-#### Artifact 1: Sandwich attacking a private swap
-#### Artifact 2: Tracing attacks on SNIP-20 transfers
+* Github commit: Latest
+
+* Pulls prebuild images from initc3 docker image repo
 
 ### Set up the environment
 <!--
@@ -116,7 +132,7 @@ apt install libxxx xxx
 Describe the expected results where it makes sense to do so.
 -->
 
-#### Artifact 1: Sandwich attacking a private swap
+#### Artifact 
 We assume a linux operating system and we have run the experiment on Ubuntu 22.04.
 
 ##### Get the code
@@ -132,15 +148,37 @@ If you are missing the submodules after having cloned, run:
 git submodule update --init --recursive --remote
 ```
 
-##### Install Docker
-Docker Engine: https://docs.docker.com/engine/install/
 
+Go into the `hacking` directory:
 
+```shell
+cd hacking/
+```
 
-#### Artifact 2: Tracing attacks on SNIP-20 transfers
+Setup and start the local network with:
 
+```shell
+./scripts/start_node.sh
+```
 
+<details>
+<summary>What does the above command do?</summary>
 
+[Full description of start_node.sh](./hacking/scripts/README.md#start_nodesh)
+
+1) Start a validator node (node-1) and a non-validator node (node-2)
+
+2) Store and instantiate Toy Uniswap demo contracts and set up the initial states for the MEV sandwhich attack.
+The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
+The victim and adversary account in the toy-swap contract each have a balance
+of 100 `token_a` and `token_b`.
+
+3) Store and instantiate snip-20 contract and set up the initial states for the SNIP-20 privacy attack demos.
+The victim account has a balance of 12343. Two attacker accounts have balance of 10000 each.
+
+4) Shut down node-1 to launch the attack in simulation mode without broadcasting
+any transactions to the network.
+</details>
 
 ### Testing the Environment
 <!--
@@ -167,6 +205,11 @@ Make sure the docker compose command is available:
 docker compose
 ```
 
+Check that *only* node-2 is running 
+```shell
+docker ps | grep hacking-localsecret-2-1
+```
+
 
 ## Artifact Evaluation
 <!--
@@ -179,13 +222,14 @@ Therefore, highlight your paper's main results and claims in the first subsectio
 List all your paper's main results and claims that are supported by your submitted artifacts.
 -->
 
-#### Main Result 1: Name
-<!--
-Describe the results in 1 to 3 sentences.
-Refer to the related sections in your paper and reference the experiments that support this result/claim.
--->
+#### Main Result 1: MEV attack on Uniswap contract
+We are able to determine the optimal sandwhich attack transactions for a token swap contract as described in section 6.2 of the paper.  
 
-#### Main Result 2: Name
+#### Main Result 2: Transfer amount privacy attack on SNIP-20 token contract
+We are able to determine the transfer amount for a SNIP-20 token transfer transaction as described in section 5.3 of the paper.  
+
+#### Main Result 3: Account balance privacy attack on SNIP-20 token contract
+We are able to determine the balance of a SNIP-20 account as described in section 5.5 of the paper.
 
 ### Experiments
 <!--
@@ -197,47 +241,19 @@ List each experiment the reviewer has to execute. Describe:
 -->
 
 #### Experiment 1: Sandwich attacking a private swap
-<!--
-Provide a short explanation of the experiment and expected results.
-Describe thoroughly the steps to perform the experiment and to collect and organize the results as expected from your paper.
-Use code segments to support the reviewers, e.g.,
-```bash
-python experiment_1.py
-```
--->
-Go into the `hacking` directory:
+Launch the sandwich attack.The script creates a victim transaction swaping 10 token A for token b with slippage limit 20. (Given that the Pool balance for token a is 1000 and Pool balance for token B is 2000) It prints the optimal frontrun transaction of swaping 20 of token a for token b, and the optimal backrun transaction of swaping 40 of tokeb b for token a. 
+
 
 ```shell
-cd hacking/
-```
-
-Setup and start the local network with:
-
-```shell
-./scripts/start_node.sh
+docker compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
 ```
 
 <details>
 <summary>What does the above command do?</summary>
-1) Start a validator node (node-1) and a non-validator node (node-2)
 
-2) Store and instantiate demo contracts and set up the initial states.
-The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
-The victim and adversary account in the toy-swap contract each have a balance
-of 100 `token_a` and `token_b`.
+[Full description of run_mev_demo_local.sh](./hacking/scripts/README.md#run_mev_demo_localsh)
 
-3) Shut down node-1 to launch the attack in simulation mode without broadcasting
-any transactions to the network.
-</details>
 
-Launch the sandwich attack
-
-```shell
-docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
-```
-
-<details>
-<summary>What does the above command do?</summary>
 The above command simulates an adversary executing the following steps:
 
 1) Generate a victim swap transaction to swap 10 `token_a` for at least 20 `token_b`.
@@ -254,8 +270,50 @@ The above command simulates an adversary executing the following steps:
 
 
 
-#### Experiment 2: Tracing attacks on SNIP-20 transfers
+#### Experiment 2: Transfer amount privacy attack
+Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
 
+```shell
+docker compose exec localsecret-2 ./scripts/test_snip20.sh
+```
+
+<details>
+<summary>What does the above command do?</summary>
+
+[Full description of test_snip20.sh](hacking/scripts/README.md#test_snip20sh)
+
+The above command simulates an adversary executing the following steps:
+
+1) Generate a victim transaction to transfer 10 tokens to another account
+
+2) Find a transfer amount by bisection search to figure out the tranfer amount:
+   * that sets the victim's balance to 0
+   * sends an amount `guess` to the victim's account resulting in the victim's account having a balance of `guess`
+   * execute the victim's transaction to see if `guess` was enough to conver the victim's transfer transaction
+3) If the `guess` was enough to cover the victim's transfer transaction then `guess` is the transfer amount
+</details>
+
+#### Experiment 3: Account balance privacy attack
+Getting the account balance. The script figures out and prints the victim's balance of 12343.
+
+```shell
+./scripts/test_balance.sh
+```
+
+<details>
+<summary>What does the above command do?</summary>
+
+[Full description of test_balance.sh](./hacking/scripts/README.md#test_balancesh)
+
+The above command simulates an adversary executing the following steps:
+
+1) Execute balance inflation by creating transfers between the attacker's two accounts, reseting the account balance to the original value before the transfer, and repeating this until the balance has the maximum value.
+
+2) Find a transaction by bisection search that transfers `guess` from the attacker's account to the victim's account until it causes an overflow error.
+
+3) The victim's balance is the `2**128-1-guess`
+
+</details>
 
 ## Limitations
 <!--

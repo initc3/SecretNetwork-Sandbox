@@ -14,7 +14,7 @@ echo "pool_a $(query_pool pool_b)"
 
 # make victim tx
 generate_and_sign_swap token_a 10 20 $VICTIM victim
-echo "victim tx token_a 10 20"
+echo "victim tx amount of token A = 10, expected return = 20"
 echo
 
 cnt=0
@@ -45,7 +45,7 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   ###
   end=$(date +%s.%N)
   time_diff=$(echo "$end - $start" | bc)
-  echo "-----------------------------------------------------------gen and sign adv tx: $time_diff ms"
+  echo "-----------------------------------------------------------generate and sign adversary transaction: $time_diff ms"
   ###
   echo "adv tx token_a $mid 0"
 
@@ -56,7 +56,7 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   ###
   end=$(date +%s.%N)
   time_diff=$(echo "$end - $start" | bc)
-  echo "-----------------------------------------------------------simulate adv tx: $time_diff ms"
+  echo "-----------------------------------------------------------simulate adversary transaction: $time_diff ms"
   ###
   ###
   start=$(date +%s.%N)
@@ -74,7 +74,7 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   ###
   end=$(date +%s.%N)
   time_diff=$(echo "$end - $start" | bc)
-  echo "-----------------------------------------------------------simulate victim tx: $time_diff ms"
+  echo "-----------------------------------------------------------simulate victim transaction: $time_diff ms"
   ###
   ###
   start=$(date +%s.%N)
