@@ -9,7 +9,7 @@ Requested Badge: **Reproducible**
 
 ## Description
 <!-- A short description of your artifact and how it links to your paper. -->
-There are two main artifacts, briefly described below.
+There are three main artifacts, briefly described below.
 
 ### Artifact 1: Sandwich attacking a private swap
 Contains the source code and docker-based environment to simulate a sandwich attack on
