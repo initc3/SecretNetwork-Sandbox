@@ -115,6 +115,7 @@ where
             .ok_or_else(Self::busy_enclave_err)?;
         let enclave = enclave_access_token.map_err(EnclaveError::sdk_err)?;
 
+        let start = Instant::now();
         let status = unsafe {
             imports::ecall_init(
                 enclave.geteid(),
@@ -132,6 +133,22 @@ where
                 sig_info.len(),
             )
         };
+        let elapsed = start.elapsed();
+
+        println!("ecall_init duration: {:?}", elapsed);
+        let mut ecall_init_time_logs_nanos = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("/tmp/ecall_init_nanos.log")
+            .expect("Unable to open file");
+
+        if let Err(e) = writeln!(
+            ecall_init_time_logs_nanos,
+            "{}",
+            elapsed.as_nanos().to_string()
+        ) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
 
         trace!(
             "init() returned with gas_used: {} (gas_limit: {})",
@@ -196,46 +213,12 @@ where
 
         let elapsed = start.elapsed();
 
-        println!("ecall_handle duration: {:?}", elapsed);
-        let mut ecall_handle_time_logs_millis = OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open("/tmp/ecall_handle_millis.log")
-            .expect("Unable to open file");
-
-        let mut ecall_handle_time_logs_micros = OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open("/tmp/ecall_handle_micros.log")
-            .expect("Unable to open file");
-
         let mut ecall_handle_time_logs_nanos = OpenOptions::new()
             .append(true)
             .create(true)
             .open("/tmp/ecall_handle_nanos.log")
             .expect("Unable to open file");
 
-        //if let Err(e) = writeln!(
-        //    f,
-        //    "handle() called with env: {:?}",
-        //    String::from_utf8_lossy(env),
-        //) {
-        //	eprintln!("Couldn't write to file: {}", e);
-        //}
-        if let Err(e) = writeln!(
-            ecall_handle_time_logs_millis,
-            "{}",
-            elapsed.as_millis().to_string()
-        ) {
-            eprintln!("Couldn't write to file: {}", e);
-        }
-        if let Err(e) = writeln!(
-            ecall_handle_time_logs_micros,
-            "{}",
-            elapsed.as_micros().to_string()
-        ) {
-            eprintln!("Couldn't write to file: {}", e);
-        }
         if let Err(e) = writeln!(
             ecall_handle_time_logs_nanos,
             "{}",
@@ -243,6 +226,12 @@ where
         ) {
             eprintln!("Couldn't write to file: {}", e);
         }
+
+        trace!(
+            "handle() returned with gas_used: {} (gas_limit: {})",
+            used_gas,
+            self.gas_limit
+        );
 
         self.consume_gas(used_gas);
 
@@ -277,6 +266,7 @@ where
             .ok_or_else(Self::busy_enclave_err)?;
         let enclave = enclave_access_token.map_err(EnclaveError::sdk_err)?;
 
+        let start = Instant::now();
         let status = unsafe {
             imports::ecall_query(
                 // TODO use the _qe variant
@@ -293,6 +283,23 @@ where
                 msg.len(),
             )
         };
+        let elapsed = start.elapsed();
+
+        println!("ecall_query duration: {:?}", elapsed);
+
+        let mut ecall_query_time_logs_nanos = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("/tmp/ecall_query_nanos.log")
+            .expect("Unable to open file");
+
+        if let Err(e) = writeln!(
+            ecall_query_time_logs_nanos,
+            "{}",
+            elapsed.as_nanos().to_string()
+        ) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
 
         trace!(
             "query() returned with gas_used: {} (gas_limit: {})",
