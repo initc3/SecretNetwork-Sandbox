@@ -1,22 +1,22 @@
 version: "3.9"
 services:
   localsecret-1:
+    image: initc3/localsecret:d5175c9c3
     #image: devlocalsecret
-    image: initc3/localsecret:4028e8a1c
-      #build:
-      #  context: ..
-      #  dockerfile: hacking/Dockerfile
-      #  target: build-localsecret
-      #  args:
-      #    FEATURES: "${FEATURES},debug-print"
-      #    FEATURES_U: ${FEATURES_U}
-      #    SGX_MODE: SW
-      #    SECRET_NODE_TYPE: BOOTSTRAP
-      #    CHAIN_ID: secretdev-1
-      #    IAS_BUILD: sw_dummy
-      #  secrets:
-      #    - API_KEY
-      #    - SPID
+    #build:
+    #  context: ..
+    #  dockerfile: hacking/Dockerfile
+    #  target: build-localsecret
+    #  args:
+    #    FEATURES: "${FEATURES},debug-print"
+    #    FEATURES_U: ${FEATURES_U}
+    #    SGX_MODE: SW
+    #    SECRET_NODE_TYPE: BOOTSTRAP
+    #    CHAIN_ID: secretdev-1
+    #    IAS_BUILD: sw_dummy
+    #  secrets:
+    #    - API_KEY
+    #    - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
@@ -42,21 +42,21 @@ services:
       - genesis:/genesis
 
   localsecret-2:
+    image: initc3/localsecret:d5175c9c3
     #image: devlocalsecret
-    image: initc3/localsecret:4028e8a1c
-      #build:
-      #  context: ..
-      #  dockerfile: hacking/Dockerfile
-      #  target: build-localsecret
-      #  args:
-      #    FEATURES: "${FEATURES},debug-print"
-      #    FEATURES_U: ${FEATURES_U}
-      #    SGX_MODE: SW
-      #    CHAIN_ID: secretdev-1
-      #    IAS_BUILD: sw_dummy
-      #  secrets:
-      #    - API_KEY
-      #    - SPID
+    #build:
+    #  context: ..
+    #  dockerfile: hacking/Dockerfile
+    #  target: build-localsecret
+    #  args:
+    #    FEATURES: "${FEATURES},debug-print"
+    #    FEATURES_U: ${FEATURES_U}
+    #    SGX_MODE: SW
+    #    CHAIN_ID: secretdev-1
+    #    IAS_BUILD: sw_dummy
+    #  secrets:
+    #    - API_KEY
+    #    - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
