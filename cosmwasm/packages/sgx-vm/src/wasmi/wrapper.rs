@@ -24,6 +24,11 @@ use super::results::{
     InitSuccess, QuerySuccess,
 };
 
+use std::fs::OpenOptions;
+//use std::io::Write;
+use std::io::prelude::*;
+use std::time::Instant;
+
 pub struct Module<S, Q>
 where
     S: Storage,
@@ -168,6 +173,8 @@ where
             .ok_or_else(Self::busy_enclave_err)?;
         let enclave = enclave_access_token.map_err(EnclaveError::sdk_err)?;
 
+        let start = Instant::now();
+
         let status = unsafe {
             imports::ecall_handle(
                 enclave.geteid(),
@@ -187,11 +194,56 @@ where
             )
         };
 
-        trace!(
-            "handle() returned with gas_used: {} (gas_limit: {})",
-            used_gas,
-            self.gas_limit
-        );
+        let elapsed = start.elapsed();
+
+        println!("ecall_handle duration: {:?}", elapsed);
+        let mut ecall_handle_time_logs_millis = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("/tmp/ecall_handle_millis.log")
+            .expect("Unable to open file");
+
+        let mut ecall_handle_time_logs_micros = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("/tmp/ecall_handle_micros.log")
+            .expect("Unable to open file");
+
+        let mut ecall_handle_time_logs_nanos = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open("/tmp/ecall_handle_nanos.log")
+            .expect("Unable to open file");
+
+        //if let Err(e) = writeln!(
+        //    f,
+        //    "handle() called with env: {:?}",
+        //    String::from_utf8_lossy(env),
+        //) {
+        //	eprintln!("Couldn't write to file: {}", e);
+        //}
+        if let Err(e) = writeln!(
+            ecall_handle_time_logs_millis,
+            "{}",
+            elapsed.as_millis().to_string()
+        ) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
+        if let Err(e) = writeln!(
+            ecall_handle_time_logs_micros,
+            "{}",
+            elapsed.as_micros().to_string()
+        ) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
+        if let Err(e) = writeln!(
+            ecall_handle_time_logs_nanos,
+            "{}",
+            elapsed.as_nanos().to_string()
+        ) {
+            eprintln!("Couldn't write to file: {}", e);
+        }
+
         self.consume_gas(used_gas);
 
         match status {
