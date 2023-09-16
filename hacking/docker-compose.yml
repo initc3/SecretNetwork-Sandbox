@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: initc3/localsecret:d5175c9c3
+    image: initc3/localsecret:dac7bc254
     #image: devlocalsecret
     #build:
     #  context: ..
@@ -42,7 +42,7 @@ services:
       - genesis:/genesis
 
   localsecret-2:
-    image: initc3/localsecret:d5175c9c3
+    image: initc3/localsecret:dac7bc254
     #image: devlocalsecret
     #build:
     #  context: ..

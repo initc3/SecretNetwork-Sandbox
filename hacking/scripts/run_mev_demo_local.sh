@@ -3,10 +3,6 @@ set -e
 
 source ./scripts/mev_utils.sh
 
-rm -f /tmp/ecall_handle_millis.log
-rm -f /tmp/ecall_handle_micros.log
-rm -f /tmp/ecall_handle_nanos.log
-
 CONTRACT_ADDRESS=`cat $CONTRACT_LOC/contractAddress.txt`
 CODE_HASH=`cat $CONTRACT_LOC/codeHash.txt`
 
@@ -22,7 +18,11 @@ echo "victim tx amount of token A = 10, expected return = 20"
 echo
 
 # use the nano benchmark logs to measure the loop only
+#rm -f /tmp/ecall_init_nanos.log
 rm -f /tmp/ecall_handle_nanos.log
+rm -f /tmp/ecall_query_nanos.log
+#touch /tmp/ecall_init_nanos.log
+touch /tmp/ecall_query_nanos.log
 
 start_time=$(date +%s%N)
 cnt=0
@@ -111,20 +111,34 @@ done
 
 end_time=$(date +%s%N)
 
-ecall_time_nanos=$(awk '{ sum += $1 } END { print sum }' /tmp/ecall_handle_nanos.log)
-ecall_time_millis=$( echo "$ecall_time_nanos / 1000000" | bc)
+#ecall_init_time_nanos=$(awk '{ sum += $1 } END { print sum }' /tmp/ecall_init_nanos.log)
+#ecall_init_time_millis=$( echo "$ecall_init_time_nanos / 1000000" | bc)
+ecall_handle_time_nanos=$(awk '{ sum += $1 } END { print sum }' /tmp/ecall_handle_nanos.log)
+ecall_handle_time_millis=$( echo "$ecall_handle_time_nanos / 1000000" | bc)
+ecall_query_time_nanos=$(awk '{ sum += $1 } END { print sum }' /tmp/ecall_query_nanos.log)
+ecall_query_time_millis=$( echo "$ecall_query_time_nanos / 1000000" | bc)
+#ecalls_total_time_nanos=$( echo "$ecall_init_time_nanos + $ecall_handle_time_nanos + $ecall_query_time_nanos" | bc)
+ecalls_total_time_nanos=$( echo "$ecall_handle_time_nanos + $ecall_query_time_nanos" | bc)
+ecalls_total_time_millis=$( echo "$ecalls_total_time_nanos / 1000000" | bc)
 
 total_time_nanos=$(echo "$end_time - $start_time" | bc)
 total_time_millis=$(echo "$total_time_nanos / 1000000" | bc)
 
-untrusted_time_nanos=$(echo "$total_time_nanos - $ecall_time_nanos" | bc)
-untrusted_time_millis=$(echo "$total_time_millis - $ecall_time_millis" | bc)
+untrusted_time_nanos=$(echo "$total_time_nanos - $ecalls_total_time_nanos" | bc)
+untrusted_time_millis=$(echo "$total_time_millis - $ecalls_total_time_millis" | bc)
 
 printf "\nTotal time spent for trial: ${total_time_nanos} nanosecs"
-printf "\nEstimated time spent for (trusted) ecall_handle ${ecall_time_nanos} nanosecs"
+#printf "\nEstimated time spent for (trusted) ecall_init ${ecall_init_time_nanos} nanosecs"
+printf "\nEstimated time spent for (trusted) ecall_handle ${ecall_handle_time_nanos} nanosecs"
+printf "\nEstimated time spent for (trusted) ecall_query ${ecall_query_time_nanos} nanosecs"
+printf "\nEstimated time spent for (trusted) ecalls (handle & query) ${ecalls_total_time_nanos} nanosecs"
 printf "\nEstimated time spent for untrusted code ${untrusted_time_nanos} nanosecs\n"
+
 printf "\nTotal time spent for trial: ${total_time_millis} millisecs"
-printf "\nEstimated time spent for (trusted) ecall_handle ${ecall_time_millis} millisecs"
+#printf "\nEstimated time spent for (trusted) ecall_init ${ecall_init_time_millis} millisecs"
+printf "\nEstimated time spent for (trusted) ecall_handle ${ecall_handle_time_millis} millisecs"
+printf "\nEstimated time spent for (trusted) ecall_query ${ecall_query_time_millis} millisecs"
+printf "\nEstimated time spent for (trusted) ecalls (handle & query) ${ecalls_total_time_millis} millisecs"
 printf "\nEstimated time spent for untrusted code ${untrusted_time_millis} millisecs\n\n"
 
 set_snapshot "${UNIQUE_LABEL}-${cnt}"
