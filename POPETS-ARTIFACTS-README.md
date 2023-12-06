@@ -297,7 +297,7 @@ The above command simulates an adversary executing the following steps:
 Getting the account balance. The script figures out and prints the victim's balance of 12343.
 
 ```shell
-./scripts/test_balance.sh
+docker compose exec localsecret-2 ./scripts/test_balance.sh
 ```
 
 <details>
