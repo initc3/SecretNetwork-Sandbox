@@ -6,7 +6,6 @@ echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
 set -euo pipefail
-set -x
 export RPC_URL="localsecret-1:26657"
 export CHAINID="secretdev-1"
 file=/root/.secretd/config/genesis.json

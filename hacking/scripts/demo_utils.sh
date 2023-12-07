@@ -9,14 +9,12 @@ ENCLAVE_KEY=${ENCLAVE_KEY:-io-master-cert.der}
 
 wait_for_tx() {
   set +e
-  set +x
   TX=""
   while [ "$TX" == "" ]; do
     sleep 1
     TX=$($SECRETD q tx $1)
   done
   set -e
-  set -x
 }
 
 init_contract() {

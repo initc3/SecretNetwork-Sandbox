@@ -1,5 +1,4 @@
 set -e
-set -x
 
 USER=secret15vya8x6l5qcf0xw28xwehjxd9stymtvf4sqr6q
 PASSPHRASE=password
