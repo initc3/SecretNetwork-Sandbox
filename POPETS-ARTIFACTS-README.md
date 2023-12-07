@@ -161,6 +161,25 @@ Setup and start the local network with:
 ./scripts/start_node.sh
 ```
 
+<details>
+<summary>What does the above command do?</summary>
+
+[Full description of start_node.sh](./hacking/scripts/README.md#start_nodesh)
+
+1) Start a validator node (node-1) and a non-validator node (node-2)
+
+2) Store and instantiate Toy Uniswap demo contracts and set up the initial states for the MEV sandwhich attack.
+The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
+The victim and adversary account in the toy-swap contract each have a balance
+of 100 `token_a` and `token_b`.
+
+3) Store and instantiate snip-20 contract and set up the initial states for the SNIP-20 privacy attack demos.
+The victim account has a balance of 12343. Two attacker accounts have balance of 10000 each.
+
+4) Shut down node-1 to launch the attack in simulation mode without broadcasting
+any transactions to the network.
+</details>
+
 At the end of its execution the script should end with an output similar to:
 ```console
 ...
@@ -181,26 +200,6 @@ Node 2 status info:
 	"VotingPower": "0"
 }
 ```
-
-<details>
-<summary>What does the above command do?</summary>
-
-[Full description of start_node.sh](./hacking/scripts/README.md#start_nodesh)
-
-1) Start a validator node (node-1) and a non-validator node (node-2)
-
-2) Store and instantiate Toy Uniswap demo contracts and set up the initial states for the MEV sandwhich attack.
-The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
-The victim and adversary account in the toy-swap contract each have a balance
-of 100 `token_a` and `token_b`.
-
-3) Store and instantiate snip-20 contract and set up the initial states for the SNIP-20 privacy attack demos.
-The victim account has a balance of 12343. Two attacker accounts have balance of 10000 each.
-
-4) Shut down node-1 to launch the attack in simulation mode without broadcasting
-any transactions to the network.
-</details>
-
 
 ### Testing the Environment
 <!--
