@@ -162,7 +162,7 @@ Setup and start the local network with:
 ```
 
 At the end of its execution the script should end with an output similar to:
-```shell
+```console
 ...
 
 *********************************************************************************

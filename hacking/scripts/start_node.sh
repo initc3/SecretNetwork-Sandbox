@@ -51,7 +51,7 @@ docker compose logs localsecret-2 --tail 5
 
 echo "*************************************************************************"
 echo "*                                                                       *"
-echo "* Secret Network Test Nodes are now setup, and ready for experiments.   *"
+echo "*  Secret Network Test Nodes are now setup, and ready for experiments.  *"
 echo "*                                                                       *"
 echo "*************************************************************************"
 
