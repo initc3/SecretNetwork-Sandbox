@@ -161,6 +161,27 @@ Setup and start the local network with:
 ./scripts/start_node.sh
 ```
 
+At the end of its execution the script should end with an output similar to:
+```shell
+...
+
+*********************************************************************************
+*                                                                               *
+* Secret Network Test Nodes are now setup, and ready for experiments.           *
+*                                                                               *
+*********************************************************************************
+
+Node 2 status info:
+{
+	"Address": "A80B0E25EEA4665348F071A41B8122AF079BB2AF",
+	"PubKey": {
+		"type": "tendermint/PubKeyEd25519",
+		"value": "Ew9FY1+mRmXWTnAklkyjcPMiJfbz23b06UtsC04xTQw="
+	},
+	"VotingPower": "0"
+}
+```
+
 <details>
 <summary>What does the above command do?</summary>
 
@@ -179,6 +200,7 @@ The victim account has a balance of 12343. Two attacker accounts have balance of
 4) Shut down node-1 to launch the attack in simulation mode without broadcasting
 any transactions to the network.
 </details>
+
 
 ### Testing the Environment
 <!--
