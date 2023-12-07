@@ -19,14 +19,14 @@ services:
     #    - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
-    ports:
-      - "26657:26657"
-      - "26656:26656"
-      - "9090:9090"
-      - "9091:9091"
-      - "1317:1317"
-      # faucet
-      - "5000:5000"
+    #ports:
+    #  - "26657:26657"
+    #  - "26656:26656"
+    #  - "9090:9090"
+    #  - "9091:9091"
+    #  - "1317:1317"
+    #  # faucet
+    #  - "5000:5000"
     environment:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: BOOTSTRAP
@@ -59,14 +59,14 @@ services:
     #    - SPID
     # ports are only here in case interaction
     # between localhost and container is desired
-    ports:
-      - "36657:26657"
-      - "36656:26656"
-      - "9391:9091"
-      - "9390:9090"
-      - "3317:1317"
-      # faucet
-      - "5300:5000"
+    #ports:
+    #  - "36657:26657"
+    #  - "36656:26656"
+    #  - "9391:9091"
+    #  - "9390:9090"
+    #  - "3317:1317"
+    #  # faucet
+    #  - "5300:5000"
     environment:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
