@@ -52,9 +52,10 @@ build
 check-hw/target
 
 # hacking
-hacking/backup_snip20/backup_adv_key
-hacking/backup_snip20/backup_adv_value
+hacking/backup_snip20/adv_key
+hacking/backup_snip20/adv_value
 hacking/backup_snip20/backup_victim_key
 hacking/backup_snip20/codeHash.txt
 hacking/backup_snip20/simulate_result
 hacking/backup_snip20/kv_store
+/hacking/backup_snip20/**

@@ -6,3 +6,5 @@ Cargo.lock
 target
 contract.wasm
 passphrase.txt
+
+backup_snip20/**
