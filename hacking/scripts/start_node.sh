@@ -58,4 +58,11 @@ echo "*************************************************************************"
 
 printf "\nNode 2 status info:\n"
 
-docker compose exec localsecret-2 secretd status | jq .ValidatorInfo
+if command -v jq &> /dev/null
+then
+    jq_cmd="jq"
+else
+    jq_cmd="docker run -i --rm ghcr.io/jqlang/jq"
+fi
+
+docker compose exec localsecret-2 secretd status | ${jq_cmd} .ValidatorInfo
