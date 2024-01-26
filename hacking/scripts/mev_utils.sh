@@ -30,12 +30,12 @@ generate_and_sign_swap() {
 
 query_pool() {
   size=$(query_contract_state "{\"$1\":{}}")
-  echo $size
+  log $size
 }
 
 query_balance() {
   balance=$(query_contract_state "{\"balance\":{\"token_type\":\"$1\",\"user\":\"$2\"}}")
-  echo "query_balance" $1 $2 $balance
+  log "query_balance" $1 $2 $balance
 }
 
 query_balances() {

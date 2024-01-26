@@ -6,24 +6,31 @@ BACKUP="${SNIP20_ATTACK_DIR:-$HOME}"
 #IO_MASTER_KEY="${SCRT_IO_MASTER_KEY:-io-master-key.txt}"
 ENCLAVE_KEY=${ENCLAVE_KEY:-io-master-cert.der}
 
+export SN_VERBOSE=$1
+
+source ./scripts/log_utils.sh
+
 
 wait_for_tx() {
   set +e
   TX=""
   while [ "$TX" == "" ]; do
     sleep 1
+    echo "wait for tx"
     TX=$($SECRETD q tx $1)
   done
   set -e
 }
 
 init_contract() {
+  #log "Storing contract"
   echo "Storing contract"
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/$OBJ --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
   wait_for_tx $STORE_TX_HASH
   eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key==\"code_id\") | .value ")
 
+  #log "Instantiating contract"
   echo "Instantiating contract"
   INIT_TX=$($SECRETD tx compute instantiate $CODE_ID $1 --from $ADMIN --label $UNIQUE_LABEL -y --broadcast-mode sync )
   eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
@@ -59,12 +66,12 @@ execute_tx() {
 
 set_snapshot() {
   $SECRETD tx compute snapshot --from $ADMIN "snapshot$1" -y --broadcast-mode sync > /dev/null
-  echo "set_snapshot to snapshot$1"
+  log "set_snapshot to snapshot$1"
 }
 
 reset_snapshot() {
   $SECRETD tx compute snapshot --from $ADMIN "" -y --broadcast-mode sync
-  echo "reset_snapshot to default dbstore"
+  log "reset_snapshot to default dbstore"
 }
 
 broadcast_tx() {

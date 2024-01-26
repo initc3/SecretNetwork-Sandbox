@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
 
+export SN_VERBOSE=$1
+
+source ./scripts/log_utils.sh
 source ./scripts/demo_utils.sh
 source ./scripts/local_test_params.sh
 
 init_balance=10000
 victim_balance=12343
 
-echo "Storing contract"
+log "Storing contract"
 
 STORE_TX=$(secretd tx compute store /root/secretSCRT/contract.wasm.gz --from $ACC0 -y --broadcast-mode sync --gas=5000000)
 eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
@@ -15,7 +18,7 @@ wait_for_tx $STORE_TX_HASH
 eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key==\"code_id\") | .value ")
 
 
-echo "Instantiating contract"
+log "Instantiating contract"
 INIT_TX=$(secretd tx compute instantiate $CODE_ID "{\"name\":\"SSCRT\", \"symbol\":\"SSCRT\", \"decimals\": 6, \"prng_seed\": \"MDAwMA==\", \"initial_balances\":[{\"address\": \"$ACC0\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC1\", \"amount\": \"$init_balance\"},{\"address\": \"$ACC2\", \"amount\": \"$victim_balance\"}]}" --from $ACC0 --label $UNIQUE_LABEL  -y  --broadcast-mode sync --gas=5000000)
 eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
 wait_for_tx $INIT_TX_HASH
