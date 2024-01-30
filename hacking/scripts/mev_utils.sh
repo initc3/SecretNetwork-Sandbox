@@ -1,6 +1,7 @@
 
 source ./scripts/local_test_params.sh
 source ./scripts/demo_utils.sh
+source ./scripts/log_utils.sh
 
 VICTIM="secret1ldjxljw7v4vk6zhyduywh04hpj0jdwxsmrlatf"
 ADV="secret1ajz54hz8azwuy34qwy9fkjnfcrvf0dzswy0lqq"
@@ -30,7 +31,7 @@ generate_and_sign_swap() {
 
 query_pool() {
   size=$(query_contract_state "{\"$1\":{}}")
-  log $size
+  echo $size
 }
 
 query_balance() {
