@@ -16,22 +16,20 @@ wait_for_tx() {
   TX=""
   while [ "$TX" == "" ]; do
     sleep 1
-    echo "wait for tx"
+    log "wait for tx"
     TX=$($SECRETD q tx $1)
   done
   set -e
 }
 
 init_contract() {
-  #log "Storing contract"
-  echo "Storing contract"
+  log "Storing contract"
   STORE_TX=$($SECRETD tx compute store $CONTRACT_LOC/$OBJ --from $ADMIN -y --broadcast-mode sync --gas=5000000)
   eval STORE_TX_HASH=$(echo $STORE_TX | jq .txhash )
   wait_for_tx $STORE_TX_HASH
   eval CODE_ID=$($SECRETD q tx $STORE_TX_HASH | jq ".logs[].events[].attributes[] | select(.key==\"code_id\") | .value ")
 
-  #log "Instantiating contract"
-  echo "Instantiating contract"
+  log "Instantiating contract"
   INIT_TX=$($SECRETD tx compute instantiate $CODE_ID $1 --from $ADMIN --label $UNIQUE_LABEL -y --broadcast-mode sync )
   eval INIT_TX_HASH=$(echo $INIT_TX | jq .txhash )
   wait_for_tx $INIT_TX_HASH
