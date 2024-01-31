@@ -9,6 +9,7 @@ services:
       SNIP20_ATTACK_DIR: /root/snip20
     volumes:
       - genesis:/genesis
+      - snip20:/root/snip20
 
   localsecret-2:
     image: initc3/localsecret:0b2181c62
@@ -20,6 +21,8 @@ services:
       ENCLAVE_KEY: io-master-key.txt
     volumes:
       - genesis:/genesis
+      - snip20:/root/snip20
 
 volumes:
   genesis:
+  snip20:
