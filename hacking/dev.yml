@@ -2,7 +2,7 @@ version: "3.9"
 services:
   localsecret-1:
     #image: initc3/localsecret:dac7bc254
-    image: devlocalsecret:01a2e7904
+    image: devlocalsecret:98f81d5f4
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -35,6 +35,7 @@ services:
     volumes:
       #- ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ./scripts/:/root/scripts
+      - ./teebox:/usr/src/teebox
       #- ./backup_snip20:/root/backup_snip20
       #- ./backup_snip20:${SNIP20_ATTACK_DIR}
       - ./backup_snip20:/root/snip20
@@ -42,7 +43,7 @@ services:
 
   localsecret-2:
     #image: initc3/localsecret:dac7bc254
-    image: devlocalsecret:01a2e7904
+    image: devlocalsecret:98f81d5f4
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -80,6 +81,7 @@ services:
     #  - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
     #  - ./debug_scripts/:/root/debug_scripts
       - ./scripts:/root/scripts
+      - ./teebox:/usr/src/teebox
         #- ./scripts/run_mev_demo_local.sh:/root/scripts/run_mev_demo_local.sh
         #- ./scripts/mev_utils.sh:/root/scripts/mev_utils.sh
         #- ./scripts/demo_utils.sh:/root/scripts/demo_utils.sh

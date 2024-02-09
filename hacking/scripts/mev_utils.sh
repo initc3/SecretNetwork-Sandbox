@@ -36,7 +36,7 @@ query_pool() {
 
 query_balance() {
   balance=$(query_contract_state "{\"balance\":{\"token_type\":\"$1\",\"user\":\"$2\"}}")
-  log "query_balance" $1 $2 $balance
+  echo "query_balance" $1 $2 $balance
 }
 
 query_balances() {

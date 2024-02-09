@@ -297,7 +297,10 @@ COPY --from=compile-sscrt-contract /contract/contract.wasm.gz /root/secretSCRT/c
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         bc \
+        python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install ipython rich typer[all] poetry
 
 WORKDIR /root
 
@@ -310,6 +313,13 @@ RUN chmod +x ./scripts/startup.sh
 RUN chmod +x ./scripts/bootstrap_init.sh
 RUN chmod +x ./scripts/node_init.sh
 RUN chmod +x ./scripts/set_init_states_toy_swap.sh
+
+COPY hacking/teebox ./teebox
+
+WORKDIR /root/teebox
+RUN poetry install && poetry build && pip install dist/teebox-*.whl
+
+WORKDIR /root/
 
 ENTRYPOINT ["./scripts/startup.sh"]
 

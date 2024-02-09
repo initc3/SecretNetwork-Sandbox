@@ -9,8 +9,8 @@ CODE_HASH=`cat $CONTRACT_LOC/codeHash.txt`
 set_snapshot "${UNIQUE_LABEL}-start"
 
 query_balances
-echo "pool_a $(query_pool pool_a)"
-echo "pool_a $(query_pool pool_b)"
+echo "Token A liquidity pool: $(query_pool pool_a)"
+echo "Token B liquidity pool: $(query_pool pool_b)"
 
 # make victim tx
 generate_and_sign_swap token_a 10 20 $VICTIM victim
@@ -23,6 +23,14 @@ rm -f /tmp/ecall_handle_nanos.log
 rm -f /tmp/ecall_query_nanos.log
 #touch /tmp/ecall_init_nanos.log
 touch /tmp/ecall_query_nanos.log
+
+_timeit() {
+    start=$1
+    end=$2
+    scale=$3
+    _time=$(bc -l <<< "scale=$scale;($end - $start)/1000000000")
+    echo $_time
+}
 
 start_time=$(date +%s%N)
 cnt=0
@@ -39,8 +47,10 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   set_snapshot "${UNIQUE_LABEL}-${cnt}"
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------set_snapshot: $time_diff ms"
+  #db_restore_time=$(echo "($end - $start)/1000000" | bc)
+  #db_restore_time=$(bc -l <<< "scale=5;($end - $start)/1000000000")
+  db_restore_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------restore database states: $db_restore_time s"
   ###
 
   mid=$((($hi + $lo) / 2))
@@ -52,8 +62,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   generate_and_sign_swap token_a $mid 0 $ADV adv
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------generate and sign adversary transaction: $time_diff ms"
+  #sig_time=$(echo "($end - $start)/1000000" | bc)
+  sig_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------generate and sign adversary transaction: $sig_time s"
   ###
   echo "adv tx token_a $mid 0"
 
@@ -63,8 +74,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   simulate_tx adv
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------simulate adversary transaction: $time_diff ms"
+  #sim_frontrunning_tx_time=$(echo "($end - $start)/1000000" | bc)
+  sim_frontrunning_tx_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------simulate front-running transaction: $sim_frontrunning_tx_time s"
   ###
   ###
   start=$(date +%s%N)
@@ -72,8 +84,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   old_pool_a=$(query_pool pool_a)
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------query old pool: $time_diff ms"
+  #query_before_time=$(echo "($end - $start)/1000000" | bc)
+  query_before_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------query the liquidity pool before simulating the victim transation: $query_before_time s"
   ###
   ###
   start=$(date +%s%N)
@@ -81,8 +94,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   simulate_tx victim
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------simulate victim transaction: $time_diff ms"
+  #sim_victim_tx_time=$(echo "($end - $start)/1000000" | bc)
+  sim_victim_tx_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------simulate victim transaction: $sim_victim_tx_time s"
   ###
   ###
   start=$(date +%s%N)
@@ -90,8 +104,9 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
   new_pool_a=$(query_pool pool_a)
   ###
   end=$(date +%s%N)
-  time_diff=$(echo "($end - $start)/1000000" | bc)
-  echo "-----------------------------------------------------------query new pool: $time_diff ms"
+  #query_after_time=$(echo "($end - $start)/1000000" | bc)
+  query_after_time=$(_timeit $start $end 5)
+  #echo "-----------------------------------------------------------query the liquidity pool after simulating the victim transaction: $query_after_time s"
   ###
   dif_pool_a=$(($new_pool_a - $old_pool_a))
   echo 'dif' $dif_pool_a
@@ -101,9 +116,21 @@ while [ $(expr $hi - $lo) -ne 1 ]; do
 
   ###
   end_loop=$(date +%s%N)
-  time_diff=$(echo "($end_loop - $start_loop)/1000000" | bc)
-  echo "-----------------------------------------------------------single loop: $time_diff ms"
-  ###
+  #bisection_search_time=$(echo "($end_loop - $start_loop)/1000000" | bc)
+  bisection_search_time=$(_timeit $start $end 5)
+
+  echo "event, time (seconds)" > stats-${cnt}.csv
+  echo "bisection search single iteration,$bisection_search_time" >> stats-${cnt}.csv
+  echo "restore database states,$db_restore_time" >> stats-${cnt}.csv
+  echo "generate and sign adversary transaction,$sig_time" >> stats-${cnt}.csv
+  echo "simulate front-running transaction,$sim_frontrunning_tx_time" >> stats-${cnt}.csv
+  echo "query the liquidity pool before simulating the victim transation,$query_before_time" >> stats-${cnt}.csv
+  echo "simulate victim transaction,$sim_victim_tx_time" >> stats-${cnt}.csv
+  echo "query the liquidity pool after simulating the victim transaction,$query_after_time" >> stats-${cnt}.csv
+  
+  #rich stats-${cnt}.csv
+  python3 ./scripts/mev.py stats-${cnt}.csv ${cnt}
+
 
   echo "=================================== end of a trial"
   echo
@@ -167,4 +194,4 @@ simulate_tx adv_back
 
 query_balances
 echo "pool_a $(query_pool pool_a)"
-echo "pool_a $(query_pool pool_b)"
+echo "pool_b $(query_pool pool_b)"
