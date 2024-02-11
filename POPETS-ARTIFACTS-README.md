@@ -158,7 +158,7 @@ cd hacking/
 Setup and start the local network with:
 
 ```shell
-./scripts/start_node.sh
+make start
 ```
 
 <details>
@@ -266,7 +266,7 @@ Launch the sandwich attack.The script creates a victim transaction swaping 10 to
 
 
 ```shell
-docker compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
+make sandwich-attack
 ```
 
 <details>
@@ -289,13 +289,17 @@ The above command simulates an adversary executing the following steps:
    their balance of `token_b`.
 </details>
 
+<details>
+<summary>Animated gif of demo</summary>
+![](hacking/sandwich-attack.gif)
+</details>
 
 
 #### Experiment 2: Transfer amount privacy attack
 Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
 
 ```shell
-docker compose exec localsecret-2 ./scripts/test_snip20.sh
+make receiver-privacy-attack
 ```
 
 <details>
@@ -318,7 +322,7 @@ The above command simulates an adversary executing the following steps:
 Getting the account balance. The script figures out and prints the victim's balance of 12343.
 
 ```shell
-docker compose exec localsecret-2 ./scripts/test_balance.sh
+make balance-privacy-attack
 ```
 
 <details>
