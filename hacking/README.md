@@ -38,7 +38,7 @@ The victim account has a balance of 12343. Two attacker accounts have balance of
 make sandwich-attack
 ```
 
-[Full description of run_mev_demo_local.sh](./scripts/README.md#run_mev_demo_localsh)
+[Full description of sandwich-attack.sh](./scripts/README.md#sandwich-attacksh)
 
 The above command simulates an adversary executing the following steps:
 

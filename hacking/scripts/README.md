@@ -1,7 +1,7 @@
 ## Description of Scripts
 
 #### start_node.sh
-Setup a local network 
+Setup a local network
 
 Link: [start_node.sh](start_node.sh)
 
@@ -27,10 +27,10 @@ Link: [set_init_states_toy_swap.sh](set_init_states_toy_swap.sh)
 * Set victim and adversary accounts to have token balance to 100 for token A and token B
 
 
-#### run_mev_demo_local.sh
+#### sandwich-attack.sh
 Execute MEV attack against local network
 
-Link: [run_mev_demo_local.sh](run_mev_demo_local.sh)
+Link: [sandwich-attack.sh](sandwich-attack.sh)
 
 * Generate victim transaction that aims to swap 10 of token A for token B with slippage limit 20 (i.e. the transaction only succedes if it gets at least 20 of token B for 10 token B)
 

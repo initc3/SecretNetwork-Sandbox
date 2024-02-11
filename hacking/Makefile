@@ -15,7 +15,7 @@ stop:
 	docker compose --file $(COMPOSE_FILE) down --volumes
 
 sandwich-attack:
-	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/run_mev_demo_local.py.sh
+	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/sandwich-attack.sh
 
 receiver-privacy-attack:
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/test_snip20.sh

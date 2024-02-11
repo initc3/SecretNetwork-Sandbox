@@ -262,7 +262,7 @@ List each experiment the reviewer has to execute. Describe:
 -->
 
 #### Experiment 1: Sandwich attacking a private swap
-Launch the sandwich attack.The script creates a victim transaction swaping 10 token A for token b with slippage limit 20. (Given that the Pool balance for token a is 1000 and Pool balance for token B is 2000) It prints the optimal frontrun transaction of swaping 20 of token a for token b, and the optimal backrun transaction of swaping 40 of tokeb b for token a. 
+Launch the sandwich attack.The script creates a victim transaction swaping 10 token A for token b with slippage limit 20. (Given that the Pool balance for token a is 1000 and Pool balance for token B is 2000) It prints the optimal frontrun transaction of swaping 20 of token a for token b, and the optimal backrun transaction of swaping 40 of tokeb b for token a.
 
 
 ```shell
@@ -272,7 +272,7 @@ make sandwich-attack
 <details>
 <summary>What does the above command do?</summary>
 
-[Full description of run_mev_demo_local.sh](./hacking/scripts/README.md#run_mev_demo_localsh)
+[Full description of sandwich-attack.sh](./hacking/scripts/README.md#sandwich-attacksh)
 
 
 The above command simulates an adversary executing the following steps:

@@ -33,13 +33,10 @@ services:
       SNIP20_ATTACK_DIR: /root/snip20
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
-      #- ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
       - ./scripts/:/root/scripts
       - ./teebox:/usr/src/teebox
-      #- ./backup_snip20:/root/backup_snip20
-      #- ./backup_snip20:${SNIP20_ATTACK_DIR}
-      - ./backup_snip20:/root/snip20
       - genesis:/genesis
+      - snip20:/root/snip20
 
   localsecret-2:
     #image: initc3/localsecret:dac7bc254
@@ -76,20 +73,10 @@ services:
       ENCLAVE_KEY: io-master-key.txt
     # NOTE: mount source code that may be changed and rebuilt in a container
     volumes:
-    #  - ../go-cosmwasm/src:/go/src/github.com/enigmampc/SecretNetwork/go-cosmwasm/src
-    #  - ../x:/go/src/github.com/enigmampc/SecretNetwork/x
-    #  - ../app:/go/src/github.com/enigmampc/SecretNetwork/app
-    #  - ./debug_scripts/:/root/debug_scripts
       - ./scripts:/root/scripts
       - ./teebox:/usr/src/teebox
-        #- ./scripts/run_mev_demo_local.sh:/root/scripts/run_mev_demo_local.sh
-        #- ./scripts/mev_utils.sh:/root/scripts/mev_utils.sh
-        #- ./scripts/demo_utils.sh:/root/scripts/demo_utils.sh
-        #- ./scripts/log_utils.sh:/root/scripts/log_utils.sh
-    #  #- ./backup_snip20:/root/backup_snip20
-    #  #- ./backup_snip20:${SNIP20_ATTACK_DIR}
-      - ./backup_snip20:/root/snip20
       - genesis:/genesis
+      - snip20:/root/snip20
 secrets:
   API_KEY:
     file: ../.env.local
@@ -97,3 +84,4 @@ secrets:
     file: ../.env.local
 volumes:
   genesis:
+  snip20:

@@ -53,7 +53,7 @@ any transactions to the network.
 Launch the sandwich attack
 
 ```shell
-docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
+make sandwich-attack
 ```
 
 <details>
