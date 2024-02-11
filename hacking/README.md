@@ -53,7 +53,7 @@ The above command simulates an adversary executing the following steps:
    sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
    their balance of `token_b`.
 
-![](hacking/sandwich-attack.gif)
+![](./sandwich-attack.gif)
 
 
 #### Transfer amount privacy attack
