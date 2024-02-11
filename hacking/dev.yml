@@ -2,7 +2,7 @@ version: "3.9"
 services:
   localsecret-1:
     #image: initc3/localsecret:dac7bc254
-    image: devlocalsecret:98f81d5f4
+    image: devlocalsecret:a30b34c50
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -43,7 +43,7 @@ services:
 
   localsecret-2:
     #image: initc3/localsecret:dac7bc254
-    image: devlocalsecret:98f81d5f4
+    image: devlocalsecret:a30b34c50
     build:
       context: ..
       dockerfile: hacking/Dockerfile
