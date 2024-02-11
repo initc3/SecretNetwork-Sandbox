@@ -14,7 +14,7 @@ Docker compose
 ### Setup Environment
 
 ```shell
-./scripts/start_node.sh
+make start
 ```
 [Full description of start_node.sh](./scripts/README.md#start_nodesh)
 
@@ -35,7 +35,7 @@ The victim account has a balance of 12343. Two attacker accounts have balance of
 ### Launch MEV Attack
 
 ```shell
-docker-compose exec localsecret-2 ./scripts/run_mev_demo_local.sh
+make sandwich-attack
 ```
 
 [Full description of run_mev_demo_local.sh](./scripts/README.md#run_mev_demo_localsh)
@@ -53,11 +53,14 @@ The above command simulates an adversary executing the following steps:
    sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
    their balance of `token_b`.
 
+![](hacking/sandwich-attack.gif)
+
+
 #### Transfer amount privacy attack
 Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
 
 ```shell
-docker compose exec localsecret-2 ./scripts/test_snip20.sh
+make receiver-privacy-attack
 ```
 
 
@@ -77,7 +80,7 @@ The above command simulates an adversary executing the following steps:
 Getting the account balance. The script prints out the victim's balance of 12343.
 
 ```shell
-./scripts/test_balance.sh
+make balance-privacy-attack
 ```
 
 [Full description test_balance.sh](./scripts/README.md#test_balancesh)

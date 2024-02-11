@@ -289,11 +289,6 @@ The above command simulates an adversary executing the following steps:
    their balance of `token_b`.
 </details>
 
-<details>
-<summary>Animated gif of demo</summary>
-![](hacking/sandwich-attack.gif)
-</details>
-
 
 #### Experiment 2: Transfer amount privacy attack
 Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
