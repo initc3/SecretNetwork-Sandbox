@@ -294,13 +294,13 @@ The above command simulates an adversary executing the following steps:
 Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
 
 ```shell
-make receiver-privacy-attack
+make transfer-privacy-attack
 ```
 
 <details>
 <summary>What does the above command do?</summary>
 
-[Full description of receiver-privacy-attack.sh](hacking/scripts/README.md#receiver-privacy-attacksh)
+[Full description of transfer-privacy-attack.sh](hacking/scripts/README.md#transfer-privacy-attacksh)
 
 The above command simulates an adversary executing the following steps:
 

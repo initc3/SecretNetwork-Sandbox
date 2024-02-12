@@ -57,14 +57,14 @@ Snip-20 contract is at [secretSCRT](../secretSCRT/)
 
 Link: [setup_snip20.sh](setup_snip20.sh)
 
-* Set 2 attacker acount balance to 10000 
+* Set 2 attacker acount balance to 10000
 
 * Set victim sender balance to 12343
 
-#### receiver-privacy-attack.sh
+#### transfer-privacy-attack.sh
 Execute privacy attack to get transfer amount for SNIP-20 transaction against local network
 
-Link: [receiver-privacy-attack.sh](receiver-privacy-attack.sh)
+Link: [transfer-privacy-attack.sh](transfer-privacy-attack.sh)
 
 * Generate a victim transaction that sends 10 from victim's account to another account
 

@@ -21,8 +21,8 @@ stop: ##@ Stop local network
 sandwich-attack: ##@ run sandwich attack on a private swap (section 6.2 in paper)
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/sandwich-attack.sh
 
-receiver-privacy-attack: ##@ run transfer privacy attack on SNIP-20 transaction (section 5.3 in paper)
-	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/receiver-privacy-attack.sh
+transfer-privacy-attack: ##@ run transfer privacy attack on SNIP-20 transaction (section 5.3 in paper)
+	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/transfer-privacy-attack.sh
 
 balance-privacy-attack: ##@ run account balance privacy attack on SNIP-20
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/balance-privacy-attack.sh
