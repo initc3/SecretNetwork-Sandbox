@@ -58,6 +58,13 @@ def _show_mev_stats(iteration, stats):
 
 
 @app.command()
+def print_json(jsonfile: str):
+    with open(jsonfile) as f:
+        content = f.read()
+    console.print_json(content)
+
+
+@app.command()
 def info_panel(
     text: str,
     title: Annotated[str, typer.Option()] = "",

