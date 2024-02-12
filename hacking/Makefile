@@ -18,7 +18,7 @@ sandwich-attack:
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/sandwich-attack.sh
 
 receiver-privacy-attack:
-	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/test_snip20.sh
+	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/receiver-privacy-attack.sh
 
 balance-privacy-attack:
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/test_balance.sh

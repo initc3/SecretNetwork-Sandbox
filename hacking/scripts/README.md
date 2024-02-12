@@ -61,10 +61,10 @@ Link: [setup_snip20.sh](setup_snip20.sh)
 
 * Set victim sender balance to 12343
 
-#### test_snip20.sh
+#### receiver-privacy-attack.sh
 Execute privacy attack to get transfer amount for SNIP-20 transaction against local network
 
-Link: [test_snip20.sh](test_snip20.sh)
+Link: [receiver-privacy-attack.sh](receiver-privacy-attack.sh)
 
 * Generate a victim transaction that sends 10 from victim's account to another account
 

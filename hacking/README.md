@@ -64,7 +64,7 @@ make receiver-privacy-attack
 ```
 
 
-[Full description of test_snip20.sh](./scripts/README.md#test_snip20sh)
+[Full description of receiver-privacy-attack.sh](./scripts/README.md#receiver-privacy-attacksh)
 
 The above command simulates an adversary executing the following steps:
 
