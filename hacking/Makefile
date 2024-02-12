@@ -1,6 +1,8 @@
 VERBOSE ?= 0
 COMPOSE_FILE ?= compose.yml
 
+.DEFAULT_GOAL := help
+
 ##@
 ##@ Local network management commands
 ##@
@@ -18,13 +20,13 @@ stop: ##@ Stop local network
 ##@
 ##@ Attack commands
 ##@
-sandwich-attack: ##@ run sandwich attack on a private swap (section 6.2 in paper)
+sandwich-attack: ##@ Run sandwich attack on a private swap (section 6.2 in paper)
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/sandwich-attack.sh
 
-transfer-privacy-attack: ##@ run transfer privacy attack on SNIP-20 transaction (section 5.3 in paper)
+transfer-privacy-attack: ##@ Run transfer privacy attack on SNIP-20 transaction (section 5.3 in paper)
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/transfer-privacy-attack.sh
 
-balance-privacy-attack: ##@ run account balance privacy attack on SNIP-20
+balance-privacy-attack: ##@ Run account balance privacy attack on SNIP-20
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/balance-privacy-attack.sh
 
 
