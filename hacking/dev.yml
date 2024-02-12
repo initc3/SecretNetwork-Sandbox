@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: devlocalsecret:c1850359b
+    image: devlocalsecret:98c5ef9fe
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -38,7 +38,7 @@ services:
       - snip20:/root/snip20
 
   localsecret-2:
-    image: devlocalsecret:c1850359b
+    image: devlocalsecret:98c5ef9fe
     build:
       context: ..
       dockerfile: hacking/Dockerfile
