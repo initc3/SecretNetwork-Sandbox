@@ -5,7 +5,7 @@ set -e
 source ./scripts/log_utils.sh
 
 verbose=${VERBOSE:-0}
-COMPOSE_FILE=${COMPOSE_FILE:-docker-compose.yml}
+COMPOSE_FILE=${COMPOSE_FILE:-compose.yml}
 
 _help() {
    echo "Initialize a local secret network."

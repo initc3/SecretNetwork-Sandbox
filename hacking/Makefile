@@ -1,5 +1,5 @@
 VERBOSE ?= 0
-COMPOSE_FILE ?= docker-compose.yml
+COMPOSE_FILE ?= compose.yml
 
 ##@
 ##@ Local network management commands
