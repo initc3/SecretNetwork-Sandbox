@@ -21,7 +21,7 @@ receiver-privacy-attack:
 	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/receiver-privacy-attack.sh
 
 balance-privacy-attack:
-	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/test_balance.sh
+	docker compose --file $(COMPOSE_FILE) exec localsecret-2 ./scripts/balance-privacy-attack.sh
 
 clean:
 	-rm -rf \

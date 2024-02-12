@@ -82,10 +82,10 @@ Link: [receiver-privacy-attack.sh](receiver-privacy-attack.sh)
         * If the victim transaction failed set `low = guess`
         * If `high == low == guess` that is the transfer amount and exit the loop
 
-#### test_balance.sh
+#### balance-privacy-attack.sh
 Execute privacy attack to get the SNIP-20 balance amount against local network
 
-Link: [test_balance.sh](test_balance.sh)
+Link: [balance-privacy-attack.sh](balance-privacy-attack.sh)
 
 * Get the key for the victim's account balance by sending a transaction to the sender victim  and seeing which value changes in the contract database key value store
 

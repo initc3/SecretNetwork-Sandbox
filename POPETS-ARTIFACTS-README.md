@@ -323,7 +323,7 @@ make balance-privacy-attack
 <details>
 <summary>What does the above command do?</summary>
 
-[Full description of test_balance.sh](./hacking/scripts/README.md#test_balancesh)
+[Full description of balance-privacy-attack.sh](./hacking/scripts/README.md#balance-privacy-attacksh)
 
 The above command simulates an adversary executing the following steps:
 

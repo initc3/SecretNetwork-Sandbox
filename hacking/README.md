@@ -83,7 +83,7 @@ Getting the account balance. The script prints out the victim's balance of 12343
 make balance-privacy-attack
 ```
 
-[Full description test_balance.sh](./scripts/README.md#test_balancesh)
+[Full description balance-privacy-attack.sh](./scripts/README.md#balance-privacy-attacksh)
 
 The above command simulates an adversary executing the following steps:
 
