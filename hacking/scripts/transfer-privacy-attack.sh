@@ -17,7 +17,7 @@ set_snapshot "${snapshot_uniq_label}-start"
 #generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
 generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
 
-rm -r $BACKUP/victim_key
+rm -f $BACKUP/victim_key
 rm -f $BACKUP/adv_key
 rm -f $BACKUP/adv_value
 touch $BACKUP/victim_key
