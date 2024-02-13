@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   localsecret-1:
-    image: initc3/sgxonerated:fe44b7f8f
+    image: initc3/sgxonerated:de9b1f723
     environment:
       LOG_LEVEL: "TRACE"
       SECRET_NODE_TYPE: BOOTSTRAP
@@ -12,7 +12,7 @@ services:
       - snip20:/root/snip20
 
   localsecret-2:
-    image: initc3/sgxonerated:fe44b7f8f
+    image: initc3/sgxonerated:de9b1f723
     environment:
       CHAINID: "secretdev-1"
       LOG_LEVEL: "TRACE"
