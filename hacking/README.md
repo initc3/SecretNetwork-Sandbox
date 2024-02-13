@@ -8,8 +8,8 @@ git submodule update --init --recursive --remote
 ```
 
 ### Requirements
-Docker Engine: https://docs.docker.com/engine/install/
-Docker compose
+* Docker Engine: https://docs.docker.com/engine/install/
+* Docker compose: https://docs.docker.com/compose/
 
 ### Setup Environment
 
@@ -32,7 +32,7 @@ The victim account has a balance of 12343. Two attacker accounts have balance of
 
 4) Shut down node-1 to launch the attack in simulation mode without broadcasting any transactions to the network.
 
-### Launch MEV Attack
+## Launch MEV Sandwich Attack
 
 ```shell
 make sandwich-attack
@@ -56,7 +56,7 @@ The above command simulates an adversary executing the following steps:
 ![](./sandwich-attack.gif)
 
 
-#### Transfer amount privacy attack
+## Transfer Amount Privacy Attack
 Getting transfer amount. This script generates a victim transaction sending 10 of a SNIP-20 token to another account. It figures out the transfer amount prints it.
 
 ```shell
@@ -79,7 +79,7 @@ The above command simulates an adversary executing the following steps:
 ![](./transfer-privacy-attack.gif)
 
 
-#### Account balance privacy attack
+## Account Balance Privacy Attack
 Getting the account balance. The script prints out the victim's balance of 12343.
 
 ```shell
@@ -96,10 +96,14 @@ The above command simulates an adversary executing the following steps:
 
 3) The victim's balance is the `2**128-1-guess`
 
-### Cleanup
-
+## Cleanup
 ```shell
-docker compose down --volumes
+make stop
+```
+
+## Help
+```shell
+make
 ```
 
 
