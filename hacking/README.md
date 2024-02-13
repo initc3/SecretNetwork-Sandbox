@@ -1,17 +1,17 @@
 # Running the MEV Demo
 
-### Update Git Submodules
+## Update Git Submodules
 Fetch the git submodules by running the following command:
 
 ```shell
 git submodule update --init --recursive --remote
 ```
 
-### Requirements
+## Requirements
 * Docker Engine: https://docs.docker.com/engine/install/
 * Docker compose: https://docs.docker.com/compose/
 
-### Setup Environment
+## Setup Environment
 
 ```shell
 make start
@@ -31,6 +31,9 @@ of 100 `token_a` and `token_b`.
 The victim account has a balance of 12343. Two attacker accounts have balance of 10000 each.
 
 4) Shut down node-1 to launch the attack in simulation mode without broadcasting any transactions to the network.
+
+### Animated GIF of Network Startup
+![](./start-network.gif)
 
 ## Launch MEV Sandwich Attack
 
@@ -53,7 +56,7 @@ The above command simulates an adversary executing the following steps:
    sell the 40 `token_b`, increasing their balance of `token_a` by 1 and maintaining
    their balance of `token_b`.
 
-### Animated GIF of attack
+### Animated GIF of sandwich attack
 ![](./sandwich-attack.gif)
 
 
@@ -77,7 +80,7 @@ The above command simulates an adversary executing the following steps:
    * execute the victim's transaction to see if `guess` was enough to conver the victim's transfer transaction
 3) If the `guess` was enough to cover the victim's transfer transaction then `guess` is the transfer amount
 
-### Animated GIF of attack
+### Animated GIF of transfer amount privacy attack
 ![](./transfer-privacy-attack.gif)
 
 
