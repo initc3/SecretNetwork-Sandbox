@@ -22,7 +22,7 @@ The above command will:
 
 1) Start a validator node (node-1) and a non-validator node (node-2)
 
-2) Store and instantiate Toy uniswap demo contracts and set up the initial states for MEV sandwhich attack.
+2) Store and instantiate Toy uniswap demo contracts and set up the initial states for MEV sandwich attack.
 The pool sizes are 1000 for `token_a` and 2000 for `token_b`.
 The victim and adversary account in the toy-swap contract each have a balance
 of 100 `token_a` and `token_b`.
