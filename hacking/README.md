@@ -76,6 +76,9 @@ The above command simulates an adversary executing the following steps:
    * execute the victim's transaction to see if `guess` was enough to conver the victim's transfer transaction
 3) If the `guess` was enough to cover the victim's transfer transaction then `guess` is the transfer amount
 
+![](./transfer-privacy-attack.gif)
+
+
 #### Account balance privacy attack
 Getting the account balance. The script prints out the victim's balance of 12343.
 
