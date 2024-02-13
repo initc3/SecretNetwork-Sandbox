@@ -95,15 +95,20 @@ while [ $(expr ${high} - ${low}) -ne 0 ]; do
     #teebox log "Replay the victim's transfer transaction of ${AMOUNT} tokens"
     teebox log "[bold]Simulate(Tx_victim)[/]"
     simulate_tx snip20_victim
+
+    # See app/app.go
+    # -- if transaction completed, 0 is written to file; think exit(0)
+    # -- else if transaction failed, 1 is written to file; think exit(1)
     simulate_tx_victim_result=$(cat $BACKUP/simulate_result)
     #teebox log "Result: $simulate_tx_victim_result"
     echo
 
+    # Assumes exit code 0, meaning successful, and exit code 1, meaning failure
     if [ $simulate_tx_victim_result != 0 ]; then
         ((low=probe+1));
-        teebox log "Simulation of victim transaction [green]succeeded[/], set [bold]low[/] to [bold]probe+1=${low}[/])"
+        teebox log "Simulation of victim transaction [red]failed[/], set [bold]low[/] to [bold]probe+1=${low}[/])"
     else
-        teebox log "Simulation of victim transaction [red]failed[/], set [bold]high[/] to [bold]probe=${probe}[/])"
+        teebox log "Simulation of victim transaction [green]succeeded[/], set [bold]high[/] to [bold]probe=${probe}[/])"
         high=${probe};
     fi
 
