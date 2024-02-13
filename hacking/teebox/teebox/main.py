@@ -58,6 +58,11 @@ def _show_mev_stats(iteration, stats):
 
 
 @app.command()
+def enter_prompt(message: str):
+    _ = EnterPrompt.ask(f"\n[bold yellow]{message}[/]\n")
+
+
+@app.command()
 def print_json(jsonfile: str):
     with open(jsonfile) as f:
         content = f.read()

