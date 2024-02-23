@@ -1,8 +1,10 @@
 import itertools
 import json
+import os
 import subprocess
 import time
 
+import requests
 import typer
 from typing_extensions import Annotated
 
@@ -12,6 +14,22 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Prompt
 from rich.style import Style
 from rich.table import Table
+
+
+SNIP20_ATTACK_DIR = os.environ["SNIP20_ATTACK_DIR"]
+
+
+def get_code_hash():
+    with open(f"{SNIP20_ATTACK_DIR}/codeHash.txt") as f:
+        code_hash = f.read()
+    return code_hash
+
+
+def get_contract_address():
+    with open(f"{SNIP20_ATTACK_DIR}/contractAddress.txt") as f:
+        contract_address = f.read()
+    return contract_address
+
 
 console = Console(log_path=False)
 
@@ -86,7 +104,51 @@ def log(text: str):
 
 
 @app.command()
-def show_mev_stats(csvfile):
+def wait_for_blocks(
+    block_height: int, hostname: Annotated[str, typer.Option()] = "localhost"
+):
+    status_endpoint = f"http://{hostname}:26657/status"
+
+    with Progress() as progress:
+        # task1 = progress.add_task("[red]Downloading...", total=1000)
+        # task2 = progress.add_task("[green]Processing...", total=1000)
+        task3 = progress.add_task(
+            f"[cyan]Waiting for node[/] [yellow]{hostname}[/] [cyan]to produce[/] [yellow]{block_height}[/] [cyan]blocks ...[/]\n",
+            total=block_height,
+        )
+
+        while True:
+            try:
+                response = requests.get(status_endpoint)
+            except requests.RequestException:
+                continue
+
+            current_block_height = int(
+                response.json()["result"]["sync_info"]["latest_block_height"]
+            )
+
+            break
+
+        # console.log(f"current_block_height={current_block_height}")
+
+        while not progress.finished:
+            response = requests.get(status_endpoint)
+            latest_block_height = int(
+                response.json()["result"]["sync_info"]["latest_block_height"]
+            )
+            # console.log("prev block height=", current_block_height)
+            # console.log("latest block height=", latest_block_height)
+            advance = latest_block_height - current_block_height
+            # console.log("advance=", advance)
+            current_block_height = latest_block_height
+            progress.update(task3, advance=advance)
+            time.sleep(1.5)
+
+        # console.log(f"current_block_height={current_block_height}")
+
+
+@app.command()
+def show_mev_stats(csvfile: str):
     with open(csvfile) as f:
         lines = f.readlines()
 
@@ -105,6 +167,11 @@ def show_mev_stats(csvfile):
         )
 
         _show_mev_stats(i, stats)
+
+
+@app.command()
+def inflate_balance(addr1: str, addr2: str):
+    pass
 
 
 @app.command()
@@ -160,13 +227,80 @@ def generate_and_sign_tx():
     # $SECRETD tx sign tx_$3.json --chain-id $CHAIN_ID --from $2 -y > tx_$3_sign.json
 
 
+# @app.command()
+def generate_tx(
+    contract_address: str,
+    sender: str,
+    recipient: str,
+    amount: int,
+    label: str,
+    output_file_label: str,
+):
+    """
+    Generate transaction.
+    """
+    code_hash = get_code_hash()
+    enclave_key = "io-master-key.txt"
+    tx = {"transfer": {"recipient": recipient, "amount": amount, "memo": ""}}
+    tx_json = json.dumps(tx)
+    cmd = [
+        "secretd",
+        "tx",
+        "compute",
+        "execute",
+        contract_address,
+        "--generate-only",
+        tx_json,
+        "--from",
+        sender,
+        "--enclave-key",
+        enclave_key,
+        "--code-hash",
+        "code_hash",
+        "--label",
+        "label",
+        "-y",
+        "--broadcast-mode",
+        "sync",
+    ]
+    completed_process = subprocess.run(cmd, capture_output=True)
+
+    tx_json_output = completed_process.stdout.decode().strip()
+    with open(f"tx_{output_file_label}.json", "w") as f:
+        f.write(tx_json_output)
+
+
 @app.command()
-def generate_and_sign_transfer():
+def generate_and_sign_transfer(
+    contract_address: str,
+    sender: str,
+    recipient: str,
+    amount: int,
+    label: str,
+    output_file_label: str,
+):
     """
     generate_and_sign_transfer
     """
-    # generate_and_sign_tx "{\"transfer\":{\"recipient\":\"$2\",\"amount\":\"$3\",\"memo\":\"\"}}" $1 $4
-    typer.echo("generate and sign transfer")
+    # $SECRETD tx sign tx_$3.json --chain-id $CHAIN_ID --from $2 -y > tx_$3_sign.json
+    generate_tx(contract_address, sender, recipient, amount, label, output_file_label)
+
+    cmd = [
+        "secretd",
+        "tx",
+        "sign",
+        f"tx_{output_file_label}.json",
+        "--chain-id",
+        chain_id,
+        "--from",
+        sender,
+        "-y",
+    ]
+    completed_process = subprocess.run(cmd, capture_output=True)
+
+    signed_tx_json_output = completed_process.stdout.decode().strip()
+    with open(f"tx_{output_file_label}_sign.json", "w") as f:
+        f.write(signed_tx_json_output)
 
 
 @app.command()

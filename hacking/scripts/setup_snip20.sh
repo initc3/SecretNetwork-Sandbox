@@ -30,3 +30,6 @@ CODE_HASH=${CODE_HASH:2} #strip of 0x.. from CODE_HASH hex string
 echo $CONTRACT_ADDRESS > $BACKUP/contractAddress.txt
 echo $CODE_HASH > $BACKUP/codeHash.txt
 
+
+# create viewing keys, for testing and demonstration purposes only
+set_viewing_keys

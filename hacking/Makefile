@@ -14,7 +14,7 @@ else
 endif
 
 stop: ##@ Stop local network
-	docker compose --file $(COMPOSE_FILE) down --volumes
+	docker compose --file $(COMPOSE_FILE) down --volumes --remove-orphans
 
 
 ##@

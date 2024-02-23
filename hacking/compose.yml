@@ -22,6 +22,27 @@ services:
     volumes:
       - genesis:/genesis
       - snip20:/root/snip20
+    depends_on:
+      localsecret-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:26657"]
+      interval: 3s
+      timeout: 1s
+      retries: 120
+      start_period: 5s
+
+  block-watcher:
+    image: teebox
+    build:
+      context: teebox
+      dockerfile: Dockerfile
+    depends_on:
+      localsecret-2:
+        condition: service_healthy
+    volumes:
+      - ./teebox:/usr/src/teebox
+    command: sleep 1
 
 volumes:
   genesis:

@@ -81,3 +81,20 @@ broadcast_tx() {
 query_contract_state() {
   echo $($SECRETD q compute query $CONTRACT_ADDRESS $1)
 }
+
+set_viewing_key() {
+    sender=$1
+    output_file=$2
+    txhash=$(secretd tx snip20 create-viewing-key ${CONTRACT_ADDRESS} --from ${sender} -y --broadcast-mode sync --gas=5000000 | jq -r .txhash)
+    wait_for_tx ${txhash}
+    viewing_key=$(secretd query compute tx ${txhash} | jq .answers[0].output_data_as_string | jq -r fromjson.create_viewing_key.key)
+    secretd tx snip20 set-viewing-key ${CONTRACT_ADDRESS} ${viewing_key} --from ${sender} -y --broadcast-mode sync --gas=5000000 > /dev/null 2>&1
+    echo ${viewing_key} > ${BACKUP}/${output_file}
+}
+
+set_viewing_keys() {
+    set_viewing_key $ACC0 attacker1_viewing_key
+    set_viewing_key $ACC1 attacker2_viewing_key
+    set_viewing_key $ACC2 victim_viewing_key
+
+}

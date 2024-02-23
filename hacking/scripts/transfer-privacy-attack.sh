@@ -68,7 +68,7 @@ high=40
 cnt=0
 while [ $(expr ${high} - ${low}) -ne 0 ]; do
     # P := (low+high)/2
-    probe=$(( (high + low ) / 2))
+    probe=$(( (high + low ) / 2 ))
 
     teebox info-panel ":mag: Iteration ${cnt} :mag:" --title "Bisection Search for the Transfer Amount"
     teebox log "[bold]low=${low}[/], [bold]high=${high}[/], [bold]probe=${probe}[/]"
@@ -86,7 +86,7 @@ while [ $(expr ${high} - ${low}) -ne 0 ]; do
     # TODO what does this do exactly?
     set_snapshot "${snapshot_uniq_label}-${cnt}"
 
-    # TODO What is doing that?
+    # TODO What is doing that? -- the above db snapshot
     teebox log "Replay(balance\[sender]=0)    [light_goldenrod1]# reset sender's balance to zero"
     
     # Figure 5 in paper, line 11

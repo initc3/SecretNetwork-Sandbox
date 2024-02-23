@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   localsecret-1:
-    image: sgxonerated:e1d7f4796
+    image: sgxonerated:938effb36
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -38,7 +38,7 @@ services:
       - snip20:/root/snip20
 
   localsecret-2:
-    image: sgxonerated:e1d7f4796
+    image: sgxonerated:938effb36
     build:
       context: ..
       dockerfile: hacking/Dockerfile
@@ -51,6 +51,9 @@ services:
       secrets:
         - API_KEY
         - SPID
+    depends_on:
+      localsecret-1:
+        condition: service_healthy
     # ports are only here in case interaction
     # between localhost and container is desired
     #ports:
@@ -75,6 +78,19 @@ services:
       - ./teebox:/usr/src/teebox
       - genesis:/genesis
       - snip20:/root/snip20
+
+  block-watcher:
+    image: teebox
+    build:
+      context: teebox
+      dockerfile: Dockerfile
+    depends_on:
+      localsecret-2:
+        condition: service_healthy
+    volumes:
+      - ./teebox:/usr/src/teebox
+    command: sleep 1
+
 secrets:
   API_KEY:
     file: ../.env.local

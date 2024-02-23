@@ -11,6 +11,7 @@ teebox = "teebox.main:app"
 [tool.poetry.dependencies]
 python = "^3.8"
 typer = {extras = ["all"], version = "^0.9.0"}
+requests = "^2.31"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
