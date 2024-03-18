@@ -16,7 +16,7 @@ from rich.style import Style
 from rich.table import Table
 
 
-SNIP20_ATTACK_DIR = os.environ["SNIP20_ATTACK_DIR"]
+SNIP20_ATTACK_DIR = os.environ.get("SNIP20_ATTACK_DIR", "/root/snip20")
 
 
 def get_code_hash():
